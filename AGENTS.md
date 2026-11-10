@@ -71,6 +71,36 @@ ten merged PRs. Rules for running it:
 - Do not merge a PR unless asked. Keep the worktree until the PR is merged or
   closed.
 
+## Scheduled runs
+
+A scheduled run is an unattended session working through `ROADMAP.md`. The
+owner approved the exceptions below for these runs only; interactive sessions
+follow the rest of this file unchanged.
+
+1. **Finish before starting.** If an open PR from an `agent/` branch exists
+   and isn't labelled `needs-human`, continue it: rebase, fix, rerun checks
+   and `/review-loop`. Start nothing new in that run.
+2. **Otherwise take the first `[ ]` milestone** in `ROADMAP.md`. One milestone
+   per run, one PR, through the full workflow above. The PR ticks the
+   milestone's box.
+3. **Auto-merge on green.** Merge your own PR with
+   `gh pr merge --squash --delete-branch` only when all of these hold: every
+   check passes on the final commit, gate A passed in this run with no open
+   actionable findings, the PR targets `main` and has no conflicts, and the
+   diff stays inside the milestone. Otherwise add the `needs-human` label
+   (create it with `gh label create needs-human` if it's missing), say why
+   in a PR comment, and stop.
+4. **Mocks only.** Never call a real model API or use `OPENROUTER_API_KEY`.
+   Test network code with stubbed fetch.
+5. **Dependencies.** Only the ones the milestone lists. Anything else: label
+   `needs-human` and stop.
+6. **Blocked twice.** If a milestone fails in two runs, mark it `[!]` in
+   `ROADMAP.md` with the reason (in its own small PR) and move on next run.
+7. **Nothing left.** If every milestone is `[x]` or `[!]`, report that the
+   roadmap is finished and make no changes.
+8. End every run with: the milestone, the PR URL, merged or not and why,
+   check results, and anything not done.
+
 ## Done means
 
 - Changes stay inside the task's scope.
