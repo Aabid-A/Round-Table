@@ -3,7 +3,7 @@ import { createState, viewFor, addEvent, eventBase } from '../../src/engine/stat
 import type { PhaseRequest } from '../../src/engine/types.js';
 import { MOCK_CAST } from '../../src/players/mock.js';
 import { buildPrompt } from '../../src/prompts/phases.js';
-import { SYSTEM_PROMPT } from '../../src/prompts/system.js';
+import { buildSystemPrompt, SYSTEM_PROMPT } from '../../src/prompts/system.js';
 import type { Role } from '../../src/types.js';
 
 const roles: Record<string, Role> = Object.fromEntries(MOCK_CAST.map((c, i) => [c.name, i < 2 ? 'traitor' : 'faithful']));
@@ -68,5 +68,14 @@ describe('prompt builders', () => {
     expect(SYSTEM_PROMPT).toContain('"private_notes"');
     expect(SYSTEM_PROMPT).toContain('viewers see this, other players never do');
     expect(SYSTEM_PROMPT).toContain('1–3 sentences');
+  });
+});
+
+describe('buildSystemPrompt', () => {
+  it('reflects the game settings', () => {
+    const text = buildSystemPrompt({ players: 8, traitors: 3, maxRounds: 4 });
+    expect(text).toContain('Three of them are secret TRAITORS');
+    expect(text).toContain('after round 4');
+    expect(buildSystemPrompt({ players: 8, traitors: 1, maxRounds: 6 })).toContain('One of them is a secret TRAITOR');
   });
 });

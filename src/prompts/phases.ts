@@ -37,7 +37,7 @@ export function buildRoundTablePrompt(req: Req<'round_table'>): string {
 export function buildVotePrompt(req: Req<'vote'>): string {
   return frame(
     req,
-    `Banishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: ${names(req.options)}.\nUse "speech": "" or a short public remark.\nAction: {"target": "<name>"}`,
+    `Banishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: ${names(req.options)}.\nUse "speech": "" (only round-table speech is shown to other players).\nAction: {"target": "<name>"}`,
   );
 }
 
@@ -65,7 +65,7 @@ export function buildRecruitRespondPrompt(req: Req<'recruit_respond'>): string {
 export function buildEndgameVotePrompt(req: Req<'endgame_vote'>): string {
   return frame(
     req,
-    `Few players remain. Vote to end the game now or banish again. A strict majority for "end" ends the game; if it ends, any surviving traitor means the traitors win.\nUse "speech": "" or a short public remark.\nAction: {"choice": "end"} or {"choice": "banish"}`,
+    `Few players remain. Vote to end the game now or banish again. A strict majority for "end" ends the game; if it ends, any surviving traitor means the traitors win.\nUse "speech": "" (only round-table speech is shown to other players).\nAction: {"choice": "end"} or {"choice": "banish"}`,
   );
 }
 

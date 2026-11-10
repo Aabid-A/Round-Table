@@ -139,7 +139,7 @@ export async function runBanishment(ctx: EngineContext): Promise<string> {
       banished = tally.leaders[0] as string;
     } else {
       method = 'random';
-      banished = rng.pick(tally.leaders.length > 0 ? tally.leaders : tied);
+      banished = rng.pick(tally.leaders);
     }
   }
   const player = getPlayer(state, banished);

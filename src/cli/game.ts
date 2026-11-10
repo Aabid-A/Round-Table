@@ -6,7 +6,7 @@ import { createMockPlayers, MOCK_CAST } from '../players/mock.js';
 import { createOpenRouterPlayer, DEFAULT_TIMEOUT_MS } from '../players/openrouter.js';
 import type { Player } from '../players/player.js';
 import { buildPrompt } from '../prompts/phases.js';
-import { SYSTEM_PROMPT } from '../prompts/system.js';
+import { buildSystemPrompt } from '../prompts/system.js';
 import { writeGameLog } from '../log/writer.js';
 import { loadCast } from './cast.js';
 
@@ -49,13 +49,14 @@ async function main(): Promise<void> {
     if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set (put it in .env or the environment)');
     cast = loadCast(values.cast as string);
     const timeoutMs = Number(values['timeout-ms']);
+    if (!Number.isInteger(timeoutMs) || timeoutMs < 1) throw new Error('--timeout-ms must be a positive integer');
     players = Object.fromEntries(
       cast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey, timeoutMs })]),
     );
     name = `game-${new Date().toISOString().replace(/[:.]/g, '-')}-seed-${seed}`;
   }
 
-  const log = await runGame({ cast, settings, seed, players, buildPrompt, systemPrompt: SYSTEM_PROMPT });
+  const log = await runGame({ cast, settings, seed, players, buildPrompt, systemPrompt: buildSystemPrompt({ players: cast.length, traitors: settings.traitors, maxRounds: settings.maxRounds }) });
   console.log(writeGameLog(log, values.out as string, name));
 }
 

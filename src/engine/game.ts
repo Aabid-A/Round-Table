@@ -30,7 +30,8 @@ export interface RunGameInput {
 export async function runGame(input: RunGameInput): Promise<GameLog> {
   const { cast, settings, seed } = input;
   if (new Set(cast.map((c) => c.name)).size !== cast.length) throw new Error('cast names must be unique');
-  if (settings.traitors < 1 || settings.traitors >= cast.length) throw new Error('traitors must be between 1 and players - 1');
+  if (!Number.isInteger(settings.maxRounds) || settings.maxRounds < 1) throw new Error('maxRounds must be an integer >= 1');
+  if (!Number.isInteger(settings.traitors) || settings.traitors < 1 || settings.traitors >= cast.length) throw new Error('traitors must be between 1 and players - 1');
 
   const rng = createRng(seed);
   const roles = assignRoles(cast.map((c) => c.name), settings.traitors, rng);

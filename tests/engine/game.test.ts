@@ -97,7 +97,33 @@ describe('privacy', () => {
   });
 });
 
+describe('game settings', () => {
+  it('rejects invalid maxRounds', async () => {
+    for (const bad of [0, -1, 1.5, Number.NaN]) {
+      await expect(playMock(1, { maxRounds: bad })).rejects.toThrow('maxRounds');
+    }
+  });
+});
+
 describe('retry and fallback', () => {
+  it('keeps notes and whispers out of retry prompts', async () => {
+    const players = createMockPlayers(MOCK_CAST, 8);
+    const good = createMockPlayer({ seed: 8, name: 'Hugo' });
+    // Hugo's first reply of every turn is invalid but contains a note-like string.
+    let calls = 0;
+    players.Hugo = {
+      respond: async (r) => (calls++ % 2 === 0 ? '{"speech":"","private_notes":"MOCKNOTE-LEAK-9999","action":' : good.respond(r)),
+    };
+    const log = await play(players, 8);
+    const retries = log.turns.flatMap((t) => t.attempts.slice(1));
+    expect(retries.length).toBeGreaterThan(5);
+    const everyone = log.turns.flatMap((t) => t.attempts.map((a) => a.prompt)).join('\n');
+    expect(everyone).not.toContain('LEAK-9999');
+    for (const t of log.turns) {
+      for (const a of t.attempts.slice(1)) expect(a.prompt).toContain('reply is not valid JSON');
+    }
+  });
+
   it('retries a broken player exactly once, then falls back, and the game finishes', async () => {
     const players = createMockPlayers(MOCK_CAST, 3);
     let calls = 0;

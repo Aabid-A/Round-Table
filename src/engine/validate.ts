@@ -62,7 +62,7 @@ export function validateAction(phase: Phase, raw: unknown, options: string[]): {
   }
 }
 
-/** Parse a raw model reply. Error messages never echo the reply, so private notes cannot leak into a retry prompt. */
+/** Parse a raw model reply. Error messages never echo the reply text or private_notes (they may quote a short invalid target, which only goes back to the same player). */
 export function parseReply(phase: Phase, raw: string, options: string[]): ParseResult {
   let json: unknown;
   try {
