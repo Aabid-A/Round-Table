@@ -71,38 +71,49 @@ ten merged PRs. Rules for running it:
 - Do not merge a PR unless asked. Keep the worktree until the PR is merged or
   closed.
 
-## Scheduled runs
+## Unattended runs
 
-A scheduled run is an unattended session working through `ROADMAP.md`. The
-owner approved the exceptions below for these runs only; interactive sessions
-follow the rest of this file unchanged.
+An unattended run is a session working through `ROADMAP.md` with nobody
+watching, started by hand or by a scheduled task. The owner approved the
+exceptions below for these runs only; interactive sessions follow the rest of
+this file unchanged.
 
-1. **Finish before starting.** If an open PR from an `agent/` branch exists
-   and isn't labelled `needs-human`, continue it: rebase, fix, rerun checks
-   and `/review-loop`. Start nothing new in that run.
-2. **Otherwise take the first `[ ]` milestone** in `ROADMAP.md`. One milestone
-   per run, one PR, through the full workflow above. The PR ticks the
-   milestone's box.
-3. **Auto-merge on green.** Merge your own PR with a squash merge only when
-   all of these hold: every
-   check passes on the final commit, gate A passed in this run with no open
-   actionable findings, the PR targets `main` and has no conflicts, and the
-   diff stays inside the milestone. Otherwise add the `needs-human` label
-   (create it with `gh label create needs-human` if it's missing), say why
-   in a PR comment, and stop. Cloud sessions can't use GitHub GraphQL, so
-   if `gh pr merge` or `gh pr create` fails, use the REST API: `gh api -X PUT
-   repos/{owner}/{repo}/pulls/<n>/merge -f merge_method=squash`, and
-   `gh api repos/{owner}/{repo}/pulls -f title=... -f head=... -f base=main`.
-4. **Mocks only.** Never call a real model API or use `OPENROUTER_API_KEY`.
+1. **One session at a time.** Before starting, run `git fetch origin` and
+   check the newest commit on any `origin/agent/*` branch. If one was pushed
+   in the last 45 minutes and its PR isn't merged or labelled `needs-human`,
+   another session is active: report that and stop.
+2. **Heartbeat.** Push your branch as soon as it has a commit and at least
+   every 30 minutes after, and open the PR as a draft early. That push is
+   what rule 1 checks.
+3. **Finish before starting.** If an open PR from an `agent/` branch exists
+   and isn't labelled `needs-human`, continue it first: rebase, fix, rerun
+   checks and `/review-loop`.
+4. **Then loop through milestones.** Take the first `[ ]` milestone in
+   `ROADMAP.md`, one PR per milestone, through the full workflow above. The
+   PR ticks the milestone's box. After it merges, start the next one in the
+   same session. Keep going until the roadmap is done or you are stopped.
+5. **Auto-merge on green.** Merge your own PR with a squash merge only when
+   all of these hold: every check passes on the final commit, gate A passed
+   with no open actionable findings, the PR targets `main` and has no
+   conflicts, and the diff stays inside the milestone. Mark the draft ready
+   first. Otherwise add the `needs-human` label (create it with
+   `gh label create needs-human` if it's missing), say why in a PR comment,
+   and move to the next milestone only if it doesn't depend on this one.
+   Cloud sessions can't use GitHub GraphQL, so if a `gh pr` command fails,
+   use the REST API: `gh api -X PUT repos/{owner}/{repo}/pulls/<n>/merge -f
+   merge_method=squash`, `gh api repos/{owner}/{repo}/pulls -f title=... -f
+   head=... -f base=main -F draft=true`, and the
+   `repos/{owner}/{repo}/pulls/<n>/ccr/ready_for_review` route.
+6. **Mocks only.** Never call a real model API or use `OPENROUTER_API_KEY`.
    Test network code with stubbed fetch.
-5. **Dependencies.** Only the ones the milestone lists. Anything else: label
-   `needs-human` and stop.
-6. **Blocked twice.** If a milestone fails in two runs, mark it `[!]` in
-   `ROADMAP.md` with the reason (in its own small PR) and move on next run.
-7. **Nothing left.** If every milestone is `[x]` or `[!]`, report that the
+7. **Dependencies.** Only the ones the milestone lists. Anything else: label
+   `needs-human`.
+8. **Blocked twice.** If a milestone fails twice, mark it `[!]` in
+   `ROADMAP.md` with the reason (in its own small PR) and move on.
+9. **Nothing left.** If every milestone is `[x]` or `[!]`, report that the
    roadmap is finished and make no changes.
-8. End every run with: the milestone, the PR URL, merged or not and why,
-   check results, and anything not done.
+10. After each milestone, and at the end, report: the milestone, the PR URL,
+    merged or not and why, check results, and anything not done.
 
 ## Done means
 

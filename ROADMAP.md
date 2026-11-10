@@ -1,13 +1,13 @@
 # Roadmap
 
-Scheduled runs work through this file top to bottom, one milestone per run.
-The rules for those runs are in `AGENTS.md` under "Scheduled runs".
+Unattended runs work through this file top to bottom, one PR per milestone.
+The rules for those runs are in `AGENTS.md` under "Unattended runs".
 
 Status: `[ ]` to do, `[x]` merged, `[!]` blocked (reason on the next line).
 A milestone's PR ticks its own box.
 
 **Goal:** everything needed to turn a real game into a Twitter clip, built and
-tested on mock games. Real games are run by the owner, not by scheduled runs.
+tested on mock games. Real games are run by the owner, not by unattended runs.
 
 ## Milestones
 
