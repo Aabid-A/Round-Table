@@ -1,0 +1,1968 @@
+{
+  "schemaVersion": 1,
+  "seed": 1,
+  "settings": {
+    "maxRounds": 6,
+    "traitors": 2
+  },
+  "cast": [
+    {
+      "name": "Aria",
+      "model": "mock"
+    },
+    {
+      "name": "Bram",
+      "model": "mock"
+    },
+    {
+      "name": "Cleo",
+      "model": "mock"
+    },
+    {
+      "name": "Dax",
+      "model": "mock"
+    },
+    {
+      "name": "Esme",
+      "model": "mock"
+    },
+    {
+      "name": "Finn",
+      "model": "mock"
+    },
+    {
+      "name": "Gwen",
+      "model": "mock"
+    },
+    {
+      "name": "Hugo",
+      "model": "mock"
+    }
+  ],
+  "roles": {
+    "Aria": "faithful",
+    "Bram": "traitor",
+    "Cleo": "traitor",
+    "Dax": "faithful",
+    "Esme": "faithful",
+    "Finn": "faithful",
+    "Gwen": "faithful",
+    "Hugo": "faithful"
+  },
+  "systemPrompt": "You are a player in \"The Round Table\", a social-deduction game. Eight players take part. Two of them are secret TRAITORS; the rest are FAITHFULS.\n\nHow a round works:\n1. Night: the traitors privately agree on one faithful to murder.\n2. Breakfast: the victim and their role are revealed.\n3. Whispers: each player may send one private message to one other player.\n4. Round table: every player speaks in turn and MUST name one suspect and give a reason.\n5. Banishment vote: every player votes for one player. The player with the most votes is banished and their role is revealed. A tie is settled by a revote between the tied players, then at random.\nAfter a traitor is banished, if traitors remain, a surviving traitor may offer one faithful the chance to become a traitor. The faithful accepts or refuses.\nWhen 4 or fewer players remain, after each banishment the survivors vote to end the game or banish again. A strict majority for \"end\" ends it. The game also ends if 2 players remain, if no traitors remain, or after a maximum number of rounds.\nIf any traitor is still in the game at the end, the traitors win. Otherwise the faithfuls win.\n\nYou only know what your prompt tells you. Use the public history, your role and the whispers you sent or received. Play to win, using the strategy you think best.\n\nREPLY FORMAT. Reply with one JSON object and nothing else:\n{\"speech\": string, \"private_notes\": string, \"action\": object}\n- \"speech\": what you say out loud to the table. Other players read it. Use \"\" when the phase has no public speech.\n- \"private_notes\": your strategy for this turn in 1–3 sentences; viewers see this, other players never do.\n- \"action\": the decision for the current phase. The prompt gives the exact shape and the valid choices.\nUse player names exactly as written. Do not wrap the JSON in markdown.",
+  "turns": [
+    {
+      "id": 0,
+      "round": 1,
+      "phase": "night",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Esme, Finn, Gwen, Hugo.\n\nWhat you know so far:\nNothing has happened yet.\n\nIt is night. Pick one faithful to murder.\nValid targets: Aria, Dax, Esme, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0001: Keep my head down and let others argue.\",\"action\":{\"target\":\"Esme\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0001: Keep my head down and let others argue.",
+      "action": {
+        "target": "Esme"
+      },
+      "fallback": false
+    },
+    {
+      "id": 1,
+      "round": 1,
+      "phase": "night",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Esme, Finn, Gwen, Hugo.\n\nWhat you know so far:\nNothing has happened yet.\n\nIt is night. Pick one faithful to murder.\nValid targets: Aria, Dax, Esme, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0001: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0001: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 2,
+      "round": 1,
+      "phase": "night",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Esme, Finn, Gwen, Hugo.\n\nWhat you know so far:\nNothing has happened yet.\n\nIt is night. Pick one faithful to murder.\nYour fellow traitors did not all pick the same target. Their proposals: Cleo -> Finn.\nThis is the last chance to agree; if you still differ, one proposal is picked at random.\nValid targets: Aria, Dax, Esme, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0002: Push the group toward the quietest player.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0002: Push the group toward the quietest player.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 3,
+      "round": 1,
+      "phase": "night",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Esme, Finn, Gwen, Hugo.\n\nWhat you know so far:\nNothing has happened yet.\n\nIt is night. Pick one faithful to murder.\nYour fellow traitors did not all pick the same target. Their proposals: Bram -> Esme.\nThis is the last chance to agree; if you still differ, one proposal is picked at random.\nValid targets: Aria, Dax, Esme, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0002: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Esme\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0002: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Esme"
+      },
+      "fallback": false
+    },
+    {
+      "id": 4,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Aria",
+      "attempts": [
+        {
+          "prompt": "You are Aria. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Cleo, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Aria-0001: Build trust with one ally and test their reaction.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Aria-0001: Build trust with one ally and test their reaction.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 5,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Cleo, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0003: Keep my head down and let others argue.\",\"action\":{\"to\":\"Dax\",\"message\":\"Tell me who you trust. (WHISPER-Bram-0003)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0003: Keep my head down and let others argue.",
+      "action": {
+        "to": "Dax",
+        "message": "Tell me who you trust. (WHISPER-Bram-0003)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 6,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Bram, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0003: Build trust with one ally and test their reaction.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0003: Build trust with one ally and test their reaction.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 7,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Dax",
+      "attempts": [
+        {
+          "prompt": "You are Dax. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Bram, Cleo, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Dax-0001: Keep my head down and let others argue.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Dax-0001: Keep my head down and let others argue.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 8,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Bram, Cleo, Dax, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0001: Keep my head down and let others argue.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0001: Keep my head down and let others argue.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 9,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Bram, Cleo, Dax, Finn, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0001: Keep my head down and let others argue.\",\"action\":{\"to\":\"Dax\",\"message\":\"I think we should watch the same person. (WHISPER-Gwen-0001)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0001: Keep my head down and let others argue.",
+      "action": {
+        "to": "Dax",
+        "message": "I think we should watch the same person. (WHISPER-Gwen-0001)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 10,
+      "round": 1,
+      "phase": "whispers",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Aria, Bram, Cleo, Dax, Finn, Gwen.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0001: Blend in and steer suspicion away from me.\",\"action\":{\"to\":\"Dax\",\"message\":\"Tell me who you trust. (WHISPER-Hugo-0001)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0001: Blend in and steer suspicion away from me.",
+      "action": {
+        "to": "Dax",
+        "message": "Tell me who you trust. (WHISPER-Hugo-0001)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 11,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Dax",
+      "attempts": [
+        {
+          "prompt": "You are Dax. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nBram whispered to you: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nHugo whispered to you: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Bram, Cleo, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"Let us not rush. Who has stayed quiet when it mattered?\",\"private_notes\":\"MOCKNOTE-Dax-0002: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"their vote did not match their words\"}}",
+          "error": null
+        }
+      ],
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "private_notes": "MOCKNOTE-Dax-0002: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "their vote did not match their words"
+      },
+      "fallback": false
+    },
+    {
+      "id": 12,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Bram, Cleo, Dax, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I will be honest: I do not know yet, but I have a feeling.\",\"private_notes\":\"MOCKNOTE-Finn-0002: Keep my head down and let others argue.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they dodged a direct question\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I will be honest: I do not know yet, but I have a feeling.",
+      "private_notes": "MOCKNOTE-Finn-0002: Keep my head down and let others argue.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they dodged a direct question"
+      },
+      "fallback": false
+    },
+    {
+      "id": 13,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Aria",
+      "attempts": [
+        {
+          "prompt": "You are Aria. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Cleo, Dax, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I would rather be careful than sorry. Pay attention to who changes their story.\",\"private_notes\":\"MOCKNOTE-Aria-0002: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"it is a gut feeling, nothing more\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "private_notes": "MOCKNOTE-Aria-0002: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "it is a gut feeling, nothing more"
+      },
+      "fallback": false
+    },
+    {
+      "id": 14,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Cleo, Dax, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I would rather be careful than sorry. Pay attention to who changes their story.\",\"private_notes\":\"MOCKNOTE-Bram-0004: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Gwen\",\"reason\":\"they dodged a direct question\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "private_notes": "MOCKNOTE-Bram-0004: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Gwen",
+        "reason": "they dodged a direct question"
+      },
+      "fallback": false
+    },
+    {
+      "id": 15,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Bram, Cleo, Dax, Finn, Gwen.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I would rather be careful than sorry. Pay attention to who changes their story.\",\"private_notes\":\"MOCKNOTE-Hugo-0002: Build trust with one ally and test their reaction.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they have been unusually calm\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "private_notes": "MOCKNOTE-Hugo-0002: Build trust with one ally and test their reaction.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they have been unusually calm"
+      },
+      "fallback": false
+    },
+    {
+      "id": 16,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Bram, Cleo, Dax, Finn, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"Let us not rush. Who has stayed quiet when it mattered?\",\"private_notes\":\"MOCKNOTE-Gwen-0002: Keep my head down and let others argue.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they are too eager to point elsewhere\"}}",
+          "error": null
+        }
+      ],
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "private_notes": "MOCKNOTE-Gwen-0002: Keep my head down and let others argue.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they are too eager to point elsewhere"
+      },
+      "fallback": false
+    },
+    {
+      "id": 17,
+      "round": 1,
+      "phase": "round_table",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Aria, Bram, Dax, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I would rather be careful than sorry. Pay attention to who changes their story.\",\"private_notes\":\"MOCKNOTE-Cleo-0004: Blend in and steer suspicion away from me.\",\"action\":{\"suspect\":\"Gwen\",\"reason\":\"they have been unusually calm\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "private_notes": "MOCKNOTE-Cleo-0004: Blend in and steer suspicion away from me.",
+      "action": {
+        "suspect": "Gwen",
+        "reason": "they have been unusually calm"
+      },
+      "fallback": false
+    },
+    {
+      "id": 18,
+      "round": 1,
+      "phase": "vote",
+      "player": "Aria",
+      "attempts": [
+        {
+          "prompt": "You are Aria. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Cleo, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Aria-0003: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Cleo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Aria-0003: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Cleo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 19,
+      "round": 1,
+      "phase": "vote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Cleo, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0005: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0005: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 20,
+      "round": 1,
+      "phase": "vote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Bram, Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0005: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0005: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 21,
+      "round": 1,
+      "phase": "vote",
+      "player": "Dax",
+      "attempts": [
+        {
+          "prompt": "You are Dax. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nBram whispered to you: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nHugo whispered to you: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Bram, Cleo, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Dax-0003: Push the group toward the quietest player.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Dax-0003: Push the group toward the quietest player.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 22,
+      "round": 1,
+      "phase": "vote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Bram, Cleo, Dax, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0003: Keep my head down and let others argue.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0003: Keep my head down and let others argue.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 23,
+      "round": 1,
+      "phase": "vote",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Bram, Cleo, Dax, Finn, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0003: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0003: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 24,
+      "round": 1,
+      "phase": "vote",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Aria, Bram, Cleo, Dax, Finn, Gwen.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0003: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Cleo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0003: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Cleo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 25,
+      "round": 1,
+      "phase": "revote",
+      "player": "Aria",
+      "attempts": [
+        {
+          "prompt": "You are Aria. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Cleo, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Aria-0004: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Cleo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Aria-0004: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Cleo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 26,
+      "round": 1,
+      "phase": "revote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Cleo, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0006: Push the group toward the quietest player.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0006: Push the group toward the quietest player.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 27,
+      "round": 1,
+      "phase": "revote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0006: Keep my head down and let others argue.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0006: Keep my head down and let others argue.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 28,
+      "round": 1,
+      "phase": "revote",
+      "player": "Dax",
+      "attempts": [
+        {
+          "prompt": "You are Dax. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nBram whispered to you: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nHugo whispered to you: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Cleo, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Dax-0004: Keep my head down and let others argue.\",\"action\":{\"target\":\"Cleo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Dax-0004: Keep my head down and let others argue.",
+      "action": {
+        "target": "Cleo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 29,
+      "round": 1,
+      "phase": "revote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Cleo.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0004: Push the group toward the quietest player.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0004: Push the group toward the quietest player.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 30,
+      "round": 1,
+      "phase": "revote",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Cleo, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0004: Push the group toward the quietest player.\",\"action\":{\"target\":\"Cleo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0004: Push the group toward the quietest player.",
+      "action": {
+        "target": "Cleo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 31,
+      "round": 1,
+      "phase": "revote",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 1. Players still in the game: Aria, Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\n\nRevote. The vote ended in a tie between Aria, Cleo, Finn. Vote again; you may only vote for one of them (not yourself).\nValid choices: Aria, Cleo, Finn.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0004: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Aria\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0004: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Aria"
+      },
+      "fallback": false
+    },
+    {
+      "id": 32,
+      "round": 2,
+      "phase": "night",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n\nIt is night. Pick one faithful to murder.\nValid targets: Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0007: Push the group toward the quietest player.\",\"action\":{\"target\":\"Dax\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0007: Push the group toward the quietest player.",
+      "action": {
+        "target": "Dax"
+      },
+      "fallback": false
+    },
+    {
+      "id": 33,
+      "round": 2,
+      "phase": "night",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Dax, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n\nIt is night. Pick one faithful to murder.\nValid targets: Dax, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0007: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Dax\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0007: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Dax"
+      },
+      "fallback": false
+    },
+    {
+      "id": 34,
+      "round": 2,
+      "phase": "whispers",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Cleo, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0008: Build trust with one ally and test their reaction.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0008: Build trust with one ally and test their reaction.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 35,
+      "round": 2,
+      "phase": "whispers",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Finn, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0008: Push the group toward the quietest player.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0008: Push the group toward the quietest player.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 36,
+      "round": 2,
+      "phase": "whispers",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Cleo, Gwen, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0005: Build trust with one ally and test their reaction.\",\"action\":{\"to\":\"Bram\",\"message\":\"I think we should watch the same person. (WHISPER-Finn-0005)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0005: Build trust with one ally and test their reaction.",
+      "action": {
+        "to": "Bram",
+        "message": "I think we should watch the same person. (WHISPER-Finn-0005)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 37,
+      "round": 2,
+      "phase": "whispers",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Cleo, Finn, Hugo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0005: Build trust with one ally and test their reaction.\",\"action\":{\"to\":\"Finn\",\"message\":\"I think we should watch the same person. (WHISPER-Gwen-0005)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0005: Build trust with one ally and test their reaction.",
+      "action": {
+        "to": "Finn",
+        "message": "I think we should watch the same person. (WHISPER-Gwen-0005)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 38,
+      "round": 2,
+      "phase": "whispers",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Cleo, Finn, Gwen.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0005: Blend in and steer suspicion away from me.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0005: Blend in and steer suspicion away from me.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 39,
+      "round": 2,
+      "phase": "round_table",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Cleo, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I have been watching how people vote, and something does not add up.\",\"private_notes\":\"MOCKNOTE-Finn-0006: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they dodged a direct question\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I have been watching how people vote, and something does not add up.",
+      "private_notes": "MOCKNOTE-Finn-0006: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they dodged a direct question"
+      },
+      "fallback": false
+    },
+    {
+      "id": 40,
+      "round": 2,
+      "phase": "round_table",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Finn: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Cleo, Finn, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"Let us not rush. Who has stayed quiet when it mattered?\",\"private_notes\":\"MOCKNOTE-Gwen-0006: Build trust with one ally and test their reaction.\",\"action\":{\"suspect\":\"Finn\",\"reason\":\"their vote did not match their words\"}}",
+          "error": null
+        }
+      ],
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "private_notes": "MOCKNOTE-Gwen-0006: Build trust with one ally and test their reaction.",
+      "action": {
+        "suspect": "Finn",
+        "reason": "their vote did not match their words"
+      },
+      "fallback": false
+    },
+    {
+      "id": 41,
+      "round": 2,
+      "phase": "round_table",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Cleo, Finn, Gwen.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I trust my read on this table. One of us is not who they claim.\",\"private_notes\":\"MOCKNOTE-Hugo-0006: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Gwen\",\"reason\":\"it is a gut feeling, nothing more\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "private_notes": "MOCKNOTE-Hugo-0006: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Gwen",
+        "reason": "it is a gut feeling, nothing more"
+      },
+      "fallback": false
+    },
+    {
+      "id": 42,
+      "round": 2,
+      "phase": "round_table",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Cleo, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I trust my read on this table. One of us is not who they claim.\",\"private_notes\":\"MOCKNOTE-Bram-0009: Build trust with one ally and test their reaction.\",\"action\":{\"suspect\":\"Gwen\",\"reason\":\"their vote did not match their words\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "private_notes": "MOCKNOTE-Bram-0009: Build trust with one ally and test their reaction.",
+      "action": {
+        "suspect": "Gwen",
+        "reason": "their vote did not match their words"
+      },
+      "fallback": false
+    },
+    {
+      "id": 43,
+      "round": 2,
+      "phase": "round_table",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Finn, Gwen, Hugo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"Last night changed things. We need to look at who benefits.\",\"private_notes\":\"MOCKNOTE-Cleo-0009: Keep my head down and let others argue.\",\"action\":{\"suspect\":\"Finn\",\"reason\":\"they have been unusually calm\"}}",
+          "error": null
+        }
+      ],
+      "speech": "Last night changed things. We need to look at who benefits.",
+      "private_notes": "MOCKNOTE-Cleo-0009: Keep my head down and let others argue.",
+      "action": {
+        "suspect": "Finn",
+        "reason": "they have been unusually calm"
+      },
+      "fallback": false
+    },
+    {
+      "id": 44,
+      "round": 2,
+      "phase": "vote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Cleo, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0010: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0010: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 45,
+      "round": 2,
+      "phase": "vote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Finn, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0010: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0010: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 46,
+      "round": 2,
+      "phase": "vote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Cleo, Gwen, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0007: Keep my head down and let others argue.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0007: Keep my head down and let others argue.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 47,
+      "round": 2,
+      "phase": "vote",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Finn: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Cleo, Finn, Hugo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0007: Keep my head down and let others argue.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0007: Keep my head down and let others argue.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 48,
+      "round": 2,
+      "phase": "vote",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Cleo, Finn, Gwen.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0007: Keep my head down and let others argue.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0007: Keep my head down and let others argue.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 49,
+      "round": 2,
+      "phase": "revote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\n\nRevote. The vote ended in a tie between Gwen, Hugo. Vote again; you may only vote for one of them (not yourself).\nValid choices: Gwen, Hugo.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0011: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0011: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 50,
+      "round": 2,
+      "phase": "revote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\n\nRevote. The vote ended in a tie between Gwen, Hugo. Vote again; you may only vote for one of them (not yourself).\nValid choices: Gwen, Hugo.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0011: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0011: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 51,
+      "round": 2,
+      "phase": "revote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\n\nRevote. The vote ended in a tie between Gwen, Hugo. Vote again; you may only vote for one of them (not yourself).\nValid choices: Gwen, Hugo.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0008: Blend in and steer suspicion away from me.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0008: Blend in and steer suspicion away from me.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 52,
+      "round": 2,
+      "phase": "revote",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Finn: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\n\nRevote. The vote ended in a tie between Gwen, Hugo. Vote again; you may only vote for one of them (not yourself).\nValid choices: Hugo.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0008: Keep my head down and let others argue.\",\"action\":{\"target\":\"Hugo\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0008: Keep my head down and let others argue.",
+      "action": {
+        "target": "Hugo"
+      },
+      "fallback": false
+    },
+    {
+      "id": 53,
+      "round": 2,
+      "phase": "revote",
+      "player": "Hugo",
+      "attempts": [
+        {
+          "prompt": "You are Hugo. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen, Hugo.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Hugo-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\n\nRevote. The vote ended in a tie between Gwen, Hugo. Vote again; you may only vote for one of them (not yourself).\nValid choices: Gwen.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Hugo-0008: Keep my head down and let others argue.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Hugo-0008: Keep my head down and let others argue.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 54,
+      "round": 2,
+      "phase": "endgame_vote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\n\nFew players remain. Vote to end the game now or banish again. A strict majority for \"end\" ends the game; if it ends, any surviving traitor means the traitors win.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"choice\": \"end\"} or {\"choice\": \"banish\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0012: Keep my head down and let others argue.\",\"action\":{\"choice\":\"end\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0012: Keep my head down and let others argue.",
+      "action": {
+        "choice": "end"
+      },
+      "fallback": false
+    },
+    {
+      "id": 55,
+      "round": 2,
+      "phase": "endgame_vote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\n\nFew players remain. Vote to end the game now or banish again. A strict majority for \"end\" ends the game; if it ends, any surviving traitor means the traitors win.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"choice\": \"end\"} or {\"choice\": \"banish\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0012: Blend in and steer suspicion away from me.\",\"action\":{\"choice\":\"banish\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0012: Blend in and steer suspicion away from me.",
+      "action": {
+        "choice": "banish"
+      },
+      "fallback": false
+    },
+    {
+      "id": 56,
+      "round": 2,
+      "phase": "endgame_vote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\n\nFew players remain. Vote to end the game now or banish again. A strict majority for \"end\" ends the game; if it ends, any surviving traitor means the traitors win.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"choice\": \"end\"} or {\"choice\": \"banish\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0009: Keep my head down and let others argue.\",\"action\":{\"choice\":\"end\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0009: Keep my head down and let others argue.",
+      "action": {
+        "choice": "end"
+      },
+      "fallback": false
+    },
+    {
+      "id": 57,
+      "round": 2,
+      "phase": "endgame_vote",
+      "player": "Gwen",
+      "attempts": [
+        {
+          "prompt": "You are Gwen. Your role: faithful.\nRound 2. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"I think we should watch the same person. (WHISPER-Gwen-0001)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Finn: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\n\nFew players remain. Vote to end the game now or banish again. A strict majority for \"end\" ends the game; if it ends, any surviving traitor means the traitors win.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"choice\": \"end\"} or {\"choice\": \"banish\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Gwen-0009: Push the group toward the quietest player.\",\"action\":{\"choice\":\"banish\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Gwen-0009: Push the group toward the quietest player.",
+      "action": {
+        "choice": "banish"
+      },
+      "fallback": false
+    },
+    {
+      "id": 58,
+      "round": 3,
+      "phase": "night",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 3. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n\nIt is night. Pick one faithful to murder.\nValid targets: Finn, Gwen.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0013: Keep my head down and let others argue.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0013: Keep my head down and let others argue.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 59,
+      "round": 3,
+      "phase": "night",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 3. Players still in the game: Bram, Cleo, Finn, Gwen.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n\nIt is night. Pick one faithful to murder.\nValid targets: Finn, Gwen.\nUse \"speech\": \"\".\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0013: Push the group toward the quietest player.\",\"action\":{\"target\":\"Gwen\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0013: Push the group toward the quietest player.",
+      "action": {
+        "target": "Gwen"
+      },
+      "fallback": false
+    },
+    {
+      "id": 60,
+      "round": 3,
+      "phase": "whispers",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Cleo, Finn.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0014: Push the group toward the quietest player.\",\"action\":{\"to\":\"Cleo\",\"message\":\"Can we work together? (WHISPER-Bram-0014)\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0014: Push the group toward the quietest player.",
+      "action": {
+        "to": "Cleo",
+        "message": "Can we work together? (WHISPER-Bram-0014)"
+      },
+      "fallback": false
+    },
+    {
+      "id": 61,
+      "round": 3,
+      "phase": "whispers",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Finn.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0014: Blend in and steer suspicion away from me.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0014: Blend in and steer suspicion away from me.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 62,
+      "round": 3,
+      "phase": "whispers",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nBreakfast: Gwen was murdered in the night. They were a faithful.\n\nWhispers. You may send one private message to one player; only they will see it. Everyone chooses at the same time.\nValid recipients: Bram, Cleo.\nUse \"speech\": \"\".\nAction: {\"to\": \"<name>\", \"message\": \"<text>\"} or {\"to\": null} to send nothing.",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0010: Push the group toward the quietest player.\",\"action\":{\"to\":null}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0010: Push the group toward the quietest player.",
+      "action": {
+        "to": null,
+        "message": ""
+      },
+      "fallback": false
+    },
+    {
+      "id": 63,
+      "round": 3,
+      "phase": "round_table",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\nYou whispered to Cleo: \"Can we work together? (WHISPER-Bram-0014)\"\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Cleo, Finn.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I trust my read on this table. One of us is not who they claim.\",\"private_notes\":\"MOCKNOTE-Bram-0015: Push the group toward the quietest player.\",\"action\":{\"suspect\":\"Finn\",\"reason\":\"they are too eager to point elsewhere\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "private_notes": "MOCKNOTE-Bram-0015: Push the group toward the quietest player.",
+      "action": {
+        "suspect": "Finn",
+        "reason": "they are too eager to point elsewhere"
+      },
+      "fallback": false
+    },
+    {
+      "id": 64,
+      "round": 3,
+      "phase": "round_table",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nBreakfast: Gwen was murdered in the night. They were a faithful.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Finn because: they are too eager to point elsewhere.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Cleo.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I will be honest: I do not know yet, but I have a feeling.\",\"private_notes\":\"MOCKNOTE-Finn-0011: Blend in and steer suspicion away from me.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they have been unusually calm\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I will be honest: I do not know yet, but I have a feeling.",
+      "private_notes": "MOCKNOTE-Finn-0011: Blend in and steer suspicion away from me.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they have been unusually calm"
+      },
+      "fallback": false
+    },
+    {
+      "id": 65,
+      "round": 3,
+      "phase": "round_table",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\nBram whispered to you: \"Can we work together? (WHISPER-Bram-0014)\"\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Finn because: they are too eager to point elsewhere.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they have been unusually calm.\n\nRound table. Speak to the table, then name one suspect and give a reason. Everyone sees what you say and who you suspect.\nValid suspects: Bram, Finn.\nAction: {\"suspect\": \"<name>\", \"reason\": \"<text>\"}",
+          "raw": "{\"speech\":\"I would rather be careful than sorry. Pay attention to who changes their story.\",\"private_notes\":\"MOCKNOTE-Cleo-0015: Blend in and steer suspicion away from me.\",\"action\":{\"suspect\":\"Bram\",\"reason\":\"they are too eager to point elsewhere\"}}",
+          "error": null
+        }
+      ],
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "private_notes": "MOCKNOTE-Cleo-0015: Blend in and steer suspicion away from me.",
+      "action": {
+        "suspect": "Bram",
+        "reason": "they are too eager to point elsewhere"
+      },
+      "fallback": false
+    },
+    {
+      "id": 66,
+      "round": 3,
+      "phase": "vote",
+      "player": "Bram",
+      "attempts": [
+        {
+          "prompt": "You are Bram. Your role: traitor.\nYour fellow traitors: Cleo.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nYou whispered to Dax: \"Tell me who you trust. (WHISPER-Bram-0003)\"\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn whispered to you: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\nYou whispered to Cleo: \"Can we work together? (WHISPER-Bram-0014)\"\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Finn because: they are too eager to point elsewhere.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they have been unusually calm.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they are too eager to point elsewhere.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Cleo, Finn.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Bram-0016: Push the group toward the quietest player.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Bram-0016: Push the group toward the quietest player.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 67,
+      "round": 3,
+      "phase": "vote",
+      "player": "Cleo",
+      "attempts": [
+        {
+          "prompt": "You are Cleo. Your role: traitor.\nYour fellow traitors: Bram.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nYour pack murdered Esme.\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nYour pack murdered Dax.\nBreakfast: Dax was murdered in the night. They were a faithful.\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nYour pack murdered Gwen.\nBreakfast: Gwen was murdered in the night. They were a faithful.\nBram whispered to you: \"Can we work together? (WHISPER-Bram-0014)\"\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Finn because: they are too eager to point elsewhere.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they have been unusually calm.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they are too eager to point elsewhere.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Finn.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Cleo-0016: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Finn\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Cleo-0016: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Finn"
+      },
+      "fallback": false
+    },
+    {
+      "id": 68,
+      "round": 3,
+      "phase": "vote",
+      "player": "Finn",
+      "attempts": [
+        {
+          "prompt": "You are Finn. Your role: faithful.\nRound 3. Players still in the game: Bram, Cleo, Finn.\nOut of the game: Aria (banished, was a faithful), Dax (murdered, was a faithful), Esme (murdered, was a faithful), Gwen (murdered, was a faithful), Hugo (banished, was a faithful).\n\nWhat you know so far:\n-- Round 1 --\nBreakfast: Esme was murdered in the night. They were a faithful.\nDax said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: their vote did not match their words.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they dodged a direct question.\nAria said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: it is a gut feeling, nothing more.\nBram said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they dodged a direct question.\nHugo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they have been unusually calm.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Bram because: they are too eager to point elsewhere.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Gwen because: they have been unusually calm.\nBanishment vote: Aria -> Cleo, Bram -> Finn, Cleo -> Aria, Dax -> Hugo, Finn -> Aria, Gwen -> Finn, Hugo -> Cleo.\nRevote: Aria -> Cleo, Bram -> Aria, Cleo -> Aria, Dax -> Cleo, Finn -> Aria, Gwen -> Cleo, Hugo -> Aria.\nAria was banished. They were a faithful.\n-- Round 2 --\nBreakfast: Dax was murdered in the night. They were a faithful.\nYou whispered to Bram: \"I think we should watch the same person. (WHISPER-Finn-0005)\"\nGwen whispered to you: \"I think we should watch the same person. (WHISPER-Gwen-0005)\"\nFinn said \"I have been watching how people vote, and something does not add up.\" and suspects Bram because: they dodged a direct question.\nGwen said \"Let us not rush. Who has stayed quiet when it mattered?\" and suspects Finn because: their vote did not match their words.\nHugo said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: it is a gut feeling, nothing more.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Gwen because: their vote did not match their words.\nCleo said \"Last night changed things. We need to look at who benefits.\" and suspects Finn because: they have been unusually calm.\nBanishment vote: Bram -> Hugo, Cleo -> Gwen, Finn -> Gwen, Gwen -> Hugo, Hugo -> Finn.\nRevote: Bram -> Hugo, Cleo -> Gwen, Finn -> Hugo, Gwen -> Hugo, Hugo -> Gwen.\nHugo was banished. They were a faithful.\nEnd-or-banish vote: Bram: end, Cleo: banish, Finn: end, Gwen: banish. The game goes on.\n-- Round 3 --\nBreakfast: Gwen was murdered in the night. They were a faithful.\nBram said \"I trust my read on this table. One of us is not who they claim.\" and suspects Finn because: they are too eager to point elsewhere.\nFinn said \"I will be honest: I do not know yet, but I have a feeling.\" and suspects Bram because: they have been unusually calm.\nCleo said \"I would rather be careful than sorry. Pay attention to who changes their story.\" and suspects Bram because: they are too eager to point elsewhere.\n\nBanishment vote. Vote for the player to banish. Votes are revealed together afterwards.\nValid choices: Bram, Cleo.\nUse \"speech\": \"\" or a short public remark.\nAction: {\"target\": \"<name>\"}",
+          "raw": "{\"speech\":\"\",\"private_notes\":\"MOCKNOTE-Finn-0012: Build trust with one ally and test their reaction.\",\"action\":{\"target\":\"Bram\"}}",
+          "error": null
+        }
+      ],
+      "speech": "",
+      "private_notes": "MOCKNOTE-Finn-0012: Build trust with one ally and test their reaction.",
+      "action": {
+        "target": "Bram"
+      },
+      "fallback": false
+    }
+  ],
+  "events": [
+    {
+      "type": "murder",
+      "round": 1,
+      "afterTurn": 3,
+      "visibleTo": [
+        "Bram",
+        "Cleo"
+      ],
+      "victim": "Esme",
+      "proposals": [
+        {
+          "player": "Bram",
+          "target": "Aria"
+        },
+        {
+          "player": "Cleo",
+          "target": "Esme"
+        }
+      ],
+      "method": "random"
+    },
+    {
+      "type": "breakfast",
+      "round": 1,
+      "afterTurn": 3,
+      "visibleTo": "all",
+      "victim": "Esme",
+      "role": "faithful"
+    },
+    {
+      "type": "whisper",
+      "round": 1,
+      "afterTurn": 10,
+      "visibleTo": [
+        "Bram",
+        "Dax"
+      ],
+      "from": "Bram",
+      "to": "Dax",
+      "message": "Tell me who you trust. (WHISPER-Bram-0003)"
+    },
+    {
+      "type": "whisper",
+      "round": 1,
+      "afterTurn": 10,
+      "visibleTo": [
+        "Gwen",
+        "Dax"
+      ],
+      "from": "Gwen",
+      "to": "Dax",
+      "message": "I think we should watch the same person. (WHISPER-Gwen-0001)"
+    },
+    {
+      "type": "whisper",
+      "round": 1,
+      "afterTurn": 10,
+      "visibleTo": [
+        "Hugo",
+        "Dax"
+      ],
+      "from": "Hugo",
+      "to": "Dax",
+      "message": "Tell me who you trust. (WHISPER-Hugo-0001)"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 11,
+      "visibleTo": "all",
+      "player": "Dax",
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "suspect": "Bram",
+      "reason": "their vote did not match their words"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 12,
+      "visibleTo": "all",
+      "player": "Finn",
+      "speech": "I will be honest: I do not know yet, but I have a feeling.",
+      "suspect": "Bram",
+      "reason": "they dodged a direct question"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 13,
+      "visibleTo": "all",
+      "player": "Aria",
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "suspect": "Bram",
+      "reason": "it is a gut feeling, nothing more"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 14,
+      "visibleTo": "all",
+      "player": "Bram",
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "suspect": "Gwen",
+      "reason": "they dodged a direct question"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 15,
+      "visibleTo": "all",
+      "player": "Hugo",
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "suspect": "Bram",
+      "reason": "they have been unusually calm"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 16,
+      "visibleTo": "all",
+      "player": "Gwen",
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "suspect": "Bram",
+      "reason": "they are too eager to point elsewhere"
+    },
+    {
+      "type": "speech",
+      "round": 1,
+      "afterTurn": 17,
+      "visibleTo": "all",
+      "player": "Cleo",
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "suspect": "Gwen",
+      "reason": "they have been unusually calm"
+    },
+    {
+      "type": "vote",
+      "round": 1,
+      "afterTurn": 24,
+      "visibleTo": "all",
+      "stage": "vote",
+      "votes": [
+        {
+          "voter": "Aria",
+          "target": "Cleo"
+        },
+        {
+          "voter": "Bram",
+          "target": "Finn"
+        },
+        {
+          "voter": "Cleo",
+          "target": "Aria"
+        },
+        {
+          "voter": "Dax",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Finn",
+          "target": "Aria"
+        },
+        {
+          "voter": "Gwen",
+          "target": "Finn"
+        },
+        {
+          "voter": "Hugo",
+          "target": "Cleo"
+        }
+      ],
+      "tally": {
+        "Aria": 2,
+        "Cleo": 2,
+        "Finn": 2,
+        "Hugo": 1
+      },
+      "leaders": [
+        "Aria",
+        "Cleo",
+        "Finn"
+      ]
+    },
+    {
+      "type": "vote",
+      "round": 1,
+      "afterTurn": 31,
+      "visibleTo": "all",
+      "stage": "revote",
+      "votes": [
+        {
+          "voter": "Aria",
+          "target": "Cleo"
+        },
+        {
+          "voter": "Bram",
+          "target": "Aria"
+        },
+        {
+          "voter": "Cleo",
+          "target": "Aria"
+        },
+        {
+          "voter": "Dax",
+          "target": "Cleo"
+        },
+        {
+          "voter": "Finn",
+          "target": "Aria"
+        },
+        {
+          "voter": "Gwen",
+          "target": "Cleo"
+        },
+        {
+          "voter": "Hugo",
+          "target": "Aria"
+        }
+      ],
+      "tally": {
+        "Aria": 4,
+        "Cleo": 3
+      },
+      "leaders": [
+        "Aria"
+      ]
+    },
+    {
+      "type": "banishment",
+      "round": 1,
+      "afterTurn": 31,
+      "visibleTo": "all",
+      "player": "Aria",
+      "role": "faithful",
+      "method": "revote"
+    },
+    {
+      "type": "murder",
+      "round": 2,
+      "afterTurn": 33,
+      "visibleTo": [
+        "Bram",
+        "Cleo"
+      ],
+      "victim": "Dax",
+      "proposals": [
+        {
+          "player": "Bram",
+          "target": "Dax"
+        },
+        {
+          "player": "Cleo",
+          "target": "Dax"
+        }
+      ],
+      "method": "agreed"
+    },
+    {
+      "type": "breakfast",
+      "round": 2,
+      "afterTurn": 33,
+      "visibleTo": "all",
+      "victim": "Dax",
+      "role": "faithful"
+    },
+    {
+      "type": "whisper",
+      "round": 2,
+      "afterTurn": 38,
+      "visibleTo": [
+        "Finn",
+        "Bram"
+      ],
+      "from": "Finn",
+      "to": "Bram",
+      "message": "I think we should watch the same person. (WHISPER-Finn-0005)"
+    },
+    {
+      "type": "whisper",
+      "round": 2,
+      "afterTurn": 38,
+      "visibleTo": [
+        "Gwen",
+        "Finn"
+      ],
+      "from": "Gwen",
+      "to": "Finn",
+      "message": "I think we should watch the same person. (WHISPER-Gwen-0005)"
+    },
+    {
+      "type": "speech",
+      "round": 2,
+      "afterTurn": 39,
+      "visibleTo": "all",
+      "player": "Finn",
+      "speech": "I have been watching how people vote, and something does not add up.",
+      "suspect": "Bram",
+      "reason": "they dodged a direct question"
+    },
+    {
+      "type": "speech",
+      "round": 2,
+      "afterTurn": 40,
+      "visibleTo": "all",
+      "player": "Gwen",
+      "speech": "Let us not rush. Who has stayed quiet when it mattered?",
+      "suspect": "Finn",
+      "reason": "their vote did not match their words"
+    },
+    {
+      "type": "speech",
+      "round": 2,
+      "afterTurn": 41,
+      "visibleTo": "all",
+      "player": "Hugo",
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "suspect": "Gwen",
+      "reason": "it is a gut feeling, nothing more"
+    },
+    {
+      "type": "speech",
+      "round": 2,
+      "afterTurn": 42,
+      "visibleTo": "all",
+      "player": "Bram",
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "suspect": "Gwen",
+      "reason": "their vote did not match their words"
+    },
+    {
+      "type": "speech",
+      "round": 2,
+      "afterTurn": 43,
+      "visibleTo": "all",
+      "player": "Cleo",
+      "speech": "Last night changed things. We need to look at who benefits.",
+      "suspect": "Finn",
+      "reason": "they have been unusually calm"
+    },
+    {
+      "type": "vote",
+      "round": 2,
+      "afterTurn": 48,
+      "visibleTo": "all",
+      "stage": "vote",
+      "votes": [
+        {
+          "voter": "Bram",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Cleo",
+          "target": "Gwen"
+        },
+        {
+          "voter": "Finn",
+          "target": "Gwen"
+        },
+        {
+          "voter": "Gwen",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Hugo",
+          "target": "Finn"
+        }
+      ],
+      "tally": {
+        "Finn": 1,
+        "Gwen": 2,
+        "Hugo": 2
+      },
+      "leaders": [
+        "Gwen",
+        "Hugo"
+      ]
+    },
+    {
+      "type": "vote",
+      "round": 2,
+      "afterTurn": 53,
+      "visibleTo": "all",
+      "stage": "revote",
+      "votes": [
+        {
+          "voter": "Bram",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Cleo",
+          "target": "Gwen"
+        },
+        {
+          "voter": "Finn",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Gwen",
+          "target": "Hugo"
+        },
+        {
+          "voter": "Hugo",
+          "target": "Gwen"
+        }
+      ],
+      "tally": {
+        "Gwen": 2,
+        "Hugo": 3
+      },
+      "leaders": [
+        "Hugo"
+      ]
+    },
+    {
+      "type": "banishment",
+      "round": 2,
+      "afterTurn": 53,
+      "visibleTo": "all",
+      "player": "Hugo",
+      "role": "faithful",
+      "method": "revote"
+    },
+    {
+      "type": "endgame_vote",
+      "round": 2,
+      "afterTurn": 57,
+      "visibleTo": "all",
+      "votes": [
+        {
+          "voter": "Bram",
+          "choice": "end"
+        },
+        {
+          "voter": "Cleo",
+          "choice": "banish"
+        },
+        {
+          "voter": "Finn",
+          "choice": "end"
+        },
+        {
+          "voter": "Gwen",
+          "choice": "banish"
+        }
+      ],
+      "end": false
+    },
+    {
+      "type": "murder",
+      "round": 3,
+      "afterTurn": 59,
+      "visibleTo": [
+        "Bram",
+        "Cleo"
+      ],
+      "victim": "Gwen",
+      "proposals": [
+        {
+          "player": "Bram",
+          "target": "Gwen"
+        },
+        {
+          "player": "Cleo",
+          "target": "Gwen"
+        }
+      ],
+      "method": "agreed"
+    },
+    {
+      "type": "breakfast",
+      "round": 3,
+      "afterTurn": 59,
+      "visibleTo": "all",
+      "victim": "Gwen",
+      "role": "faithful"
+    },
+    {
+      "type": "whisper",
+      "round": 3,
+      "afterTurn": 62,
+      "visibleTo": [
+        "Bram",
+        "Cleo"
+      ],
+      "from": "Bram",
+      "to": "Cleo",
+      "message": "Can we work together? (WHISPER-Bram-0014)"
+    },
+    {
+      "type": "speech",
+      "round": 3,
+      "afterTurn": 63,
+      "visibleTo": "all",
+      "player": "Bram",
+      "speech": "I trust my read on this table. One of us is not who they claim.",
+      "suspect": "Finn",
+      "reason": "they are too eager to point elsewhere"
+    },
+    {
+      "type": "speech",
+      "round": 3,
+      "afterTurn": 64,
+      "visibleTo": "all",
+      "player": "Finn",
+      "speech": "I will be honest: I do not know yet, but I have a feeling.",
+      "suspect": "Bram",
+      "reason": "they have been unusually calm"
+    },
+    {
+      "type": "speech",
+      "round": 3,
+      "afterTurn": 65,
+      "visibleTo": "all",
+      "player": "Cleo",
+      "speech": "I would rather be careful than sorry. Pay attention to who changes their story.",
+      "suspect": "Bram",
+      "reason": "they are too eager to point elsewhere"
+    },
+    {
+      "type": "vote",
+      "round": 3,
+      "afterTurn": 68,
+      "visibleTo": "all",
+      "stage": "vote",
+      "votes": [
+        {
+          "voter": "Bram",
+          "target": "Finn"
+        },
+        {
+          "voter": "Cleo",
+          "target": "Finn"
+        },
+        {
+          "voter": "Finn",
+          "target": "Bram"
+        }
+      ],
+      "tally": {
+        "Bram": 1,
+        "Finn": 2
+      },
+      "leaders": [
+        "Finn"
+      ]
+    },
+    {
+      "type": "banishment",
+      "round": 3,
+      "afterTurn": 68,
+      "visibleTo": "all",
+      "player": "Finn",
+      "role": "faithful",
+      "method": "majority"
+    }
+  ],
+  "result": {
+    "winner": "traitor",
+    "reason": "no_faithfuls",
+    "rounds": 3,
+    "survivors": [
+      {
+        "name": "Bram",
+        "role": "traitor"
+      },
+      {
+        "name": "Cleo",
+        "role": "traitor"
+      }
+    ]
+  }
+}
