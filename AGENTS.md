@@ -83,13 +83,16 @@ follow the rest of this file unchanged.
 2. **Otherwise take the first `[ ]` milestone** in `ROADMAP.md`. One milestone
    per run, one PR, through the full workflow above. The PR ticks the
    milestone's box.
-3. **Auto-merge on green.** Merge your own PR with
-   `gh pr merge --squash --delete-branch` only when all of these hold: every
+3. **Auto-merge on green.** Merge your own PR with a squash merge only when
+   all of these hold: every
    check passes on the final commit, gate A passed in this run with no open
    actionable findings, the PR targets `main` and has no conflicts, and the
    diff stays inside the milestone. Otherwise add the `needs-human` label
    (create it with `gh label create needs-human` if it's missing), say why
-   in a PR comment, and stop.
+   in a PR comment, and stop. Cloud sessions can't use GitHub GraphQL, so
+   if `gh pr merge` or `gh pr create` fails, use the REST API: `gh api -X PUT
+   repos/{owner}/{repo}/pulls/<n>/merge -f merge_method=squash`, and
+   `gh api repos/{owner}/{repo}/pulls -f title=... -f head=... -f base=main`.
 4. **Mocks only.** Never call a real model API or use `OPENROUTER_API_KEY`.
    Test network code with stubbed fetch.
 5. **Dependencies.** Only the ones the milestone lists. Anything else: label
