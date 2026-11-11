@@ -38,7 +38,7 @@ Rules for readers:
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | Player name. |
-| `model` | string | OpenRouter model ID (`"mock"` for mock players). |
+| `model` | string | OpenRouter model ID. `"mock"` for mock players, and `"human"` for a person playing a seat in the browser (see `?mode=play`). A human seat's `private_notes` are what the person typed in the optional note field. |
 
 ### Result
 

@@ -184,6 +184,28 @@ http://localhost:5173/?mode=guess&log=episode-003         a log by name
 Today's episode is picked by the UTC date and cycles through the list, so everyone plays the same
 game that day. `&date=2026-11-11` previews another day.
 
+### Take a seat (solo)
+
+`?mode=play` puts you at the table against seven AIs, in your browser tab. The engine, prompts and AI
+players are the same code the command line uses; your turns arrive as forms (what you know, the task,
+and the choices for that phase), and you can add a private note for viewers on each turn.
+
+```text
+http://localhost:5173/?mode=play
+http://localhost:5173/?mode=play&seed=42     the same game again (same seats and roles)
+```
+
+- **Practice AIs** need no key and send nothing anywhere.
+- **Real models** need your own OpenRouter key and seven model IDs (see openrouter.ai/models; I do not
+  ship any), plus a **spend cap** in US dollars: the game stops before a call that could pass it, as with
+  `--max-cost-usd`. The key lives in this tab's memory only: it is cleared from the page when the game
+  starts, sent only to OpenRouter, never stored (no local or session storage, no cookies) and not put in
+  the log. Closing or reloading the tab forgets it. Costs are only known if OpenRouter reports them.
+- At the end you see who was who and **what the AIs really thought of you**: every private note that
+  names you, with what they said, and a card for each (1200x675 PNG). Long lists show the first six.
+  You can also download the whole game log; your seat has `model: "human"` in it
+  ([docs/LOG.md](docs/LOG.md)), so replay, highlights, cards and stats work on it.
+
 Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
 `npx playwright install chromium` once first.
 
