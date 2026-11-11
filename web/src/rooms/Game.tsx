@@ -85,14 +85,14 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
 
       {open && turn ? (
         <>
-          <Clock key={turn.id} timeoutMs={turn.timeoutMs} />
+          <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} />
           {turn.error && (
             <p className="notice notice-error" role="alert">
               {turn.error}
             </p>
           )}
           <HumanForm
-            key={turn.id}
+            key={`form-${turn.id}`}
             request={{ system: '', user: turn.user, phase: turn.phase, player: me.you, options: turn.options }}
             turn={turn.id}
             onSubmit={(answer) => {
