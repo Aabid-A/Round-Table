@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkCreate, checkJoin, parseModelIds } from '../../web/src/rooms/forms.js';
 
-const real = { name: 'Quinn', real: true, key: ' sk-x ', models: 'a/b\nc/d', cap: '2.50' };
+const real = { name: 'Quinn', real: true, key: ' sk-x ', models: 'a/b\nc/d', cap: '2.50', aliases: false };
 
 describe('parseModelIds', () => {
   it('takes one to seven IDs by line or comma', () => {
@@ -22,6 +22,11 @@ describe('checkCreate', () => {
   });
   it('builds the message for real models with a trimmed key and a number cap', () => {
     expect(checkCreate(real)).toEqual({ ok: true, value: { t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-x', models: ['a/b', 'c/d'], maxCostUsd: 2.5 } });
+  });
+  it('asks for aliases only when the box is ticked, in either kind of room', () => {
+    expect(checkCreate({ ...real, real: false, aliases: true })).toEqual({ ok: true, value: { t: 'create', name: 'Quinn', mode: 'mock', aliases: true } });
+    expect(checkCreate({ ...real, aliases: true })).toMatchObject({ ok: true, value: { mode: 'openrouter', aliases: true } });
+    expect(checkCreate({ ...real, aliases: false })).not.toHaveProperty('value.aliases');
   });
   it('checks the key, the IDs and the cap, in that order', () => {
     expect(checkCreate({ ...real, key: ' ' })).toEqual({ ok: false, message: 'Paste your OpenRouter key.' });
