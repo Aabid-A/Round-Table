@@ -40,6 +40,7 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
   for (let i = 0; i < 2 && !accepted; i++) {
     let raw: string | null = null;
     let error: string | null = null;
+    let extracted = false;
     try {
       const impl = ctx.players[player];
       if (!impl) throw new Error(`no player implementation for ${player}`);
@@ -49,12 +50,15 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
         throw new Error('player returned a non-string reply');
       }
       const parsed = parseReply(phase, raw, options);
-      if (parsed.ok) accepted = parsed.reply;
+      if (parsed.ok) {
+        accepted = parsed.reply;
+        extracted = parsed.extracted;
+      }
       else error = parsed.error;
     } catch (e) {
       error = errorMessage(e);
     }
-    attempts.push({ prompt: user, raw, error });
+    attempts.push({ prompt: user, raw, error, ...(extracted ? { extracted: true as const } : {}) });
     if (error !== null) user = baseUser + retryNote(raw, error);
   }
 

@@ -97,6 +97,24 @@ describe('privacy', () => {
   });
 });
 
+describe('replies with text around the JSON', () => {
+  it('accepts the object, marks the attempt extracted, and replays identically', async () => {
+    const good = createMockPlayer({ seed: 9, name: 'Dax' });
+    const players = createMockPlayers(MOCK_CAST, 9);
+    players.Dax = { respond: async (r) => `Let me think about it.\n${await good.respond(r)}\nThat is my answer.` };
+    const log = await play(players, 9);
+    const dax = log.turns.filter((t) => t.player === 'Dax');
+    expect(dax.length).toBeGreaterThan(3);
+    for (const t of dax) {
+      expect(t.fallback).toBe(false);
+      expect(t.attempts).toHaveLength(1);
+      expect(t.attempts[0]?.extracted).toBe(true);
+    }
+    expect(log.turns.filter((t) => t.player !== 'Dax').every((t) => t.attempts.every((a) => !('extracted' in a)))).toBe(true);
+    expect(await play(createReplayPlayers(log), 9)).toEqual(log);
+  });
+});
+
 describe('game settings', () => {
   it('rejects invalid maxRounds', async () => {
     for (const bad of [0, -1, 1.5, Number.NaN]) {

@@ -74,6 +74,7 @@ Night turns happen twice in a round when traitors disagree: the second set of
 |---|---|---|
 | `prompt` | string | Exact user prompt sent. On a retry it is the first prompt plus the error. |
 | `raw` | string \| null | Raw reply text exactly as returned. `null` if the player threw (timeout, HTTP error); then `error` is the thrown message. |
+| `extracted` | `true` (optional) | Present only when the reply had text around a single JSON object and the object was taken from it. Absent otherwise. |
 | `error` | string \| null | Why the attempt was rejected, or `null` if it was accepted. The accepted attempt is always last and has `error: null`; on fallback both attempts have an error. |
 
 ### Action by phase

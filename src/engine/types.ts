@@ -43,6 +43,8 @@ export interface TurnAttempt {
   raw: string | null;
   /** Why this attempt was rejected, or null if it was accepted. */
   error: string | null;
+  /** Present and true only when the JSON object was taken from text around it. */
+  extracted?: true;
 }
 
 export interface Turn {
