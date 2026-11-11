@@ -2,6 +2,9 @@ import type { GameLog } from '../src/engine/types.js';
 import type { Guess } from '../src/roomResult.js';
 import type { Room } from './room.js';
 
+/** How long someone who dropped (a reload, a flicker) has to come back before the step stops waiting for them. */
+export const RECONNECT_GRACE_MS = 8_000;
+
 /**
  * After an alias game, before anyone is told who was who: each person says which seats they think were AIs.
  * It waits for every person who is still connected, up to `timeoutMs`; someone who has left, or is too slow, is simply not scored.
@@ -10,6 +13,7 @@ import type { Room } from './room.js';
 export class Guessing {
   private readonly guesses = new Map<string, string[]>();
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private graceTimer: ReturnType<typeof setTimeout> | null = null;
   private startedAt = 0;
   private done = false;
 
@@ -19,6 +23,7 @@ export class Guessing {
     private readonly timeoutMs: number,
     private readonly onDone: (guesses: Guess[]) => void,
     private readonly now: () => number = Date.now,
+    private readonly graceMs: number = RECONNECT_GRACE_MS,
   ) {}
 
   /** Ask everyone, and start the clock. */
@@ -51,21 +56,41 @@ export class Guessing {
     return true;
   }
 
-  /** Finish now if everyone who is still connected has answered. Call it when someone answers or goes. */
+  /**
+   * Someone's connection went. Finish if everyone left has answered, but only after a short grace: a person who reloads the page
+   * comes straight back, and should not lose their guess because they were the last one.
+   */
+  connectionLost(): void {
+    if (this.done || this.graceTimer) return;
+    this.graceTimer = setTimeout(() => {
+      this.graceTimer = null;
+      this.check();
+    }, this.graceMs);
+  }
+
+  /** Finish now if everyone who is still connected has answered. Call it when someone answers, or when the start finds nobody here. */
   check(): void {
     if (this.done) return;
-    const waiting = this.room.seats.some((seat) => {
+    let here = false; // someone connected who has not answered
+    let gone = false; // someone not connected who has not answered
+    for (const seat of this.room.seats) {
       const alias = this.room.aliasOf(seat.name);
-      return alias !== null && seat.conn !== null && !this.guesses.has(alias);
-    });
-    if (!waiting) this.finish();
+      if (alias === null || this.guesses.has(alias)) continue;
+      if (seat.conn !== null) here = true;
+      else gone = true;
+    }
+    // Someone who dropped a moment ago may be reloading: while their grace runs, do not finish without them.
+    if (here || (gone && this.graceTimer !== null)) return;
+    this.finish();
   }
 
   /** The room closed: stop the clock and report nothing. */
   cancel(): void {
     this.done = true;
     if (this.timer) clearTimeout(this.timer);
+    if (this.graceTimer) clearTimeout(this.graceTimer);
     this.timer = null;
+    this.graceTimer = null;
   }
 
   private finish(): void {

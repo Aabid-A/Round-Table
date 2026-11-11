@@ -83,7 +83,7 @@ export class Session {
     if (!room) return;
     room.detach(this.conn);
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage()); // so friends see who is offline
-    this.deps.runtimes.get(room.code)?.guessing?.check(); // nobody is held up by someone who has gone
+    this.deps.runtimes.get(room.code)?.guessing?.connectionLost(); // nobody is held up for long by someone who has gone
     // A game with nobody watching still spends the host's money on the AIs, so it does not run on forever.
     const rt = this.deps.runtimes.get(room.code);
     if (rt && room.phase === 'playing' && room.seats.every((s) => s.conn === null) && !rt.abandonTimer) {

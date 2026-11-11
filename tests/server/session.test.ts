@@ -3,6 +3,7 @@ import { LIMITS } from '../../server/protocol.js';
 import { Registry } from '../../server/registry.js';
 import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
+import { RECONNECT_GRACE_MS } from '../../server/guessing.js';
 import { FakeConn, waitFor } from './helpers.js';
 
 function server(turnMs = 1000, allowSeed = true, saveLog?: (name: string, log: unknown) => Promise<unknown>) {
@@ -282,18 +283,19 @@ describe('Session: creating, joining and rejoining', () => {
       expect(host.conn.sent.filter((m) => m.t === 'error').map((m) => (m as { message: string }).message)).toEqual(['There is nothing to guess right now.']);
     });
 
-    it('does not wait for someone who left, and gives a returning person the question again', async () => {
+    it('does not wait for someone who left for longer than the grace, and gives a returning person the log', async () => {
       const { s, host, friend, joined, room } = await play();
       const back = s.open();
       friend.session.disconnect();
-      host.send({ t: 'guess', ai: [] }); // the only person still connected: done
-      expect(room.phase).toBe('finished');
+      host.send({ t: 'guess', ai: [] }); // the only person still connected has answered, but Rae may be reloading
+      expect(room.phase).toBe('guessing');
+      await waitFor(() => room.phase === 'finished', RECONNECT_GRACE_MS + 3000); // then the grace runs out
       const rae = room.seats.find((x) => x.name === 'Rae')!;
       back.send({ t: 'rejoin', code: joined.code, token: rae.token });
       expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'finished']);
       const done = back.conn.sent[1] as Extract<(typeof back.conn.sent)[number], { t: 'finished' }>;
       expect(done.outcome.scores?.map((x) => x.person)).toEqual(['Quinn']); // Rae was not scored
-    });
+    }, 20_000); // waits out the real reconnect grace
 
     it('returns to the question for someone who reloads while guessing', async () => {
       const { s, host, joined, room } = await play();

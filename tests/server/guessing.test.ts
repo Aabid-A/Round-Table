@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Guessing } from '../../server/guessing.js';
+import { Guessing, RECONNECT_GRACE_MS } from '../../server/guessing.js';
 import { Room } from '../../server/room.js';
 import type { Guess } from '../../src/roomResult.js';
 import { logFrom } from '../helpers/logs.js';
@@ -8,7 +8,7 @@ import { FakeConn } from './helpers.js';
 // Four seats named as aliases: Aria and Bram are AIs; Cleo is Quinn and Dax is Rae.
 const log = logFrom({ Aria: 'traitor', Bram: 'faithful', Cleo: 'faithful', Dax: 'traitor' }, [], {}, { Cleo: 'human', Dax: 'human' });
 
-function setup() {
+function setup(timeoutMs = 1000) {
   const room = new Room('AB2CD', { mode: 'mock' }, 1, 0);
   room.aliases = true;
   room.people = { Cleo: 'Quinn', Dax: 'Rae' };
@@ -16,7 +16,7 @@ function setup() {
   room.join('Quinn', conns.Quinn);
   room.join('Rae', conns.Rae);
   const done: Guess[][] = [];
-  const guessing = new Guessing(room, log, 1000, (g) => done.push(g));
+  const guessing = new Guessing(room, log, timeoutMs, (g) => done.push(g));
   return { room, conns, done, guessing };
 }
 
@@ -61,13 +61,45 @@ describe('Guessing', () => {
     expect(done).toEqual([[{ seat: 'Cleo', ai: ['Aria'] }]]);
   });
 
-  it('does not wait for someone who is not connected', () => {
-    const { room, conns, done, guessing } = setup();
+  it('does not wait for someone who has gone, once the grace for coming back is over', () => {
+    const { room, conns, done, guessing } = setup(60_000); // a limit well beyond the grace
     guessing.start();
     guessing.submit('Quinn', ['Aria']);
     room.detach(conns.Rae);
-    guessing.check(); // what the session does when a connection closes
+    guessing.connectionLost(); // what the session does when a connection closes
+    expect(done).toEqual([]); // not yet: they may be reloading
+    vi.advanceTimersByTime(RECONNECT_GRACE_MS - 1);
+    expect(done).toEqual([]);
+    vi.advanceTimersByTime(1);
     expect(done).toEqual([[{ seat: 'Cleo', ai: ['Aria'] }]]);
+  });
+
+  it('keeps waiting for someone who comes back within the grace, so a reload does not cost them their guess', () => {
+    const { room, conns, done, guessing } = setup(60_000);
+    guessing.start();
+    guessing.submit('Quinn', ['Aria']);
+    const rae = room.seats[1]!;
+    room.detach(conns.Rae);
+    guessing.connectionLost();
+    vi.advanceTimersByTime(RECONNECT_GRACE_MS - 1000);
+    room.rejoin(rae.token, new FakeConn()); // back in time
+    vi.advanceTimersByTime(2000);
+    expect(done).toEqual([]); // still waiting for Rae's answer
+    expect(guessing.submit('Rae', ['Bram'])).toBe(true);
+    expect(done).toEqual([[{ seat: 'Cleo', ai: ['Aria'] }, { seat: 'Dax', ai: ['Bram'] }]]);
+  });
+
+  it('does not finish on someone else\'s answer while a person who just dropped might be back, but does once they have answered', () => {
+    const { room, conns, done, guessing } = setup(60_000);
+    guessing.start();
+    const rae = room.seats[1]!;
+    room.detach(conns.Rae);
+    guessing.connectionLost(); // Rae is reloading
+    guessing.submit('Quinn', ['Aria']); // the last person still here answers: Rae's grace has not run out
+    expect(done).toEqual([]);
+    room.rejoin(rae.token, new FakeConn());
+    expect(guessing.submit('Rae', ['Bram'])).toBe(true); // back in time, and answering finishes it at once
+    expect(done).toEqual([[{ seat: 'Cleo', ai: ['Aria'] }, { seat: 'Dax', ai: ['Bram'] }]]);
   });
 
   it('finishes at once, with nothing, if nobody is connected when it starts', () => {
@@ -93,9 +125,10 @@ describe('Guessing', () => {
     expect(back.sent.at(-1)).toMatchObject({ t: 'guess', sent: true });
   });
 
-  it('stops quietly when cancelled', () => {
+  it('stops quietly when cancelled, grace timer included', () => {
     const { done, guessing } = setup();
     guessing.start();
+    guessing.connectionLost();
     guessing.cancel();
     vi.advanceTimersByTime(5000);
     expect(done).toEqual([]);
