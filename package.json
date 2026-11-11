@@ -19,7 +19,8 @@
     "highlights": "tsx src/cli/highlights.ts",
     "stats": "tsx src/cli/stats.ts",
     "card": "tsx src/cli/card.ts",
-    "episodes": "tsx src/cli/episodes.ts"
+    "episodes": "tsx src/cli/episodes.ts",
+    "rooms": "tsx server/main.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
