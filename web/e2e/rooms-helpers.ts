@@ -1,10 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 
-/** Make a room with practice AIs. Returns its code. */
-export async function makeRoom(page: Page, name: string, query = ''): Promise<string> {
+/** Make a room with practice AIs (with aliases, if asked). Returns its code. */
+export async function makeRoom(page: Page, name: string, query = '', options: { aliases?: boolean } = {}): Promise<string> {
   await page.goto(`/?mode=room${query}`);
   const create = page.getByRole('region', { name: 'Make a room' });
   await create.getByLabel('Your name at the table').fill(name);
+  if (options.aliases) await create.getByLabel(/Human or AI\?/).check();
   await create.getByRole('button', { name: 'Make room' }).click();
   await expect(page.getByTestId('lobby')).toBeVisible();
   return (await page.getByTestId('room-code').innerText()).trim();
@@ -21,7 +22,7 @@ export async function joinByInvite(page: Page, code: string, name: string): Prom
 
 /**
  * Answer this person's turns until the end screen shows. Returns the turns answered.
- * Stops early (returning what it has) if the page shows the room-closed screen.
+ * Stops early (returning what it has) if the page shows the room-closed screen, or the guess screen of an alias room.
  * `forbid` lists text that must never be on the page while playing, such as other people's notes.
  * `speech` is what to say at the round table; `seen` collects the "What you know" text of each turn.
  */
@@ -32,8 +33,9 @@ export async function playTurns(page: Page, note: string, forbid: string[] = [],
     const form = page.getByTestId('turn-form');
     const end = page.getByTestId('room-end');
     const closed = page.getByTestId('room-closed');
-    await expect(form.or(end).or(closed)).toBeVisible({ timeout: 30_000 });
-    if ((await end.isVisible()) || (await closed.isVisible())) break;
+    const guess = page.getByTestId('guess').or(page.getByTestId('guess-sent'));
+    await expect(form.or(end).or(closed).or(guess)).toBeVisible({ timeout: 30_000 });
+    if ((await end.isVisible()) || (await closed.isVisible()) || (await guess.isVisible())) break;
     const turn = (await form.getAttribute('data-turn')) ?? '';
     if (seen.has(turn)) {
       // The same turn is still showing: our answer is on its way. Wait for the page to move on.
