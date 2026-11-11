@@ -153,6 +153,7 @@ h3 {
   gap: var(--space-4);
   max-width: 520px;
   margin: var(--space-7) auto;
+  padding: 0 var(--space-4);
 }
 .loader h1 {
   font-size: var(--fs-xl);
