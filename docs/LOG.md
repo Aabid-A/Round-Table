@@ -38,7 +38,7 @@ Rules for readers:
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | Player name. |
-| `model` | string | OpenRouter model ID. `"mock"` for mock players, and `"human"` for a person playing a seat in the browser (see `?mode=play`). A human seat's `private_notes` are what the person typed in the optional note field. |
+| `model` | string | OpenRouter model ID. `"mock"` for mock players, and `"human"` for a person playing a seat in the browser (see `?mode=play`) or in a room ([ROOMS.md](ROOMS.md)). In a "Human or AI?" room every `name` in the cast is one of the AI names, so the real names are not in the log. A human seat's `private_notes` are what the person typed in the optional note field. |
 
 ### Result
 

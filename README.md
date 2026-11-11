@@ -222,6 +222,11 @@ is ever sent another person's role, notes or whispers before the game ends. For 
 OpenRouter key is held in memory for that room only and never logged or sent to anyone. Settings, limits
 and the key rules: [docs/ROOMS.md](docs/ROOMS.md).
 
+Tick **Human or AI?** when making a room and everyone plays under an alias, so nobody knows which seats are friends and which
+are models. At the end each person guesses which seats were AIs before the reveal, and the end screen shows who fooled whom, a
+result card ("3 of 4 humans trusted the AI traitor") and a spoiler-free line to share with the replay link. Every finished game
+is saved as a normal log in `games/` (`LOG_DIR` changes the folder), so replay, highlights, cards and stats work on it.
+
 Browser tests: `npm run test:e2e` (Playwright, page on port 5183 and a room server on 8788). On your own machine run
 `npx playwright install chromium` once first.
 
