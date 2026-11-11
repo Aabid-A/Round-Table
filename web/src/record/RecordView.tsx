@@ -6,6 +6,7 @@ import { buildSteps, seatsAt } from '../replay/timeline.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
 import { Faces } from './Faces.js';
+import { textScale } from './fit.js';
 import type { RecordParams } from './params.js';
 import { stepsForRange } from './range.js';
 
@@ -28,7 +29,7 @@ export function RecordView({ log, params }: Props) {
   if (params.faces !== null) {
     return (
       <div className="rec" data-aspect={params.aspect} data-done="true">
-        <div className="rec-stage" data-testid="stage">
+        <div className="rec-stage" data-testid="stage" data-mode="faces">
           <Faces log={log} turnId={params.faces} />
         </div>
       </div>
@@ -60,7 +61,11 @@ export function RecordView({ log, params }: Props) {
             {step.kind !== 'result' && ` · Round ${step.section.round}`}
           </p>
           {view.speaker && view.bubble && <p className="rec-who">{view.speaker}</p>}
-          {view.bubble && <p className="rec-text">{view.bubble.text}</p>}
+          {view.bubble && (
+            <p className="rec-text" style={{ fontSize: `calc(var(--rec-text) * ${textScale(view.bubble.text.length)})` }}>
+              {view.bubble.text}
+            </p>
+          )}
           {view.card && (
             <>
               <p className="rec-who">{view.card.title}</p>

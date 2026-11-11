@@ -29,6 +29,7 @@
   --rec-who: 3cqw;
   --rec-text: 3.6cqw;
   --rec-sub: 2.2cqw;
+  --rec-face: 2.8cqw;
   --rec-seat-w: 10cqw;
   --rec-seat-name: 1.7cqw;
   --rec-seat-meta: 1.2cqw;
@@ -39,6 +40,7 @@
   --rec-who: 6cqw;
   --rec-text: 6.4cqw;
   --rec-sub: 4cqw;
+  --rec-face: 5.6cqw;
   --rec-seat-w: 17cqw;
   --rec-seat-name: 3.4cqw;
   --rec-seat-meta: 2.4cqw;
@@ -48,6 +50,11 @@
   display: grid;
   gap: var(--rec-gap);
   padding: var(--rec-gap);
+}
+.rec-stage[data-mode='faces'] {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  align-items: center;
 }
 .rec[data-aspect='16x9'] .rec-stage {
   grid-template-columns: 1fr 1fr;
@@ -153,7 +160,7 @@
 }
 .face blockquote {
   margin: 0;
-  font-size: var(--rec-sub);
+  font-size: var(--rec-face);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
