@@ -48,7 +48,7 @@ describe('npm run card', () => {
     expect(existsSync(join(out, `episode-1-turn-${turnId}-1200x675.png`))).toBe(false);
   }, SLOW);
 
-  it('says how to get Chromium when it cannot start, and leaves nothing running', () => {
+  it('says how to get Chromium when it cannot start', () => {
     const r = runWith({ CHROMIUM_PATH: '/nonexistent/chrome' }, logPath, String(turnId), '--out', mkdtempSync(join(tmpdir(), 'rt-card-out-')));
     expect(r.status).toBe(1);
     expect(r.stderr).toContain('Could not start Chromium at /nonexistent/chrome');

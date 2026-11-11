@@ -41,7 +41,7 @@ export function Card({ log, logName, turnId, size }: Props) {
   const model = log.cast.find((c) => c.name === turn.player)?.model ?? '';
   const quoteSize = { fontSize: `calc(var(--card-quote) * ${cardTextScale(Math.max(said.length, thought.length), size)})` };
   return (
-    <article className="share-card" data-testid="card" data-size={size} aria-label={`${turn.player}: said and thought`}>
+    <article className="share-card" data-testid="card" data-size={size} data-footer={view.notes !== null} aria-label={`${turn.player}: said and thought`}>
       <header className="share-head">
         <span className="share-brand">Round Table</span>
         <span className="share-where" data-testid="card-where">

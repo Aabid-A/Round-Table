@@ -23,7 +23,7 @@
 }
 .share-card {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto; /* head, who, quotes, footer */
   gap: var(--space-5);
   width: var(--card-w);
   height: var(--card-h);
@@ -31,6 +31,9 @@
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
+}
+.share-card[data-footer='false'] {
+  grid-template-rows: auto auto minmax(0, 1fr); /* no footer row, so the bottom margin matches the sides */
 }
 .share-card[data-size='1200x675'] .share-quotes {
   grid-template-columns: 1fr 1fr;

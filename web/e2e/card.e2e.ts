@@ -69,6 +69,10 @@ test('flags a fallback turn, and leaves the hidden-note footer off when there ar
   await expect(page.getByTestId('card-said-label')).toContainText('fallback: no valid reply');
   await expect(page.getByTestId('card-thought')).toContainText('No private notes for this turn.');
   await expect(page.getByTestId('card-foot')).toHaveCount(0);
+  // With no footer the quotes run to the same margin as the sides (the card's padding), not an extra gap below.
+  const card = (await page.getByTestId('card').boundingBox())!;
+  const thought = (await page.getByTestId('card-thought').boundingBox())!;
+  expect(Math.round(card.y + card.height - (thought.y + thought.height))).toBe(56);
   await open(page, `card=${turn.id}&log=sample`);
   await expect(page.getByTestId('card-foot')).toBeVisible();
 });
