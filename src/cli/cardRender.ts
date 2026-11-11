@@ -5,7 +5,7 @@ import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
 import type { GameLog } from '../engine/types.js';
 import { cardPixels, type CardSize } from '../../web/src/card/params.js';
-import { chromiumLaunchOptions } from './browser.js';
+import { launchChromium } from './browser.js';
 
 export interface RenderCardsInput {
   log: GameLog;
@@ -35,9 +35,10 @@ export async function renderCards(input: RenderCardsInput): Promise<string[]> {
     await server.close();
     throw new Error('could not start the web server for rendering');
   }
-  const browser = await chromium.launch(chromiumLaunchOptions());
   const written: string[] = [];
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
+    browser = await launchChromium();
     for (const size of input.sizes) {
       const { width, height } = cardPixels(size);
       const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, colorScheme: 'light' });
@@ -58,7 +59,7 @@ export async function renderCards(input: RenderCardsInput): Promise<string[]> {
       }
     }
   } finally {
-    await browser.close();
+    await browser?.close();
     await server.close();
   }
   return written;

@@ -17,6 +17,8 @@ beforeAll(async () => {
 }, SLOW);
 
 const run = (...args: string[]) => spawnSync('npx', ['tsx', 'src/cli/card.ts', ...args], { encoding: 'utf8' });
+const runWith = (env: Record<string, string>, ...args: string[]) =>
+  spawnSync('npx', ['tsx', 'src/cli/card.ts', ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
 
 /** Width and height from a PNG's header. */
 function pngSize(path: string): { width: number; height: number } {
@@ -44,6 +46,14 @@ describe('npm run card', () => {
     expect(r.status, r.stderr).toBe(0);
     expect(existsSync(join(out, `episode-1-turn-${turnId}-1080x1350.png`))).toBe(true);
     expect(existsSync(join(out, `episode-1-turn-${turnId}-1200x675.png`))).toBe(false);
+  }, SLOW);
+
+  it('says how to get Chromium when it cannot start, and leaves nothing running', () => {
+    const r = runWith({ CHROMIUM_PATH: '/nonexistent/chrome' }, logPath, String(turnId), '--out', mkdtempSync(join(tmpdir(), 'rt-card-out-')));
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('Could not start Chromium at /nonexistent/chrome');
+    expect(r.stderr).toContain('npx playwright install chromium');
+    expect(r.stderr).toContain('CHROMIUM_PATH');
   }, SLOW);
 
   it('exits 1 with a message, before opening a browser, for bad arguments, an unknown turn and a missing file', () => {
