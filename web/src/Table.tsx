@@ -20,21 +20,15 @@ interface Props {
   view: StepView;
 }
 
-/** Players around a table, with a speech bubble on the speaker and a card for events. */
+/** Players around a table, with a speech bubble that names and leans toward the speaker, and a card for events. */
 export function Table({ seats, view }: Props) {
   const speakerIndex = seats.findIndex((s) => s.name === view.speaker);
   const a = speakerIndex >= 0 ? angleFor(speakerIndex, seats.length) : 0;
   const dx = Math.cos(a);
   const dy = Math.sin(a);
-  // The tail sits on the bubble's edge, on the side that faces the speaker.
-  const scale = Math.max(Math.abs(dx), Math.abs(dy)) || 1;
   const bubbleStyle: CSSProperties = {
     left: `${50 + dx * RADIUS * BUBBLE_OFFSET}%`,
     top: `${50 + dy * RADIUS * BUBBLE_OFFSET}%`,
-  };
-  const tailStyle: CSSProperties = {
-    left: `${50 + (dx / scale) * 50}%`,
-    top: `${50 + (dy / scale) * 50}%`,
   };
 
   return (
@@ -81,7 +75,6 @@ export function Table({ seats, view }: Props) {
             {view.bubble.kind === 'whisper' ? ' whispers' : ''}
           </span>
           <span className="bubble-text">{view.bubble.text}</span>
-          <span className="bubble-tail" style={tailStyle} aria-hidden="true" />
         </div>
       )}
 
