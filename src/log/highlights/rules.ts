@@ -162,3 +162,36 @@ export const savesNightTargetInRevote: Rule = (ctx) =>
         }));
     });
   });
+
+const PRAISE =
+  /\b(trust(?:s|ed)?|honest|innocent|loyal|vouch(?:es)?|believe(?:s)? in|support(?:s)?|ally|allies|good (?:person|player|faithful)|clearly (?:a )?faithful|on our side|has my vote|above suspicion)\b/i;
+const SCHEMING =
+  /\b(target(?:s|ed)?|eliminat\w*|suspect(?:s|ed)?|traitor|lie[sd]?|lying|decei\w*|mislead\w*|fram\w*|blame|sacrific\w*|throw|betray\w*|manipulat\w*|expendable)\b/i;
+
+const sentences = (text: string): string[] => text.split(/(?<=[.!?])\s+|\n/);
+const mentions = (text: string, name: string): boolean =>
+  new RegExp(`(?<![\\w])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])`, 'i').test(text);
+
+/** The speech praises a player and the same turn's private notes name them, most of all when the notes scheme against them. */
+export const notesContradictPraise: Rule = (ctx) => {
+  const out: Highlight[] = [];
+  for (const t of ctx.log.turns) {
+    if (t.speech.trim() === '' || t.private_notes.trim() === '') continue;
+    for (const c of ctx.log.cast) {
+      if (c.name === t.player) continue;
+      const praised = sentences(t.speech).some((s) => mentions(s, c.name) && PRAISE.test(s));
+      if (!praised || !mentions(t.private_notes, c.name)) continue;
+      const scheming = sentences(t.private_notes).some((s) => mentions(s, c.name) && SCHEMING.test(s));
+      out.push({
+        rule: 'notes_contradict_praise',
+        score: scheming ? 85 : 75,
+        title: `${t.player} praises ${c.name} out loud, but their private notes ${scheming ? 'scheme against' : 'name'} ${c.name}`,
+        from: t.id,
+        to: t.id,
+        facesTurn: t.id,
+        round: t.round,
+      });
+    }
+  }
+  return out;
+};

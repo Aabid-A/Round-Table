@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildContext } from '../../src/log/highlights/context.js';
-import { faithfulBannishedByMajority, finalReveal, recruitAccepted, traitorVotesTraitor, whispersToNightTarget, defendsNightTarget, savesNightTargetInRevote } from '../../src/log/highlights/rules.js';
+import { faithfulBannishedByMajority, finalReveal, recruitAccepted, traitorVotesTraitor, whispersToNightTarget, defendsNightTarget, savesNightTargetInRevote, notesContradictPraise } from '../../src/log/highlights/rules.js';
 import { logFrom, type Spec } from '../helpers/logs.js';
 
 const roles = { T1: 'traitor', T2: 'traitor', F1: 'faithful', F2: 'faithful', F3: 'faithful', F4: 'faithful' } as const;
@@ -177,5 +177,43 @@ describe('night-target rules', () => {
         { r: 1, ev: { type: 'vote', stage: 'revote', votes: [{ voter: 'T1', target: 'F3' }], tally: {}, leaders: [] } }]);
       expect(savesNightTargetInRevote(buildContext(other))).toEqual([]);
     });
+  });
+});
+
+describe('notesContradictPraise', () => {
+  const turnWith = (speech: string, notes: string, who = 'T1'): Spec[] => [
+    { r: 1, phase: 'round_table', p: who, action: { suspect: 'F3', reason: 'x' }, speech, notes },
+  ];
+  const find = (speech: string, notes: string, who?: string) =>
+    notesContradictPraise(buildContext(logFrom({ ...roles }, turnWith(speech, notes, who))));
+
+  it('finds praise out loud against scheming in the notes, with the higher score', () => {
+    expect(find('I trust F1 completely, they are honest.', 'I will frame F1 and make F1 my target.')).toEqual([
+      { rule: 'notes_contradict_praise', score: 85, title: 'T1 praises F1 out loud, but their private notes scheme against F1', from: 0, to: 0, facesTurn: 0, round: 1 },
+    ]);
+  });
+
+  it('still finds praise when the notes only name the player, with the lower score', () => {
+    const [h] = find('I vouch for F1.', 'F1 seems easy to read.');
+    expect(h).toMatchObject({ score: 75, title: 'T1 praises F1 out loud, but their private notes name F1' });
+  });
+
+  it('needs the praise and the name in the same sentence of the speech, and the name in the notes', () => {
+    expect(find('I trust my gut. F1 spoke late.', 'F1 is a target.')).toEqual([]);
+    expect(find('I trust F1.', 'Keep my head down.')).toEqual([]);
+    expect(find('F1 looks suspicious to me.', 'F1 is a target.')).toEqual([]);
+  });
+
+  it('does not match a name inside another word, or the speaker praising themselves', () => {
+    expect(find('I trust F10 completely.', 'F1 is my target.')).toEqual([]);
+    expect(find('I trust T1, honestly.', 'T1 is me.', 'T1')).toEqual([]);
+  });
+
+  it('finds several players praised in one turn, and handles names with punctuation safely', () => {
+    expect(find('I trust F1. I also vouch for F2.', 'F1 is a target. F2 is a lie.').map((h) => h.title)).toHaveLength(2);
+    const odd = logFrom({ 'A.B': 'faithful', T1: 'traitor' }, turnWith('I trust A.B fully.', 'A.B is my target.'));
+    expect(notesContradictPraise(buildContext(odd))).toHaveLength(1);
+    const aXb = logFrom({ AxB: 'faithful', T1: 'traitor' }, turnWith('I trust A.B fully.', 'AxB is my target.'));
+    expect(notesContradictPraise(buildContext(aXb))).toEqual([]);
   });
 });
