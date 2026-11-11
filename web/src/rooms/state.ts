@@ -1,5 +1,6 @@
 import type { GameLog } from '../../../src/engine/types.js';
 import type { Phase } from '../../../src/types.js';
+import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import type { ServerMessage } from '../../../server/protocol.js';
 
 type Msg<T extends ServerMessage['t']> = Extract<ServerMessage, { t: T }>;
@@ -23,7 +24,7 @@ export interface Identity {
 export type RoomView =
   | { kind: 'home' }
   | { kind: 'lobby'; lobby: Msg<'lobby'> | null }
-  | { kind: 'playing'; phase: Phase | null; turn: TurnInfo | null; timedOut: boolean }
+  | { kind: 'playing'; phase: PublicPhase | null; turn: TurnInfo | null; timedOut: boolean }
   | { kind: 'finished'; log: GameLog }
   | { kind: 'closed'; reason: string };
 
@@ -76,7 +77,7 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
       if (view.kind === 'finished' || view.kind === 'closed') return state;
       const turn: TurnInfo = { id: msg.turn, phase: msg.phase, options: msg.options, user: msg.user, timeoutMs: msg.timeoutMs, error: msg.error };
       // A missed turn is reported until the person answers a later one: the next turn often arrives at once.
-      return { ...state, view: { kind: 'playing', phase: msg.phase, turn, timedOut: view.kind === 'playing' ? view.timedOut : false } };
+      return { ...state, view: { kind: 'playing', phase: publicPhase(msg.phase), turn, timedOut: view.kind === 'playing' ? view.timedOut : false } };
     }
     case 'turn_over':
       return view.kind === 'playing' && view.turn?.id === msg.turn ? { ...state, view: { ...view, turn: null, timedOut: true } } : state;

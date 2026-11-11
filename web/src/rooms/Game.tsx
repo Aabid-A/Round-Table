@@ -1,27 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HumanAnswer } from '../../../src/players/human.js';
-import type { Phase } from '../../../src/types.js';
+import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import { HumanForm } from '../play/HumanForm.js';
 import type { Identity, TurnInfo } from './state.js';
 import { formatLeft, LOW_MS } from './time.js';
 
 /** What is happening, in words that say nothing about who is acting. */
-const PHASE_LINE: Record<Phase, string> = {
+const PHASE_LINE: Record<PublicPhase, string> = {
   night: 'Night. The traitors are choosing.',
   whispers: 'Whispers. Players are sending private messages.',
   round_table: 'Round table. Players are speaking.',
   vote: 'The banishment vote is under way.',
   revote: 'The vote was tied. A revote is under way.',
-  recruit_choose: 'A traitor was banished. The traitors are deciding.',
-  recruit_respond: 'An offer is being made in secret.',
+  recruit: 'A traitor was banished. The traitors are deciding.',
   endgame_vote: 'Few players remain. They are voting to end the game or go on.',
 };
 
-export const phaseLine = (phase: Phase | null): string => (phase === null ? 'The game is starting.' : PHASE_LINE[phase]);
+export const phaseLine = (phase: PublicPhase | null): string => (phase === null ? 'The game is starting.' : PHASE_LINE[phase]);
 
 interface Props {
   me: Identity;
-  phase: Phase | null;
+  phase: PublicPhase | null;
   turn: TurnInfo | null;
   timedOut: boolean;
   offline: boolean;
@@ -47,7 +46,7 @@ function Clock({ timeoutMs }: { timeoutMs: number }) {
 }
 
 /** Takes focus when it appears, so focus is not lost when the form goes away. */
-function Waiting({ phase }: { phase: Phase | null }) {
+function Waiting({ phase }: { phase: PublicPhase | null }) {
   const ref = useRef<HTMLParagraphElement>(null);
   useEffect(() => ref.current?.focus(), []);
   return (
@@ -102,7 +101,7 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
           />
         </>
       ) : (
-        <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? turn.phase : phase} />
+        <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? publicPhase(turn.phase) : phase} />
       )}
 
       <div className="controls-row room-actions">

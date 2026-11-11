@@ -1,4 +1,5 @@
 import { nameProblem } from '../src/cast.js';
+import type { PublicPhase } from '../src/publicPhase.js';
 import { normalizeCode } from '../src/roomCode.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import type { GameLog } from '../src/engine/types.js';
@@ -32,6 +33,7 @@ export const LIMITS = {
 } as const;
 
 export { CODE_ALPHABET, CODE_LENGTH, normalizeCode } from '../src/roomCode.js';
+export type { PublicPhase } from '../src/publicPhase.js';
 export const MAX_HUMANS = 8;
 
 // ---- client -> server ----
@@ -126,8 +128,8 @@ export interface SeatInfo {
 export type ServerMessage =
   | { t: 'joined'; code: string; token: string; you: string; host: boolean }
   | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
-  /** Shown to everyone while the game runs. Only the phase, never who is acting. */
-  | { t: 'status'; phase: Phase | null }
+  /** Shown to everyone while the game runs. Only the public phase, and only when it changes: never who is acting, or how many turns a phase took. */
+  | { t: 'status'; phase: PublicPhase | null }
   /** Private to one seat. */
   | { t: 'turn'; turn: number; phase: Phase; options: string[]; user: string; timeoutMs: number; error: string | null }
   /** Private to one seat: that turn is no longer waiting for an answer (time ran out). */

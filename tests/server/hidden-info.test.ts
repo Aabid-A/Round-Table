@@ -89,6 +89,12 @@ describe('no client learns hidden information before the end', () => {
 
   it('sends the log only after the game, and the log is the same for everyone', async () => {
     const { byName } = await play(6);
+    // Everyone is told the same, short sequence of phases: one status per phase change, whoever they are.
+    const statuses = (n: string) => byName.get(n)!.messages.flatMap((m) => (m.t === 'status' ? [m.phase] : []));
+    for (const n of NAMES) {
+      expect(statuses(n), n).toEqual(statuses('Quinn'));
+      statuses(n).forEach((label, i, all) => i > 0 && expect(label).not.toBe(all[i - 1]));
+    }
     const logs = NAMES.map((n) => JSON.stringify((byName.get(n)!.messages.find((m) => m.t === 'finished') as { log: GameLog }).log));
     expect(new Set(logs).size).toBe(1);
     for (const n of NAMES) {

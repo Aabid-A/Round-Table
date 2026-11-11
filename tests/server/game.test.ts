@@ -31,6 +31,19 @@ describe('runRoomGame', () => {
     for (const s of statuses) expect(Object.keys(s).sort()).toEqual(['phase', 't']);
   });
 
+  it('announces a phase once when it starts, so the count of statuses reveals nothing about traitors or offers', async () => {
+    for (const seed of [3, 7, 11]) {
+      const { room, conns, seatPlayers } = autoRoom(['Quinn'], { mode: 'mock' }, seed);
+      const log = await runRoomGame(room, { seatPlayers });
+      const labels = conns.get('Quinn')!.sent.flatMap((m) => (m.t === 'status' ? [m.phase] : []));
+      for (let i = 1; i < labels.length; i++) expect(labels[i], `seed ${seed}: status ${i} repeats`).not.toBe(labels[i - 1]);
+      // Each traitor has a night turn, and a second round of them if they disagree; none of that shows.
+      expect(labels.filter((l) => l === 'night'), `seed ${seed}`).toHaveLength(log.result.rounds);
+      expect(labels).not.toContain('recruit_choose');
+      expect(labels).not.toContain('recruit_respond');
+    }
+  });
+
   it('refuses to start a person who has no connection handler', async () => {
     const { room } = autoRoom(['Quinn']);
     await expect(runRoomGame(room, { seatPlayers: new Map() })).rejects.toThrow('no connection handler for Quinn');

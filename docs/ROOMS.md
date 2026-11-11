@@ -64,9 +64,14 @@ print.
 ## What a client is told
 
 Only its own seat's prompt (what that person may know), the phase ("Night", "Round table"; never who is
-acting), and, after the game ends, the log. Never roles, other people's notes or whispers, or who is
+acting), and, after the game ends, the log. The phase is sent once when it starts, not once per turn, and the two
+recruit phases share one label, so the number of messages says nothing about how many traitors are alive or whether an
+offer was made. Never roles, other people's notes or whispers, or who is
 waiting. [The hidden-information test](../tests/server/hidden-info.test.ts) plays whole games with four
 people over several seeds and checks it.
+
+One thing is not hidden: AI calls and people take different amounts of time, so someone watching how long turns take
+could guess which seats are people.
 
 ## Limits
 

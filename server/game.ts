@@ -7,6 +7,7 @@ import type { Player } from '../src/players/player.js';
 import { buildPrompt } from '../src/prompts/phases.js';
 import { buildSystemPrompt } from '../src/prompts/system.js';
 import { HUMAN_MODEL } from '../src/cast.js';
+import { publicPhase, type PublicPhase } from '../src/publicPhase.js';
 import type { Room } from './room.js';
 import type { SeatPlayer } from './seatPlayer.js';
 import { redact } from './text.js';
@@ -64,11 +65,18 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   }
 
   const players: Record<string, Player> = {};
+  // Tell everyone the phase only when it changes. One status per turn would show how many turns a phase took, and so how many
+  // traitors are alive, whether they disagreed, and whether a recruit offer was made.
+  let announced: PublicPhase | null = null;
   for (const [name, inner] of Object.entries(base)) {
     players[name] = {
       respond: async (req) => {
         if (signal?.aborted) throw new Error('the room closed');
-        room.broadcast({ t: 'status', phase: req.phase });
+        const label = publicPhase(req.phase);
+        if (label !== announced) {
+          announced = label;
+          room.broadcast({ t: 'status', phase: label });
+        }
         try {
           return await inner.respond(req);
         } catch (e) {
