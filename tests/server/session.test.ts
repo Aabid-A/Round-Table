@@ -147,6 +147,7 @@ describe('Session: creating, joining and rejoining', () => {
     expect(finished.you).toBe('Rae');
     expect(finished.log.cast).toHaveLength(8);
     expect(s.registry.get(code)!.phase).toBe('finished');
+    expect(s.registry.get(code)!.finishedAt).not.toBeNull();
     const messages = (c: FakeConn) => c.sent.map((m) => (m as { message?: string }).message).filter(Boolean);
     expect(messages(friend.conn)).toEqual(['Only the host can start the game.']);
     host.send({ t: 'start' });

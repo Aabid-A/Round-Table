@@ -87,4 +87,20 @@ describe('Registry', () => {
     expect(registry.size).toBe(0);
     expect(conn.sent.filter((m) => m.t === 'closed')).toEqual([{ t: 'closed', reason: 'everyone left' }]);
   });
+
+  it('removes a finished room fifteen minutes after its game ended, long before the room lifetime', () => {
+    let now = 0;
+    const registry = new Registry({ now: () => now });
+    const r = registry.create(mock);
+    const running = registry.create(mock);
+    if (!r.ok || !running.ok) throw new Error('create');
+    r.value.phase = 'finished';
+    r.value.finishedAt = 1000;
+    now = 1000 + LIMITS.finishedTtlMs - 1;
+    expect(registry.sweep()).toBe(0);
+    now = 1000 + LIMITS.finishedTtlMs;
+    expect(registry.sweep()).toBe(1);
+    expect(registry.get(r.value.code)).toBeUndefined();
+    expect(registry.get(running.value.code)).toBe(running.value); // an unfinished room is not touched
+  });
 });

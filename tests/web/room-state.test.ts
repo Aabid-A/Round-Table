@@ -56,6 +56,12 @@ describe('roomReducer', () => {
     expect(run([msg(lobby), msg({ t: 'status', phase: 'night' }), msg(turn(1))], done).view).toEqual({ kind: 'closed', reason: 'expired' });
   });
 
+  it('keeps the result on screen when the room closes after the game ended', () => {
+    const log = logFrom({ Quinn: 'faithful', Aria: 'traitor' }, []);
+    const s = run([joined, msg({ t: 'finished', log, you: 'Quinn' }), msg({ t: 'closed', reason: 'This room expired.' })]);
+    expect(s.view).toEqual({ kind: 'finished', log });
+  });
+
   it('shows an error until it is dismissed, and a new seat clears it', () => {
     let s = run([msg({ t: 'error', message: 'No room has that code.' })]);
     expect(s.error).toBe('No room has that code.');

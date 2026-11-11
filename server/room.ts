@@ -24,6 +24,8 @@ const refuse = (error: string): { ok: false; error: string } => ({ ok: false, er
 export class Room {
   readonly seats: Seat[] = [];
   phase: RoomPhase = 'lobby';
+  /** When the game ended, for expiry. */
+  finishedAt: number | null = null;
   private readonly closers: (() => void)[] = [];
   /**
    * The AI setup, including the host's OpenRouter key. A private field, so it is not in JSON or in console output,

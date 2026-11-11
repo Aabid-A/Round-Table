@@ -82,7 +82,7 @@ could guess which seats are people.
 | Rate | 30 messages per 10 seconds per connection; the first refusal says so, later ones are dropped |
 | Rooms at once | 50 |
 | Connections at once | 400 |
-| Room lifetime | 2 hours from creation, finished or not |
+| Room lifetime | 2 hours from creation, or 15 minutes after the game ended |
 | People per room | 8 |
 | Text | names 20 characters; speech 600; a message or a note 300 |
 

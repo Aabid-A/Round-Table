@@ -84,7 +84,8 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
     case 'finished':
       return { ...state, view: { kind: 'finished', log: msg.log } };
     case 'closed':
-      return { ...state, view: { kind: 'closed', reason: msg.reason } };
+      // A room that closes after its game ended (the server tidies up) must not take the result off the screen.
+      return view.kind === 'finished' ? state : { ...state, view: { kind: 'closed', reason: msg.reason } };
     case 'error':
       return { ...state, error: msg.message };
   }

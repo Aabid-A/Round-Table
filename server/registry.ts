@@ -48,11 +48,14 @@ export class Registry {
     return room;
   }
 
-  /** Remove rooms that closed, and close and remove rooms older than the room lifetime. Returns how many were removed. */
+  /** Remove rooms that closed, rooms older than the room lifetime, and rooms that finished a while ago. Returns how many were removed. */
   sweep(): number {
     let removed = 0;
     for (const [code, room] of this.rooms) {
-      if (room.phase !== 'closed' && this.now() - room.createdAt < LIMITS.roomTtlMs) continue;
+      const now = this.now();
+      const old = now - room.createdAt >= LIMITS.roomTtlMs;
+      const doneLongAgo = room.finishedAt !== null && now - room.finishedAt >= LIMITS.finishedTtlMs;
+      if (room.phase !== 'closed' && !old && !doneLongAgo) continue;
       room.close('This room expired.'); // does nothing for a room that already closed
       this.rooms.delete(code);
       removed++;

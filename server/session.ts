@@ -164,6 +164,7 @@ export class Session {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
         room.phase = 'finished';
+        room.finishedAt = (options.now ?? Date.now)();
         for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name });
       },
       (e: unknown) => {
