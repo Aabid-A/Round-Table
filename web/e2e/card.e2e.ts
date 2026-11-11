@@ -48,6 +48,31 @@ test('puts the quotes side by side on the wide card', async ({ page }) => {
   expect(thought.x).toBeGreaterThan(said.x + said.width - 1);
 });
 
+test('labels the left panel by what it is: said, did or whispered', async ({ page }) => {
+  const night = log.turns.find((t) => t.phase === 'night')!;
+  const sent = JSON.parse(readFileSync(FIXTURE, 'utf8')).turns.find((t: { phase: string; action: { to: unknown } }) => t.phase === 'whispers' && t.action.to !== null);
+  await open(page, `card=${night.id}&log=sample`);
+  await expect(page.getByTestId('card-said-label')).toHaveText('Did');
+  await expect(page.getByTestId('card-said')).toContainText('Proposes murdering');
+  await open(page, `card=${sent.id}&log=sample`);
+  await expect(page.getByTestId('card-said-label')).toHaveText('Whispered');
+  await open(page, `card=${turn.id}&log=sample`);
+  await expect(page.getByTestId('card-said-label')).toHaveText('Said');
+});
+
+test('flags a fallback turn, and leaves the hidden-note footer off when there are no notes', async ({ page }) => {
+  const copy = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+  const t = copy.turns.find((x: { id: number }) => x.id === turn.id);
+  t.fallback = true;
+  t.private_notes = '';
+  await open(page, `card=${turn.id}&log=sample`, JSON.stringify(copy));
+  await expect(page.getByTestId('card-said-label')).toContainText('fallback: no valid reply');
+  await expect(page.getByTestId('card-thought')).toContainText('No private notes for this turn.');
+  await expect(page.getByTestId('card-foot')).toHaveCount(0);
+  await open(page, `card=${turn.id}&log=sample`);
+  await expect(page.getByTestId('card-foot')).toBeVisible();
+});
+
 test('a very long quote and a long name still fit inside the card', async ({ page }) => {
   const long = JSON.parse(readFileSync(FIXTURE, 'utf8'));
   const t = long.turns.find((x: { id: number }) => x.id === turn.id);

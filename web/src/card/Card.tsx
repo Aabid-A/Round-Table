@@ -21,6 +21,8 @@ const PHASES: Record<string, string> = {
   endgame_vote: 'End-or-banish vote',
 };
 
+const SAID_LABEL = { speech: 'Said', whisper: 'Whispered', action: 'Did' } as const;
+
 /** A quote card: what a player said, against what they thought. Fixed size, ready to screenshot. */
 export function Card({ log, logName, turnId, size }: Props) {
   const turn = log.turns.find((t) => t.id === turnId);
@@ -33,6 +35,7 @@ export function Card({ log, logName, turnId, size }: Props) {
   }
   const view = describeStep({ kind: 'turn', turn, section: { round: turn.round, title: '' } }, log);
   const max = MAX_QUOTE_CHARS[size];
+  const kind = view.bubble?.kind ?? 'speech';
   const said = clipQuote(view.bubble?.text ?? '', max);
   const thought = clipQuote(view.notes ?? 'No private notes for this turn.', max);
   const model = log.cast.find((c) => c.name === turn.player)?.model ?? '';
@@ -51,7 +54,10 @@ export function Card({ log, logName, turnId, size }: Props) {
       </div>
       <div className="share-quotes">
         <figure className="share-quote share-said" data-testid="card-said">
-          <figcaption>Said</figcaption>
+          <figcaption data-testid="card-said-label">
+            {SAID_LABEL[kind]}
+            {turn.fallback ? ' · fallback: no valid reply' : ''}
+          </figcaption>
           <blockquote style={quoteSize}>{said}</blockquote>
         </figure>
         <figure className="share-quote share-thought" data-testid="card-thought">
@@ -59,9 +65,11 @@ export function Card({ log, logName, turnId, size }: Props) {
           <blockquote style={quoteSize}>{thought}</blockquote>
         </figure>
       </div>
-      <footer className="share-foot" data-testid="card-foot">
-        The thought was hidden from the other players.
-      </footer>
+      {view.notes !== null && (
+        <footer className="share-foot" data-testid="card-foot">
+          The thought was hidden from the other players.
+        </footer>
+      )}
     </article>
   );
 }
