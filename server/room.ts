@@ -24,6 +24,7 @@ const refuse = (error: string): { ok: false; error: string } => ({ ok: false, er
 export class Room {
   readonly seats: Seat[] = [];
   phase: RoomPhase = 'lobby';
+  private readonly closers: (() => void)[] = [];
   /**
    * The AI setup, including the host's OpenRouter key. A private field, so it is not in JSON or in console output,
    * and the only way out is `takeSetup`, which the game runner calls once. `dropKey` erases it.
@@ -119,11 +120,18 @@ export class Room {
     return null;
   }
 
+  /** Run `fn` when the room closes (the game stops, timers end). Runs at once if it is already closed. */
+  onClose(fn: () => void): void {
+    if (this.phase === 'closed') fn();
+    else this.closers.push(fn);
+  }
+
   /** End the room: tell everyone, close their connections, forget the key. */
   close(reason: string): void {
     if (this.phase === 'closed') return;
     this.phase = 'closed';
     this.dropKey();
+    for (const fn of this.closers.splice(0)) fn();
     this.broadcast({ t: 'closed', reason });
     for (const s of this.seats) {
       s.conn?.close();

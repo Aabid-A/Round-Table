@@ -86,4 +86,14 @@ describe('Room seats', () => {
     expect(room.takeSetup()).toEqual({ mode: 'mock' });
     expect(room.rejoin('x', new FakeConn())).toEqual({ ok: false, error: 'That room has closed.' });
   });
+
+  it('runs close hooks once, and at once when added to a closed room', () => {
+    const room = newRoom();
+    const calls: string[] = [];
+    room.onClose(() => calls.push('first'));
+    room.close('done');
+    room.close('again');
+    room.onClose(() => calls.push('late'));
+    expect(calls).toEqual(['first', 'late']);
+  });
 });
