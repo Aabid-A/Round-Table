@@ -168,8 +168,9 @@ The built `web/dist/` then works from any folder on a static host (checked from 
 `?mode=guess&episode=1`, `?page=stats`, `?log=<name>` and a recording-mode clip that reaches `data-done="true"`, with
 no errors in the browser console. Delete the mock logs from `web/public/games/` before building the real site.
 
-`tests/runbook.test.ts` runs the command-line half of this on every `npm test`, and checks that every `npm run` command
-named in these docs exists.
+Two automated checks keep this honest. `tests/runbook.test.ts` runs the command-line half on every `npm test` and checks
+that every `npm run` command and link in these docs exists. `web/e2e/static-site.e2e.ts` (in `npm run test:e2e`) builds the
+site, adds mock episodes and stats, hosts it from a folder on a plain static server and opens each kind of page.
 
 ## Before you post
 
