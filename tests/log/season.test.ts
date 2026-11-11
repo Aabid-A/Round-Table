@@ -40,6 +40,23 @@ describe('readSeason', () => {
     expect(season.skipped.every((s) => s.reason.startsWith('damaged log:'))).toBe(true);
   });
 
+  it('skips a log whose entries break the stats, even when the top-level checks pass', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rt-season-'));
+    const good = await playMock(3);
+    writeGameLog(good, dir, 'good');
+    const copy = JSON.parse(JSON.stringify(good));
+    const vote = copy.events.find((e: { type: string }) => e.type === 'vote');
+    vote.votes = [null]; // not a { voter, target }
+    // the stats read the deciding vote only for a faithful banishment, so make sure there is one in that round
+    copy.events.push({ type: 'banishment', round: vote.round, afterTurn: vote.afterTurn, visibleTo: 'all', player: copy.cast[0].name, role: 'faithful', method: 'majority' });
+    writeFileSync(join(dir, 'bad-votes.json'), JSON.stringify(copy));
+    const season = readSeason(dir);
+    expect(season.logs).toHaveLength(1);
+    expect(season.skipped).toHaveLength(1);
+    expect(season.skipped[0]).toMatchObject({ file: 'bad-votes.json' });
+    expect(season.skipped[0]!.reason).toMatch(/^damaged log: /);
+  });
+
   it('is empty for an empty folder and throws for a missing one', () => {
     expect(readSeason(mkdtempSync(join(tmpdir(), 'rt-season-')))).toEqual({ logs: [], skipped: [] });
     expect(() => readSeason(join(tmpdir(), 'rt-no-such-folder'))).toThrow();

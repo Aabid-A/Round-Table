@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { GameLog } from '../engine/types.js';
+import { computeStats } from './stats.js';
 import { readGameLog } from './writer.js';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -30,6 +31,12 @@ export function readSeason(dir: string): Season {
       const log = readGameLog(join(dir, file));
       const problem = statsProblem(log);
       if (problem) throw new Error(`damaged log: ${problem}`);
+      // The checks above cover the usual damage; a trial run catches anything else the stats would trip over.
+      try {
+        computeStats([log]);
+      } catch (e) {
+        throw new Error(`damaged log: ${e instanceof Error ? e.message : String(e)}`);
+      }
       season.logs.push(log);
     } catch (e) {
       season.skipped.push({ file, reason: e instanceof Error ? e.message : String(e) });
