@@ -1,8 +1,25 @@
+.stats-app {
+  max-width: var(--w-wide);
+}
+/* Edge shadows show that the table scrolls sideways: they appear only on a side that has more to see. */
 .stats-scroll {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
-  background: var(--surface);
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / var(--space-6) 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / var(--space-6) 100% no-repeat local,
+    linear-gradient(to right, var(--border), transparent) left / var(--space-3) 100% no-repeat scroll,
+    linear-gradient(to left, var(--border), transparent) right / var(--space-3) 100% no-repeat scroll,
+    var(--surface);
+}
+.scroll-hint {
+  display: none;
+}
+@media (max-width: 880px) {
+  .scroll-hint {
+    display: block;
+  }
 }
 .stats-table {
   width: 100%;

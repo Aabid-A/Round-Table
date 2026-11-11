@@ -93,7 +93,7 @@ export function StatsPage() {
 
   const { stats } = state;
   return (
-    <main className="app">
+    <main className="app stats-app">
       <header className="topbar">
         <h1>Season stats</h1>
         <span className="muted">
@@ -107,6 +107,7 @@ export function StatsPage() {
           <code>npm run stats</code> again.
         </p>
       ) : (
+        <>
         <div className="stats-scroll" role="region" aria-label="Model stats" tabIndex={0}>
           <table className="stats-table" data-testid="stats-table">
             <thead>
@@ -153,6 +154,8 @@ export function StatsPage() {
             </tbody>
           </table>
         </div>
+        <p className="hint scroll-hint">Scroll sideways to see every column.</p>
+        </>
       )}
       <p className="hint">Per seat, so a few games make noisy numbers. Column meanings: docs/STATS.md. Hover a heading for its definition.</p>
       <div>{picker}</div>
