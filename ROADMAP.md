@@ -31,7 +31,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     stops cleanly and the log records why.
   - Tested with stubbed fetch only. Done when: tests and docs are updated.
 
-- [ ] **M3. Replay page v1.** A web app in `web/` that plays a game log like
+- [x] **M3. Replay page v1.** A web app in `web/` that plays a game log like
   a TV episode.
   - Allowed dependencies: vite, react, react-dom, @vitejs/plugin-react,
     @types/react, @types/react-dom, @playwright/test.
