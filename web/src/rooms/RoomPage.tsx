@@ -2,6 +2,7 @@ import { useEffect, useReducer, useRef } from 'react';
 import './rooms.css';
 import { RoomConnection, sessionStore } from './connection.js';
 import { Home } from './Home.js';
+import { Lobby } from './Lobby.js';
 import { roomCodeFromSearch, roomServerUrl } from './params.js';
 import { initialState, roomReducer } from './state.js';
 
@@ -32,6 +33,9 @@ export function RoomPage() {
         onJoin={(m) => connection.send(m)}
       />
     );
+  }
+  if (state.view.kind === 'lobby' && state.me) {
+    return <Lobby me={state.me} lobby={state.view.lobby} serverError={state.error} onStart={() => connection.send({ t: 'start' })} onLeave={() => connection.leave()} />;
   }
   return (
     <main className="loader rooms">
