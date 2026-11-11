@@ -3,6 +3,7 @@ import './rooms.css';
 import { RoomConnection, sessionStore } from './connection.js';
 import { End } from './End.js';
 import { Game } from './Game.js';
+import { Guess } from './Guess.js';
 import { Home } from './Home.js';
 import { Lobby } from './Lobby.js';
 import { roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from './params.js';
@@ -52,6 +53,17 @@ export function RoomPage() {
         offline={!state.online}
         onAnswer={(turn, answer) => (dispatch({ kind: 'answered' }), connection.send({ t: 'answer', turn, answer }))}
         onLeave={() => connection.leave()}
+      />
+    );
+  }
+  if (state.view.kind === 'guessing') {
+    return (
+      <Guess
+        seats={state.view.seats}
+        you={state.view.you}
+        timeoutMs={state.view.timeoutMs}
+        sent={state.view.sent}
+        onSubmit={(ai) => (dispatch({ kind: 'guessed' }), connection.send({ t: 'guess', ai }))}
       />
     );
   }
