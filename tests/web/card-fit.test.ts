@@ -22,18 +22,21 @@ describe('clipQuote', () => {
 });
 
 describe('cardTextScale', () => {
-  it('shrinks in steps with length, differently for each shape', () => {
-    expect(cardTextScale(50, '1200x675')).toBe(1);
+  it('grows a short quote and shrinks a long one, in steps, differently for each shape', () => {
+    expect(cardTextScale(50, '1200x675')).toBe(1.25);
+    expect(cardTextScale(100, '1200x675')).toBe(1);
     expect(cardTextScale(150, '1200x675')).toBe(0.8);
     expect(cardTextScale(250, '1200x675')).toBe(0.66);
     expect(cardTextScale(360, '1200x675')).toBe(0.56);
-    expect(cardTextScale(150, '1080x1350')).toBe(1);
-    expect(cardTextScale(560, '1080x1350')).toBe(0.56);
+    expect(cardTextScale(50, '1080x1350')).toBe(1.5);
+    expect(cardTextScale(120, '1080x1350')).toBe(1.2);
+    expect(cardTextScale(200, '1080x1350')).toBe(1);
+    expect(cardTextScale(560, '1080x1350')).toBe(0.62);
   });
 
-  it('never grows with length and has a readable floor at the longest quote a card shows', () => {
+  it('never grows with length and keeps a readable floor at the longest quote a card shows', () => {
     for (const size of ['1200x675', '1080x1350'] as const) {
-      let prev = 1;
+      let prev = Number.POSITIVE_INFINITY;
       for (let n = 0; n <= MAX_QUOTE_CHARS[size] + 1; n += 5) {
         const s = cardTextScale(n, size);
         expect(s).toBeLessThanOrEqual(prev);
