@@ -7,6 +7,7 @@ import { HumanForm } from './HumanForm.js';
 import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
 import { aiFallbacks, notesAbout, type NoteAboutYou } from './notes.js';
+import { END_REASONS, WINNER } from '../result.js';
 import { seedFromSearch } from './params.js';
 import { nameProblem, parseModels, runSolo, type SoloSetup } from './solo.js';
 
@@ -24,15 +25,7 @@ interface Pending {
 
 const NOTES_SHOWN = 6;
 
-const WINNER = { traitor: 'The traitors win', faithful: 'The faithfuls win' } as const;
-const REASONS: Record<string, string> = {
-  no_traitors: 'No traitors are left.',
-  no_faithfuls: 'No faithfuls are left.',
-  two_remaining: 'Two players remain.',
-  endgame_vote: 'The survivors voted to end the game.',
-  max_rounds: 'The last round was played.',
-  cost_cap: 'The game was stopped by your spend cap.',
-};
+const REASONS: Record<string, string> = { ...END_REASONS, cost_cap: 'The game was stopped by your spend cap.' };
 
 /** ?mode=play: take a seat at the table against seven AIs, in this tab. */
 export function PlayPage() {
