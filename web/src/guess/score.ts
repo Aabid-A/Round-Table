@@ -71,6 +71,7 @@ export const emojiRow = (score: GuessScore): string => score.rounds.map((r) => S
 /** The text to copy: episode number, the row and the score, and the link. It names nobody and says no roles. */
 export function shareText(score: GuessScore, episode: number | null, url: string): string {
   const head = episode === null ? 'Round Table' : `Round Table #${episode}`;
+  if (score.rounds.length === 0) return `${head}: nothing to guess in this one\n${url}`;
   return `${head} ${emojiRow(score)} ${score.correct}/${score.possible}\n${url}`;
 }
 

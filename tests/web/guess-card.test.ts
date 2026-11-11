@@ -18,6 +18,10 @@ describe('resultCardAlt', () => {
     expect(resultCardAlt(score, null)).toMatch(/^Round Table\. Found 3 of 5/);
   });
 
+  it('says so when there was nothing to guess', () => {
+    expect(resultCardAlt({ rounds: [], correct: 0, possible: 0 }, 2)).toBe('Round Table episode 2. There was nothing to guess in this episode.');
+  });
+
   it('names no player', () => {
     const alt = resultCardAlt(score, 4);
     for (const name of ['T1', 'T2', 'F2', 'F3']) expect(alt).not.toContain(name);

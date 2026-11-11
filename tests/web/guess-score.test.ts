@@ -67,6 +67,13 @@ describe('sharing', () => {
     expect(shareText(s, null, 'https://x.test/')).toBe('Round Table 🟨🟩⬛ 3/5\nhttps://x.test/');
   });
 
+  it('says there was nothing to guess when no round had a pick, instead of printing 0/0', () => {
+    const none = { rounds: [], correct: 0, possible: 0 };
+    expect(shareText(none, 1, 'https://x.test/')).toBe('Round Table #1: nothing to guess in this one\nhttps://x.test/');
+    expect(shareText(none, null, 'https://x.test/')).toBe('Round Table: nothing to guess in this one\nhttps://x.test/');
+    expect(emojiRow(none)).toBe('');
+  });
+
   it('names no player and no role, so it spoils nothing', () => {
     const text = shareText(s, 4, 'https://example.test/?mode=guess&log=ep');
     for (const word of ['T1', 'T2', 'F1', 'F2', 'F3', 'traitor', 'faithful', 'Traitor', 'Faithful']) expect(text, word).not.toContain(word);

@@ -47,7 +47,7 @@ export function ScorePage({ log, score, episode, link, onAgain }: Props) {
   return (
     <section className="score" data-testid="score" aria-labelledby="score-title">
       <h2 id="score-title">
-        You found {score.correct} of {score.possible} traitor spots
+        {score.rounds.length === 0 ? 'There was nothing to guess in this episode' : `You found ${score.correct} of ${score.possible} traitor spots`}
       </h2>
       <p className="emoji-row" aria-label={resultCardAlt(score, episode)} data-testid="emoji-row">
         {emojiRow(score)}
