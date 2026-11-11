@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PickSetup } from './score.js';
 
 interface Props {
@@ -11,9 +11,14 @@ interface Props {
 /** After a round table: choose who you think the traitors are. Locked before the vote, so no changing your mind. */
 export function PickPanel({ setup, locked, onLock }: Props) {
   const [chosen, setChosen] = useState<string[]>([]);
+  const lockedRef = useRef<HTMLElement>(null);
+  // The form disappears when you lock, taking keyboard focus with it: move focus to the message that replaces it.
+  useEffect(() => {
+    if (locked) lockedRef.current?.focus();
+  }, [locked]);
   if (locked) {
     return (
-      <section className="pick" aria-label={`Your picks for round ${setup.round}`} data-testid="pick-locked">
+      <section ref={lockedRef} tabIndex={-1} role="status" className="pick" aria-label={`Your picks for round ${setup.round}`} data-testid="pick-locked">
         <h2>Round {setup.round}: your picks are locked</h2>
         <p>
           You picked <strong>{locked.join(' and ')}</strong>. Now watch the vote.

@@ -63,6 +63,19 @@ test('plays public steps only, stops at a pick, and will not go on until the pic
   await expect(page.getByTestId('section')).toContainText('Banishment vote');
 });
 
+test('after locking, keyboard focus moves to the locked message instead of being lost', async ({ page }) => {
+  await routes(page);
+  await page.goto('/?mode=guess&log=sample');
+  await toPick(page);
+  const boxes = page.locator('.pick-option input');
+  await boxes.nth(0).check();
+  await boxes.nth(1).check();
+  await page.getByRole('button', { name: 'Lock my picks' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('pick-locked')).toBeFocused();
+  await expect(page.getByRole('status').filter({ hasText: 'your picks are locked' })).toBeVisible();
+});
+
 test('picking: the right number, no more, and the lock button waits', async ({ page }) => {
   await routes(page);
   await page.goto('/?mode=guess&log=sample');
@@ -217,6 +230,18 @@ test('says what to do when the episode list is missing or the episode number is 
   await expect(page.getByRole('alert')).toContainText('No log named "nope"');
   await page.goto('/?mode=guess&episode=tomorrow');
   await expect(page.getByRole('alert')).toContainText('episode must be');
+});
+
+test('an episode with no vote has nothing to guess and says so, with no 0/0', async ({ page }) => {
+  const short = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+  short.turns = short.turns.filter((t: { phase: string }) => t.phase === 'night' || t.phase === 'round_table').slice(0, 10);
+  short.events = [];
+  await page.route('**/games/sample.json', (r) => r.fulfill({ body: JSON.stringify(short), contentType: 'application/json' }));
+  await page.goto('/?mode=guess&log=sample&episode=1');
+  for (let i = 0; i < 60 && !(await page.getByTestId('score').count()); i++) await next(page).click();
+  await expect(page.getByRole('heading', { level: 2, name: 'There was nothing to guess in this episode' })).toBeVisible();
+  expect(await page.getByTestId('share-text').innerText()).toMatch(/^Round Table #1: nothing to guess in this one\n/);
+  expect(await page.locator('body').innerText()).not.toContain('0/0');
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
