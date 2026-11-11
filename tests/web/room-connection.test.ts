@@ -51,6 +51,18 @@ describe('RoomConnection', () => {
     expect(sockets[0]!.sent).toHaveLength(3);
   });
 
+  it('drops what was waiting if the socket never opens, so a host\'s key is not kept for a later send, and says so', () => {
+    conn.send({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-secret', models: ['a/b'], maxCostUsd: 1 });
+    sockets[0]!.drop(); // the server could not be reached
+    expect(events).toContainEqual({ kind: 'message', msg: { t: 'error', message: 'Your request was not sent because the room server could not be reached. Enter it again.' } });
+    conn.send({ t: 'join', code: 'AB2CD', name: 'Rae' });
+    sockets[1]!.open();
+    const sent = sockets[1]!.sent.join('\n');
+    expect(sent).toContain('"join"');
+    expect(sent).not.toContain('sk-secret');
+    expect(sent).not.toContain('create');
+  });
+
   it('saves the seat when the server seats the person, and never the OpenRouter key', () => {
     conn.send({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-secret', models: ['a/b'], maxCostUsd: 1 });
     sockets[0]!.open();

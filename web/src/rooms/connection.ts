@@ -104,8 +104,10 @@ export class RoomConnection {
     if (this.socket) return;
     const socket = this.create(this.opts.url);
     this.socket = socket;
+    let opened = false;
     socket.onopen = () => {
       if (this.socket !== socket) return;
+      opened = true;
       this.open = true;
       const wasRetrying = this.attempts > 0;
       this.attempts = 0;
@@ -118,6 +120,12 @@ export class RoomConnection {
       this.socket = null;
       this.open = false;
       if (this.done) return;
+      if (!opened && this.queue.length > 0) {
+        // Never connected, so what was waiting (a create message holds the host's key) was not sent. Drop it rather than keep
+        // the key in memory for a later send to flush, and say so: the person has to enter it again.
+        this.queue = [];
+        this.opts.onEvent({ kind: 'message', msg: { t: 'error', message: 'Your request was not sent because the room server could not be reached. Enter it again.' } });
+      }
       this.opts.onEvent({ kind: 'offline' });
       this.retry();
     };
