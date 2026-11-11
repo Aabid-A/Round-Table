@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Room } from '../../server/room.js';
 import { FakeConn } from './helpers.js';
 
-const newRoom = () => new Room('AB2CD', 1, 0);
+const newRoom = () => new Room('AB2CD', { mode: 'mock' }, 1, 0);
 
 describe('Room seats', () => {
   it('makes the first person the host and gives each seat its own token', () => {
@@ -65,5 +65,25 @@ describe('Room seats', () => {
     expect(room.startProblem(host.value)).toBeNull();
     room.phase = 'playing';
     expect(room.startProblem(host.value)).toBe('The game has already started.');
+  });
+
+  it('keeps the key out of JSON and console output, and forgets it on request', () => {
+    const room = new Room('AB2CD', { mode: 'openrouter', key: 'sk-secret-123', models: ['a/b'], maxCostUsd: 1 }, 1, 0);
+    expect(JSON.stringify(room)).not.toContain('sk-secret');
+    expect(JSON.stringify(Object.entries(room))).not.toContain('sk-secret');
+    expect(room.takeSetup()).toMatchObject({ mode: 'openrouter', key: 'sk-secret-123' });
+    room.dropKey();
+    expect(room.takeSetup()).toEqual({ mode: 'mock' });
+  });
+
+  it('closes everyone and drops the key when it closes', () => {
+    const room = new Room('AB2CD', { mode: 'openrouter', key: 'sk-secret-123', models: ['a/b'], maxCostUsd: 1 }, 1, 0);
+    const a = new FakeConn();
+    room.join('Quinn', a);
+    room.close('expired');
+    expect(a.sent.at(-1)).toEqual({ t: 'closed', reason: 'expired' });
+    expect(a.closed).toBe(true);
+    expect(room.takeSetup()).toEqual({ mode: 'mock' });
+    expect(room.rejoin('x', new FakeConn())).toEqual({ ok: false, error: 'That room has closed.' });
   });
 });

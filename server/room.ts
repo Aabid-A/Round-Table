@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { AI_NAMES } from '../src/cast.js';
-import { MAX_HUMANS, type SeatInfo, type ServerMessage } from './protocol.js';
+import { MAX_HUMANS, type AiSetup, type SeatInfo, type ServerMessage } from './protocol.js';
 
 /** One open connection, as the room sees it. Tests use fakes; the server wraps a WebSocket. */
 export interface Conn {
@@ -24,11 +24,38 @@ const refuse = (error: string): { ok: false; error: string } => ({ ok: false, er
 export class Room {
   readonly seats: Seat[] = [];
   phase: RoomPhase = 'lobby';
+  /**
+   * The AI setup, including the host's OpenRouter key. A private field, so it is not in JSON or in console output,
+   * and the only way out is `takeSetup`, which the game runner calls once. `dropKey` erases it.
+   */
+  #setup: AiSetup;
+
   constructor(
     readonly code: string,
+    setup: AiSetup,
     readonly seed: number,
     readonly createdAt: number,
-  ) {}
+  ) {
+    this.#setup = setup;
+  }
+
+  get mode(): 'mock' | 'openrouter' {
+    return this.#setup.mode;
+  }
+
+  /** The AI setup for the game runner. */
+  takeSetup(): AiSetup {
+    return this.#setup;
+  }
+
+  /** Forget the key. Called when the game ends or the room closes; later calls to takeSetup get a mock setup. */
+  dropKey(): void {
+    this.#setup = { mode: 'mock' };
+  }
+
+  toJSON(): unknown {
+    return { code: this.code, phase: this.phase, seats: this.seats.map((s) => s.name) };
+  }
 
   get aiSeats(): number {
     return MAX_HUMANS - this.seats.length;
@@ -73,7 +100,7 @@ export class Room {
   }
 
   lobbyMessage(): ServerMessage {
-    return { t: 'lobby', code: this.code, mode: 'mock', seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
+    return { t: 'lobby', code: this.code, mode: this.mode, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
   }
 
   broadcast(message: ServerMessage): void {
@@ -90,5 +117,17 @@ export class Room {
     if (!seat.host) return 'Only the host can start the game.';
     if (this.phase !== 'lobby') return 'The game has already started.';
     return null;
+  }
+
+  /** End the room: tell everyone, close their connections, forget the key. */
+  close(reason: string): void {
+    if (this.phase === 'closed') return;
+    this.phase = 'closed';
+    this.dropKey();
+    this.broadcast({ t: 'closed', reason });
+    for (const s of this.seats) {
+      s.conn?.close();
+      s.conn = null;
+    }
   }
 }
