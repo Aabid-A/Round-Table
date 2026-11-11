@@ -155,7 +155,9 @@ http://localhost:5173/?mode=guess&log=episode-004&episode=4
 ```
 
 Green means every traitor found that round, yellow some, black none. How many to pick is the number
-of traitors not yet caught.
+of traitors the game started with, minus the ones caught so far. A recruitment makes the true number
+higher and the viewer is not told, so a round is scored out of what they were asked to pick. An episode
+with no vote has nothing to guess and says so.
 
 To offer episodes, copy logs into `web/public/games/` and write the list:
 
@@ -164,8 +166,13 @@ cp games/mock-seed-1.json web/public/games/episode-001.json
 npm run episodes -- web/public/games
 ```
 
-`npm run episodes` writes `web/public/games/index.json`: numbered episodes in file name order (name
-files so they sort in release order), with no winners or roles. Then:
+`npm run episodes` writes `web/public/games/index.json`: numbered episodes in file name order, with
+no winners or roles. Name files so they sort in release order and **zero-pad** the number
+(`episode-010` after `episode-009`; plain `episode-10` sorts before `episode-2`). Adding a file in the
+middle renumbers the ones after it and breaks old `?episode=N` links and shared "#N" results, so only
+add to the end. Pick neutral file names: a shared link carries `log=<name>`, so `traitors-win` would
+give it away. The page downloads the whole log to the browser (that is how it plays), so a determined
+viewer can read the roles in the network tab; this is a game, not a vault. Then:
 
 ```text
 http://localhost:5173/?page=episodes                      the list
