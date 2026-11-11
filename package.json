@@ -14,7 +14,8 @@
     "transcript": "tsx src/cli/transcript.ts",
     "games": "tsx src/cli/games.ts",
     "web": "vite web",
-    "build:web": "vite build web"
+    "build:web": "vite build web",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
