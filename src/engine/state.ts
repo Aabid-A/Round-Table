@@ -1,7 +1,7 @@
 import type { Role } from '../types.js';
 import type { Rng } from './rng.js';
 import type { CastMember } from '../types.js';
-import type { EndReason, GameEvent, GameState, PlayerState, PlayerView, Visibility } from './types.js';
+import { END_AT_REMAINING, type EndReason, type GameEvent, type GameState, type PlayerState, type PlayerView, type Visibility } from './types.js';
 
 /** Roles are the first thing drawn from the RNG, so tests can predict them. */
 export function assignRoles(names: string[], traitors: number, rng: Rng): Record<string, Role> {
@@ -77,7 +77,7 @@ export function checkEnd(s: GameState): EndReason | null {
   const faithfuls = aliveFaithfuls(s).length;
   if (traitors === 0) return 'no_traitors';
   if (faithfuls === 0) return 'no_faithfuls';
-  if (traitors + faithfuls <= 2) return 'two_remaining';
+  if (traitors + faithfuls <= END_AT_REMAINING) return 'two_remaining';
   return null;
 }
 
