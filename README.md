@@ -118,6 +118,28 @@ fallback rate, plus a betrayal index. It prints JSON; add `--out web/public/stat
 open `?page=stats` on the replay page for a sortable table. Definitions:
 [docs/STATS.md](docs/STATS.md).
 
+### Share cards
+
+A quote card shows one turn: the player and model, the game and round, what they said beside
+what they thought (marked hidden from the other players). Two shapes: 1200x675 and 1080x1350.
+
+```text
+http://localhost:5173/?card=14&log=mock-seed-1                     1200x675
+http://localhost:5173/?card=14&log=mock-seed-1&size=1080x1350      1080x1350
+```
+
+`card` is a turn id from the log (the `id` field; `npm run highlights` gives good ones, as the
+`facesTurn`). To save PNGs, no server needed:
+
+```bash
+npm run card -- games/mock-seed-1.json 14
+```
+
+It writes `.artifacts/cards/mock-seed-1-turn-14-1200x675.png` and `...-1080x1350.png` with
+Playwright (`--size 1200x675|1080x1350|both`, `--out <folder>`, `--name <name>`). A quote longer
+than about 360 characters (wide) or 560 (tall) is cut at a word with an ellipsis; the replay page
+has the full text. On your own machine run `npx playwright install chromium` once first.
+
 Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
 `npx playwright install chromium` once first.
 
