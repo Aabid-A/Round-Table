@@ -66,7 +66,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     praises; the final reveal.
   - Output as text and JSON. Tests on fixture logs built for each rule.
 
-- [ ] **M6. Season stats (the Betrayal Index).** `npm run stats -- games/`
+- [x] **M6. Season stats (the Betrayal Index).** `npm run stats -- games/`
   aggregates logs per model: games, wins by role, times caught as a traitor,
   faithfuls banished with their vote, recruit offers accepted, and fallback
   rate. Output as JSON, plus a stats page in the web app. Tests on fixtures.
