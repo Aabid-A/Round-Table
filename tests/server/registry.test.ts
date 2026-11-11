@@ -103,4 +103,19 @@ describe('Registry', () => {
     expect(registry.get(r.value.code)).toBeUndefined();
     expect(registry.get(running.value.code)).toBe(running.value); // an unfinished room is not touched
   });
+
+  it('limits how many open rooms one address may have, not counting finished ones or other addresses', () => {
+    const registry = new Registry();
+    const made = Array.from({ length: LIMITS.roomsPerOwner }, () => registry.create(mock, undefined, '10.0.0.1'));
+    expect(made.every((r) => r.ok)).toBe(true);
+    expect(registry.create(mock, undefined, '10.0.0.1')).toEqual({ ok: false, error: `You already have ${LIMITS.roomsPerOwner} rooms open. Finish or leave one first.` });
+    expect(registry.create(mock, undefined, '10.0.0.2').ok).toBe(true); // another address is not affected
+    expect(registry.create(mock).ok).toBe(true); // an unknown address is not limited here
+    const first = made[0];
+    if (!first?.ok) throw new Error('create');
+    first.value.phase = 'finished';
+    expect(registry.create(mock, undefined, '10.0.0.1').ok).toBe(true); // a finished room does not count
+    first.value.close('left');
+    expect(registry.create(mock, undefined, '10.0.0.1').ok).toBe(false); // the other two are still open
+  });
 });

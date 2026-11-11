@@ -6,6 +6,8 @@ export interface RegistryOptions {
   /** Injectable for tests. */
   now?: () => number;
   makeCode?: () => string;
+  /** Open rooms one address may have. */
+  maxRoomsPerOwner?: number;
 }
 
 const randomCode = (): string => Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
@@ -15,25 +17,32 @@ export class Registry {
   private readonly rooms = new Map<string, Room>();
   private readonly now: () => number;
   private readonly makeCode: () => string;
+  private readonly maxRoomsPerOwner: number;
 
   constructor(opts: RegistryOptions = {}) {
     this.now = opts.now ?? Date.now;
     this.makeCode = opts.makeCode ?? randomCode;
+    this.maxRoomsPerOwner = opts.maxRoomsPerOwner ?? LIMITS.roomsPerOwner;
   }
 
   get size(): number {
     return this.rooms.size;
   }
 
-  create(setup: AiSetup, seed?: number): Result<Room> {
+  create(setup: AiSetup, seed?: number, owner: string | null = null): Result<Room> {
     this.sweep();
     if (this.rooms.size >= LIMITS.rooms) return { ok: false, error: 'This server is full. Try again in a while.' };
+    if (owner !== null) {
+      const open = [...this.rooms.values()].filter((r) => r.owner === owner && r.phase !== 'finished').length;
+      if (open >= this.maxRoomsPerOwner) return { ok: false, error: `You already have ${this.maxRoomsPerOwner} rooms open. Finish or leave one first.` };
+    }
     let code = this.makeCode();
     for (let tries = 0; this.rooms.has(code); tries++) {
       if (tries >= 20) return { ok: false, error: 'Could not make a room code. Try again.' };
       code = this.makeCode();
     }
     const room = new Room(code, setup, seed ?? randomInt(2 ** 31), this.now());
+    room.owner = owner;
     this.rooms.set(code, room);
     return { ok: true, value: room };
   }

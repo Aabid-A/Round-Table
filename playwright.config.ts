@@ -30,7 +30,7 @@ export default defineConfig({
       port: ROOM_PORT,
       reuseExistingServer: false,
       timeout: 30_000,
-      env: { PORT: String(ROOM_PORT), TURN_MS: '6000', ABANDON_MS: '3000', ALLOW_SEED: '1' },
+      env: { PORT: String(ROOM_PORT), TURN_MS: '6000', ABANDON_MS: '3000', ALLOW_SEED: '1', MAX_ROOMS_PER_ADDRESS: '1000', MAX_CONNECTIONS_PER_ADDRESS: '1000' },
     },
   ],
 });

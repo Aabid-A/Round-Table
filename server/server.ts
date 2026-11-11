@@ -1,3 +1,4 @@
+import type { IncomingMessage } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { LIMITS, type ServerMessage } from './protocol.js';
 import { Registry } from './registry.js';
@@ -14,6 +15,12 @@ export interface ServerOptions {
   sweepMs?: number;
   /** Let the page choose a room's seed (tests and replays only: the seed decides every role). */
   allowSeed?: boolean;
+  /** Take a client's address from the first X-Forwarded-For entry (set this only behind a reverse proxy you run). */
+  trustProxy?: boolean;
+  /** Connections one address may hold. */
+  maxConnectionsPerAddress?: number;
+  /** Open rooms one address may have (used when no registry is given). */
+  maxRoomsPerAddress?: number;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   aiTimeoutMs?: number;
@@ -29,6 +36,13 @@ export interface RunningServer {
 
 const PING_MS = 30_000;
 
+/** Where a connection came from: the socket's address, or behind your own reverse proxy the first X-Forwarded-For entry. */
+function addressOf(req: IncomingMessage, trustProxy: boolean): string | null {
+  const forwarded = trustProxy ? req.headers['x-forwarded-for'] : undefined;
+  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim();
+  return first || req.socket.remoteAddress || null;
+}
+
 /** Wrap a socket as the room's Conn: JSON out, and nothing thrown at a socket that already closed. */
 function connOf(ws: WebSocket): Conn {
   return {
@@ -43,29 +57,39 @@ function connOf(ws: WebSocket): Conn {
 
 /** Start the room server. The `ws` library enforces the message size limit; each connection also has a rate limit. */
 export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
-  const registry = opts.registry ?? new Registry();
+  const registry = opts.registry ?? new Registry(opts.maxRoomsPerAddress !== undefined ? { maxRoomsPerOwner: opts.maxRoomsPerAddress } : {});
   const runtimes = new Map<string, Runtime>();
   const log = opts.log ?? ((line: string) => console.log(`${new Date().toISOString()} ${line}`));
   const wss = new WebSocketServer({ port: opts.port ?? 0, ...(opts.host ? { host: opts.host } : {}), maxPayload: LIMITS.messageBytes });
 
-  wss.on('connection', (ws) => {
-    if (wss.clients.size > LIMITS.connections) {
+  const perAddress = new Map<string, number>();
+  const maxPerAddress = opts.maxConnectionsPerAddress ?? LIMITS.connectionsPerAddress;
+
+  wss.on('connection', (ws, req) => {
+    const address = addressOf(req, opts.trustProxy ?? false);
+    const held = address === null ? 0 : (perAddress.get(address) ?? 0);
+    if (wss.clients.size > LIMITS.connections || held >= maxPerAddress) {
       ws.close(1013, 'busy');
       return;
     }
+    if (address !== null) perAddress.set(address, held + 1);
     const conn = connOf(ws);
-    const session = new Session(conn, {
-      registry,
-      runtimes,
-      options: {
-        turnMs: opts.turnMs ?? LIMITS.turnMs,
-        abandonMs: opts.abandonMs ?? 2 * 60_000,
-        log,
-        ...(opts.allowSeed ? { allowSeed: true } : {}),
-        ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
-        ...(opts.aiTimeoutMs !== undefined ? { aiTimeoutMs: opts.aiTimeoutMs } : {}),
+    const session = new Session(
+      conn,
+      {
+        registry,
+        runtimes,
+        options: {
+          turnMs: opts.turnMs ?? LIMITS.turnMs,
+          abandonMs: opts.abandonMs ?? 2 * 60_000,
+          log,
+          ...(opts.allowSeed ? { allowSeed: true } : {}),
+          ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
+          ...(opts.aiTimeoutMs !== undefined ? { aiTimeoutMs: opts.aiTimeoutMs } : {}),
+        },
       },
-    });
+      address,
+    );
     let alive = true;
     ws.on('pong', () => (alive = true));
     const ping = setInterval(() => {
@@ -79,6 +103,11 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
     });
     ws.on('close', () => {
       clearInterval(ping);
+      if (address !== null) {
+        const left = (perAddress.get(address) ?? 1) - 1;
+        if (left <= 0) perAddress.delete(address);
+        else perAddress.set(address, left);
+      }
       session.disconnect();
     });
     ws.on('error', () => ws.terminate());

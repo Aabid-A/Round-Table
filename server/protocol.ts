@@ -26,6 +26,10 @@ export const LIMITS = {
   rooms: 50,
   /** Connections alive at once on one server. */
   connections: 400,
+  /** Connections one network address may hold at once, so one machine cannot use them all. */
+  connectionsPerAddress: 20,
+  /** Open rooms one network address may have, finished ones aside. */
+  roomsPerOwner: 3,
   /** A room is deleted this long after it was created, finished or not. */
   roomTtlMs: 2 * 60 * 60 * 1000,
   /** A finished room is deleted this long after its game ended (long enough to reload and see the result). */

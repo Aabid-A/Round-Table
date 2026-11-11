@@ -19,6 +19,9 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `TURN_MS` | server | How long a person has for one turn. Default 90000 (90 seconds). |
 | `ABANDON_MS` | server | How long a running game may have nobody connected before its room closes. Default 120000. |
 | `ALLOW_SEED` | server | Set to `1` to let a page choose a room's seed with `?seed=N`. For tests and replays only: the seed decides every role, so anyone who can pick it can work the roles out with the public engine code. Off by default; the server then picks a random seed and ignores the page's. |
+| `MAX_ROOMS_PER_ADDRESS` | server | Open rooms one network address may have. Default 3 (finished rooms do not count). |
+| `MAX_CONNECTIONS_PER_ADDRESS` | server | Connections one network address may hold. Default 20. |
+| `TRUST_PROXY` | server | Set to `1` only behind a reverse proxy you run: the address is then the first `X-Forwarded-For` entry. Without it, every client behind the proxy looks like one address and shares these limits. |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
 Time values are whole milliseconds from 100 to 86400000. A bad value stops the server and names the
@@ -81,7 +84,8 @@ could guess which seats are people.
 | Message size | 8 KiB (larger closes the connection) |
 | Rate | 30 messages per 10 seconds per connection; the first refusal says so, later ones are dropped |
 | Rooms at once | 50 |
-| Connections at once | 400 |
+| Connections at once | 400, and 20 per network address |
+| Open rooms per network address | 3 (finished rooms do not count) |
 | Room lifetime | 2 hours from creation, or 15 minutes after the game ended |
 | People per room | 8 |
 | Text | names 20 characters; speech 600; a message or a note 300 |

@@ -72,4 +72,32 @@ describe('the WebSocket server', () => {
     await host.closed();
     server = await startServer({ port: 0, log: () => undefined }); // so afterEach has something to close
   });
+
+  it('refuses connections beyond the limit for one address, and frees the place when one closes', async () => {
+    await server.close();
+    server = await startServer({ port: 0, log: () => undefined, maxConnectionsPerAddress: 2 });
+    const a = await connect();
+    const b = await connect();
+    const c = await connect();
+    expect(await c.closed()).toBe(1013);
+    expect(a.closeCode).toBeNull();
+    expect(b.closeCode).toBeNull();
+    a.close();
+    await waitFor(() => a.closeCode !== null);
+    const d = await connect();
+    d.send({ t: 'create', name: 'Quinn', mode: 'mock' });
+    expect(await d.next('joined')).toMatchObject({ you: 'Quinn' });
+  });
+
+  it('limits rooms per address through real connections', async () => {
+    const hosts = [];
+    for (let i = 0; i < 4; i++) {
+      const c = await connect();
+      c.send({ t: 'create', name: `Host${i}`, mode: 'mock' });
+      hosts.push(c);
+    }
+    await hosts[3]!.next('error');
+    expect(hosts[3]!.messages.find((m) => m.t === 'error')).toMatchObject({ message: expect.stringContaining('rooms open') });
+    await hosts[0]!.next('joined');
+  });
 });

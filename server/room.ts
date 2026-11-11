@@ -24,6 +24,8 @@ const refuse = (error: string): { ok: false; error: string } => ({ ok: false, er
 export class Room {
   readonly seats: Seat[] = [];
   phase: RoomPhase = 'lobby';
+  /** Who made the room (a network address), for the per-address room limit. */
+  owner: string | null = null;
   /** When the game ended, for expiry. */
   finishedAt: number | null = null;
   private readonly closers: (() => void)[] = [];
