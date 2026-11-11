@@ -36,15 +36,17 @@ export function drawGroupCard(canvas: HTMLCanvasElement, log: GameLog, outcome: 
   const headline = limitLines(ctx, wrap(ctx, text.headline, textWidth), 3, textWidth);
   headline.forEach((l, i) => ctx.fillText(l, pad, 190 + i * 88));
 
+  // The facts sit at the bottom of the card, so the headline has the top and the card has no empty bottom third.
   ctx.fillStyle = token('--muted');
   ctx.font = `400 32px ${font}`;
-  let y = 190 + headline.length * 88 + 40;
-  for (const line of text.lines) {
-    for (const l of limitLines(ctx, wrap(ctx, line, textWidth), 2, textWidth)) {
-      ctx.fillText(l, pad, y);
-      y += 44;
-    }
-  }
+  const detail = limitLines(
+    ctx,
+    text.lines.flatMap((line) => limitLines(ctx, wrap(ctx, line, textWidth), 2, textWidth)),
+    5,
+    textWidth,
+  );
+  const firstBaseline = height - pad - (detail.length - 1) * 44;
+  detail.forEach((l, i) => ctx.fillText(l, pad, firstBaseline + i * 44));
 }
 
 export function groupCardPng(log: GameLog, outcome: RoomOutcome): Promise<Blob> {
