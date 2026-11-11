@@ -47,7 +47,7 @@ export function RoomPage() {
         turn={state.view.turn}
         timedOut={state.view.timedOut}
         offline={!state.online}
-        onAnswer={(turn, answer) => connection.send({ t: 'answer', turn, answer })}
+        onAnswer={(turn, answer) => (dispatch({ kind: 'answered' }), connection.send({ t: 'answer', turn, answer }))}
         onLeave={() => connection.leave()}
       />
     );

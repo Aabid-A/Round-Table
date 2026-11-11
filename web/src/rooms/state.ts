@@ -37,7 +37,7 @@ export interface RoomState {
   error: string | null;
 }
 
-export type RoomEvent = { kind: 'message'; msg: ServerMessage } | { kind: 'offline' } | { kind: 'online' } | { kind: 'leave' } | { kind: 'dismissError' };
+export type RoomEvent = { kind: 'message'; msg: ServerMessage } | { kind: 'answered' } | { kind: 'offline' } | { kind: 'online' } | { kind: 'leave' } | { kind: 'dismissError' };
 
 export const initialState = (): RoomState => ({ view: { kind: 'home' }, me: null, online: true, error: null });
 
@@ -51,6 +51,9 @@ export function roomReducer(state: RoomState, event: RoomEvent): RoomState {
       return initialState();
     case 'dismissError':
       return { ...state, error: null };
+    case 'answered':
+      // The person has caught up with the game again, so the note about a missed turn has done its job.
+      return state.view.kind === 'playing' ? { ...state, view: { ...state.view, timedOut: false } } : state;
     case 'message':
       return onMessage(state, event.msg);
   }
@@ -72,7 +75,8 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
     case 'turn': {
       if (view.kind === 'finished' || view.kind === 'closed') return state;
       const turn: TurnInfo = { id: msg.turn, phase: msg.phase, options: msg.options, user: msg.user, timeoutMs: msg.timeoutMs, error: msg.error };
-      return { ...state, view: { kind: 'playing', phase: msg.phase, turn, timedOut: false } };
+      // A missed turn is reported until the person answers a later one: the next turn often arrives at once.
+      return { ...state, view: { kind: 'playing', phase: msg.phase, turn, timedOut: view.kind === 'playing' ? view.timedOut : false } };
     }
     case 'turn_over':
       return view.kind === 'playing' && view.turn?.id === msg.turn ? { ...state, view: { ...view, turn: null, timedOut: true } } : state;

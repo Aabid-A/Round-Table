@@ -35,7 +35,11 @@ describe('roomReducer', () => {
     expect(run([msg({ t: 'turn_over', turn: 1 })], s).view).toMatchObject({ turn: { id: 2 } });
     s = run([msg({ t: 'turn_over', turn: 2 })], s);
     expect(s.view).toEqual({ kind: 'playing', phase: 'vote', turn: null, timedOut: true });
-    expect(run([msg(turn(3))], s).view).toMatchObject({ timedOut: false, turn: { id: 3 } });
+    // The next turn often arrives at once, so the note stays until the person answers one.
+    s = run([msg(turn(3))], s);
+    expect(s.view).toMatchObject({ timedOut: true, turn: { id: 3 } });
+    expect(run([{ kind: 'answered' }], s).view).toMatchObject({ timedOut: false, turn: { id: 3 } });
+    expect(run([{ kind: 'answered' }], initialState()).view).toEqual({ kind: 'home' });
   });
 
   it('keeps the screen across a reconnect: offline, then the server seats the person again', () => {
