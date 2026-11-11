@@ -9,9 +9,12 @@ import { playMock } from '../helpers/game.js';
 let logPath = '';
 beforeAll(async () => {
   logPath = writeGameLog(await playMock(1), mkdtempSync(join(tmpdir(), 'rt-hl-')), 'mock-seed-1');
-});
+}, 60_000);
 
 const run = (...args: string[]) => spawnSync('npx', ['tsx', 'src/cli/highlights.ts', ...args], { encoding: 'utf8' });
+
+// Each case starts a tsx process, which is slow when the whole suite runs in parallel.
+const SLOW = 60_000;
 
 describe('npm run highlights', () => {
   it('prints ranked text with recording URLs for the log name taken from the file name', () => {
@@ -20,7 +23,7 @@ describe('npm run highlights', () => {
     expect(r.stdout).toMatch(/^#1 {2}\[\d+\] /);
     expect(r.stdout).toContain('final reveal');
     expect(r.stdout).toContain('http://localhost:5173/?mode=record&log=mock-seed-1&from=');
-  });
+  }, SLOW);
 
   it('prints JSON with --json and respects --limit, --base, --name and --aspect', () => {
     const r = run(logPath, '--json', '--limit', '1', '--base', 'http://example.test/', '--name', 'ep1', '--aspect', '9x16');
@@ -32,7 +35,7 @@ describe('npm run highlights', () => {
     expect(url.origin).toBe('http://example.test');
     expect(url.searchParams.get('log')).toBe('ep1');
     expect(url.searchParams.get('aspect')).toBe('9x16');
-  });
+  }, SLOW);
 
   it('exits 1 with a message for bad arguments, a missing file and a wrong log', () => {
     const cases: [string[], string][] = [
@@ -53,5 +56,5 @@ describe('npm run highlights', () => {
       expect(r.status, args.join(' ')).toBe(1);
       expect(r.stderr, args.join(' ')).toContain(why);
     }
-  });
+  }, SLOW);
 });
