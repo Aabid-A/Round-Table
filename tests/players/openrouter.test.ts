@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MOCK_CAST } from '../../src/players/mock.js';
-import { createOpenRouterPlayer, OPENROUTER_URL } from '../../src/players/openrouter.js';
+import { createOpenRouterPlayer, OPENROUTER_URL, parseUsage } from '../../src/players/openrouter.js';
 import type { PromptRequest } from '../../src/players/player.js';
 import { play, reply } from '../helpers/game.js';
 
@@ -9,6 +9,47 @@ const KEY = 'test-key-not-real';
 const okBody = (content: unknown): string => JSON.stringify({ choices: [{ message: { content } }] });
 const stub = (fn: (url: string, init: RequestInit) => Promise<Response>): typeof fetch =>
   ((url: string, init: RequestInit) => fn(url, init)) as unknown as typeof fetch;
+
+describe('usage', () => {
+  const withUsage = (usage: unknown): string =>
+    JSON.stringify({ choices: [{ message: { content: 'hi' } }], usage });
+
+  it('returns the usage block with the text', async () => {
+    const player = createOpenRouterPlayer({
+      model: 'm',
+      apiKey: KEY,
+      fetchImpl: stub(async () => new Response(withUsage({ prompt_tokens: 120, completion_tokens: 30, total_tokens: 150, cost: 0.0042 }), { status: 200 })),
+    });
+    expect(await player.respond(req)).toEqual({
+      text: 'hi',
+      usage: { promptTokens: 120, completionTokens: 30, totalTokens: 150, costUsd: 0.0042 },
+    });
+  });
+
+  it('keeps only the numbers the provider sent', async () => {
+    expect(parseUsage({ prompt_tokens: 5, total_tokens: 9 })).toEqual({ promptTokens: 5, totalTokens: 9 });
+    expect(parseUsage({ cost: '0.1', prompt_tokens: -1, completion_tokens: Number.NaN })).toBeUndefined();
+    expect(parseUsage(null)).toBeUndefined();
+    expect(parseUsage('x')).toBeUndefined();
+    expect(parseUsage({})).toBeUndefined();
+  });
+
+  it('returns plain text when the response has no usage', async () => {
+    const player = createOpenRouterPlayer({
+      model: 'm',
+      apiKey: KEY,
+      fetchImpl: stub(async () => new Response(withUsage(undefined), { status: 200 })),
+    });
+    expect(await player.respond(req)).toBe('hi');
+  });
+
+  it('lands in the game log on the attempt', async () => {
+    const fetchImpl = stub(async () => new Response(withUsage({ prompt_tokens: 1, completion_tokens: 2, total_tokens: 3, cost: 0.5 }), { status: 200 }));
+    const players = Object.fromEntries(MOCK_CAST.map((c) => [c.name, createOpenRouterPlayer({ model: 'm', apiKey: KEY, fetchImpl })]));
+    const log = await play(players, 1, { maxRounds: 1 });
+    expect(log.turns.flatMap((t) => t.attempts).every((a) => a.usage?.costUsd === 0.5)).toBe(true);
+  });
+});
 
 describe('createOpenRouterPlayer', () => {
   it('sends the expected request and returns the message content', async () => {
