@@ -3,13 +3,17 @@ import type { CardSize } from './params.js';
 /** The most characters of one quote a card shows; longer quotes are cut at a word with "…". */
 export const MAX_QUOTE_CHARS: Record<CardSize, number> = { '1200x675': 360, '1080x1350': 560 };
 
-/** Cut a quote to `max` characters at a word boundary, adding "…". Short quotes come back unchanged. */
+/**
+ * Cut a quote to `max` characters (counted as whole characters, so an emoji is never split) at a word boundary,
+ * adding "…". Short quotes come back unchanged.
+ */
 export function clipQuote(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
+  const chars = Array.from(text);
+  if (chars.length <= max) return text;
+  const cut = chars.slice(0, max).join('');
   const space = cut.lastIndexOf(' ');
   // Cut at a word unless the only space is too early to be worth it.
-  const end = space > max * 0.6 ? space : max;
+  const end = space > max * 0.6 ? space : cut.length;
   return `${cut.slice(0, end).replace(/[\s.,;:!?-]+$/, '')}…`;
 }
 

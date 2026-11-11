@@ -15,6 +15,14 @@ describe('clipQuote', () => {
     for (const n of [5, 17, 30, 44]) expect(clipQuote(text, n).length).toBeLessThanOrEqual(n + 1);
   });
 
+  it('never splits an emoji or other character outside the basic plane', () => {
+    const out = clipQuote('😀'.repeat(20), 11);
+    expect(out).toBe(`${'😀'.repeat(11)}…`);
+    expect(out).not.toMatch(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/);
+    expect(clipQuote('😀'.repeat(11), 11)).toBe('😀'.repeat(11));
+    expect(clipQuote('日本語のテキスト'.repeat(10), 12)).toBe(`${'日本語のテキスト日本語の'}…`);
+  });
+
   it('does not leave punctuation before the ellipsis, and cuts mid-word for one long word', () => {
     expect(clipQuote('wait, wait, wait, wait, wait', 12)).toBe('wait, wait…');
     expect(clipQuote('a'.repeat(50), 10)).toBe(`${'a'.repeat(10)}…`);
