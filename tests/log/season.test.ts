@@ -21,6 +21,25 @@ describe('readSeason', () => {
     expect(season.skipped[1]!.reason).toContain('schemaVersion 1');
   });
 
+  it('skips a log with missing parts instead of stopping the run', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rt-season-'));
+    const good = await playMock(1);
+    writeGameLog(good, dir, 'good');
+    const broken = (edit: (l: Record<string, any>) => void, name: string): void => {
+      const copy = JSON.parse(JSON.stringify(good));
+      edit(copy);
+      writeFileSync(join(dir, `${name}.json`), JSON.stringify(copy));
+    };
+    broken((l) => delete l.roles, 'no-roles');
+    broken((l) => delete l.cast[0].model, 'no-model');
+    broken((l) => delete l.turns[2].player, 'no-player');
+    broken((l) => delete l.events[0].afterTurn, 'no-after');
+    const season = readSeason(dir);
+    expect(season.logs).toHaveLength(1);
+    expect(season.skipped.map((s) => s.file)).toEqual(['no-after.json', 'no-model.json', 'no-player.json', 'no-roles.json']);
+    expect(season.skipped.every((s) => s.reason.startsWith('damaged log:'))).toBe(true);
+  });
+
   it('is empty for an empty folder and throws for a missing one', () => {
     expect(readSeason(mkdtempSync(join(tmpdir(), 'rt-season-')))).toEqual({ logs: [], skipped: [] });
     expect(() => readSeason(join(tmpdir(), 'rt-no-such-folder'))).toThrow();
