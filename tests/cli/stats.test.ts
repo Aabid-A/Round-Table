@@ -36,6 +36,19 @@ describe('npm run stats', () => {
     expect((JSON.parse(readFileSync(out, 'utf8')) as SeasonStats).games).toBe(3);
   }, SLOW);
 
+  it('creates the folder for --out, and fails before reading when it cannot', () => {
+    const base = mkdtempSync(join(tmpdir(), 'rt-stats-out-'));
+    const nested = join(base, 'a', 'b', 'stats.json');
+    expect(run(dir, '--out', nested).status).toBe(0);
+    expect((JSON.parse(readFileSync(nested, 'utf8')) as SeasonStats).games).toBe(3);
+    const blocker = join(base, 'file');
+    writeFileSync(blocker, 'x');
+    const bad = run(dir, '--out', join(blocker, 'stats.json'));
+    expect(bad.status).toBe(1);
+    expect(bad.stderr).toMatch(/ENOTDIR|EEXIST/);
+    expect(bad.stderr).not.toContain('skipped broken.json'); // it never got as far as reading the logs
+  }, SLOW);
+
   it('warns about an empty folder and exits 1 for no argument or a missing folder', () => {
     const empty = run(mkdtempSync(join(tmpdir(), 'rt-stats-empty-')));
     expect(empty.status).toBe(0);

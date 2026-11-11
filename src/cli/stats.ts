@@ -1,6 +1,8 @@
 import { writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { parseArgs } from 'node:util';
 import { readSeason } from '../log/season.js';
+import { ensureWritableDir } from '../log/writer.js';
 import { computeStats } from '../log/stats.js';
 
 const USAGE = 'usage: npm run stats -- <folder of game logs> [--out stats.json]';
@@ -9,6 +11,9 @@ function main(): void {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: { out: { type: 'string' } } });
   const dir = positionals[0];
   if (!dir || positionals.length > 1) throw new Error(USAGE);
+
+  // Find out now, not after reading every log, that the output can be written.
+  if (values.out) ensureWritableDir(dirname(values.out));
 
   const { logs, skipped } = readSeason(dir);
   for (const s of skipped) console.error(`skipped ${s.file}: ${s.reason}`);
