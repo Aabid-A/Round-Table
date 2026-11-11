@@ -28,10 +28,13 @@ export class CostCapReached extends Error {
   }
 }
 
-/** The next call "would pass" the cap if spend so far plus the dearest call yet exceeds it. */
 /** Float sums like 0.1 + 0.1 + 0.1 land a hair over 0.3; ignore differences below a billionth of a dollar. */
 const CAP_EPSILON = 1e-9;
 
+/**
+ * The next call "would pass" the cap if spend so far plus the dearest call yet exceeds it.
+ * It is a prediction, not a hard ceiling: the first call, or a call dearer than any before it, can overshoot.
+ */
 export function wouldPassCap(b: Budget): boolean {
   return b.spentUsd + b.maxCallUsd > b.maxUsd + CAP_EPSILON;
 }
@@ -53,7 +56,8 @@ function retryNote(raw: string | null, error: string): string {
 /**
  * Ask one player for one turn. An invalid reply (or a thrown player error) gets
  * exactly one retry with the error included; after that a deterministic fallback
- * is used and logged with fallback: true. Never throws.
+ * is used and logged with fallback: true. Never throws for a bad reply or a player error; the only
+ * exception is CostCapReached, which stops the whole game.
  */
 export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promise<Turn> {
   const player = request.view.player;
@@ -100,7 +104,8 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
       ...(extracted ? { extracted: true as const } : {}),
       ...(usage ? { usage } : {}),
     });
-    if (ctx.budget && usage?.costUsd !== undefined) {
+    // A cost that is not a finite, non-negative number would corrupt the total (NaN never caps, negative refunds).
+    if (ctx.budget && usage?.costUsd !== undefined && Number.isFinite(usage.costUsd) && usage.costUsd >= 0) {
       ctx.budget.spentUsd += usage.costUsd;
       ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, usage.costUsd);
     }

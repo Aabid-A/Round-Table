@@ -81,6 +81,42 @@ describe('cost cap', () => {
     expect(log.result.costCap).toEqual({ maxUsd: 0.3, spentUsd: 0.3 });
   });
 
+  it('ignores costs that are not finite non-negative numbers', async () => {
+    for (const bad of [Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+      const log = await run(costed(1, (n) => (n % 2 === 0 ? bad : 0.25)), 1);
+      const attempts = log.turns.flatMap((t) => t.attempts);
+      expect(log.result.reason, String(bad)).toBe('cost_cap');
+      // Only the 0.25 calls count, so exactly four of them were paid for.
+      expect(attempts.filter((a) => a.usage?.costUsd === 0.25), String(bad)).toHaveLength(4);
+      expect(log.result.costCap?.spentUsd).toBe(1);
+    }
+  });
+
+  it('counts a call with no reported cost as free, and stays capped on the costed ones', async () => {
+    const base = createMockPlayers(MOCK_CAST, 1);
+    let n = 0;
+    const players = Object.fromEntries(Object.entries(base).map(([name, p]) => [name, {
+      respond: async (r) => {
+        const text = (await p.respond(r)) as string;
+        return n++ % 2 === 0 ? { text, usage: { costUsd: 0.5 } } : { text };
+      },
+    } satisfies Player]));
+    const log = await run(players, 1);
+    expect(log.result.reason).toBe('cost_cap');
+    expect(log.result.costCap?.spentUsd).toBe(1);
+    // Calls 0 (0.5), 1 (free), 2 (0.5); the check before call 3 sees 1 + 0.5 > 1.
+    expect(log.turns.flatMap((t) => t.attempts)).toHaveLength(3);
+  });
+
+  it('can overshoot on the first call or on a call dearer than any before it', async () => {
+    // Documented limit: the check predicts from calls already seen.
+    const first = await run(costed(1, () => 5), 1);
+    expect(first.turns.flatMap((t) => t.attempts)).toHaveLength(1);
+    expect(first.result.costCap).toEqual({ maxUsd: 1, spentUsd: 5 });
+    const spike = await run(costed(1, (n) => (n < 3 ? 1 : 10)), 5);
+    expect(spike.result.costCap?.spentUsd).toBe(13);
+  });
+
   it('replays a capped game identically', async () => {
     const original = await run(costed(2, () => 0.25), 2, 2);
     const replayed = await run(createReplayPlayers(original), 2, 2);
