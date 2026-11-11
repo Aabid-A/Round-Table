@@ -104,6 +104,12 @@ http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice a
 - When a clip finishes it holds the last frame and sets `data-done="true"` on the `.rec`
   element, so a screen recorder or script knows when to stop.
 
+### Highlights
+
+`npm run highlights -- games/mock-seed-1.json` lists the best moments of a game, ranked,
+each with a recording-mode URL (and a two-faces URL where the moment is speech against
+private notes). `--json` prints JSON. Rules and options: [docs/HIGHLIGHTS.md](docs/HIGHLIGHTS.md).
+
 Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
 `npx playwright install chromium` once first.
 
