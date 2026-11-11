@@ -208,7 +208,8 @@ const MARK = '\u0001';
  * The name is masked first, so a cast name like "Smith, John" or "Yet" is not split or read as a keyword.
  */
 const praisesInClause = (speech: string, name: string): boolean =>
-  sentences(speech.replace(nameRegex(name, 'gu'), MARK)).some((s) =>
+  // A stray MARK in the speech itself must not count as a masked name.
+  sentences(speech.replaceAll(MARK, ' ').replace(nameRegex(name, 'gu'), MARK)).some((s) =>
     clauses(s).some((c) => c.includes(MARK) && PRAISE.test(c) && !NEGATION.test(c)),
   );
 

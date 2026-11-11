@@ -248,6 +248,12 @@ describe('notesContradictPraise', () => {
     for (const name of ['a:b', 'Smith, John', 'Yet', 'No', 'Nor', 'Though']) expect(praised(name), name).toHaveLength(1);
   });
 
+  it('is not fooled by a control character in the speech that looks like a masked name', () => {
+    expect(find('I trust \u0001 completely.', 'F1 is a target.')).toEqual([]);
+    expect(find('Trust \u0001 .', 'F1 is a target.')).toEqual([]);
+    expect(find('I trust \u0001 and I trust F1.', 'F1 is a target.')).toHaveLength(1);
+  });
+
   it('still skips a negated clause and a clause about someone else for such names', () => {
     const neg = logFrom({ No: 'faithful', T1: 'traitor' }, turnWith('I do not trust No.', 'No is my target.'));
     expect(notesContradictPraise(buildContext(neg))).toEqual([]);
