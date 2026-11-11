@@ -2,7 +2,7 @@ import type { Player } from '../players/player.js';
 import type { CastMember } from '../types.js';
 import { createRng } from './rng.js';
 import { assignRoles, aliveNames, checkEnd, createState, getPlayer, winnerOf } from './state.js';
-import type { EngineContext } from './turn.js';
+import { CostCapReached, type EngineContext } from './turn.js';
 import {
   runBanishment,
   runBreakfast,
@@ -21,6 +21,8 @@ export interface RunGameInput {
   players: Record<string, Player>;
   buildPrompt: (request: PhaseRequest) => string;
   systemPrompt: string;
+  /** Stop the game cleanly before a call that could pass this many USD in total. */
+  maxCostUsd?: number;
 }
 
 /**
@@ -33,6 +35,9 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
   if (!Number.isInteger(settings.maxRounds) || settings.maxRounds < 1) throw new Error('maxRounds must be an integer >= 1');
   if (!Number.isInteger(settings.traitors) || settings.traitors < 1 || settings.traitors >= cast.length) throw new Error('traitors must be between 1 and players - 1');
 
+  if (input.maxCostUsd !== undefined && !(Number.isFinite(input.maxCostUsd) && input.maxCostUsd > 0)) {
+    throw new Error('maxCostUsd must be a positive number');
+  }
   const rng = createRng(seed);
   const roles = assignRoles(cast.map((c) => c.name), settings.traitors, rng);
   const state = createState(cast, roles);
@@ -42,26 +47,32 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     players: input.players,
     buildPrompt: input.buildPrompt,
     systemPrompt: input.systemPrompt,
+    ...(input.maxCostUsd !== undefined ? { budget: { maxUsd: input.maxCostUsd, spentUsd: 0, maxCallUsd: 0 } } : {}),
   };
 
   let reason: EndReason | null = null;
-  for (let round = 1; round <= settings.maxRounds && reason === null; round++) {
-    state.round = round;
-    const victim = await runNight(ctx);
-    runBreakfast(ctx, victim);
-    reason = checkEnd(state);
-    if (reason) break;
+  try {
+    for (let round = 1; round <= settings.maxRounds && reason === null; round++) {
+      state.round = round;
+      const victim = await runNight(ctx);
+      runBreakfast(ctx, victim);
+      reason = checkEnd(state);
+      if (reason) break;
 
-    await runWhispers(ctx);
-    await runRoundTable(ctx);
-    const banished = await runBanishment(ctx);
-    await runRecruitment(ctx, banished);
-    reason = checkEnd(state);
-    if (reason) break;
+      await runWhispers(ctx);
+      await runRoundTable(ctx);
+      const banished = await runBanishment(ctx);
+      await runRecruitment(ctx, banished);
+      reason = checkEnd(state);
+      if (reason) break;
 
-    if (aliveNames(state).length <= ENDGAME_AT && (await runEndgameVote(ctx))) reason = 'endgame_vote';
+      if (aliveNames(state).length <= ENDGAME_AT && (await runEndgameVote(ctx))) reason = 'endgame_vote';
+    }
+    reason ??= 'max_rounds';
+  } catch (e) {
+    if (!(e instanceof CostCapReached)) throw e;
+    reason = 'cost_cap';
   }
-  reason ??= 'max_rounds';
 
   return {
     schemaVersion: 1,
@@ -73,10 +84,11 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     turns: state.turns,
     events: state.events,
     result: {
-      winner: winnerOf(state),
+      winner: reason === 'cost_cap' ? null : winnerOf(state),
       reason,
       rounds: state.round,
       survivors: aliveNames(state).map((name) => ({ name, role: getPlayer(state, name).role })),
+      ...(reason === 'cost_cap' && ctx.budget ? { costCap: { maxUsd: ctx.budget.maxUsd, spentUsd: ctx.budget.spentUsd } } : {}),
     },
   };
 }

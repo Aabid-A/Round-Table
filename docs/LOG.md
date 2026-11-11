@@ -44,10 +44,11 @@ Rules for readers:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `winner` | `"traitor" \| "faithful"` | Traitors win if any traitor is alive at the end. |
+| `winner` | `"traitor" \| "faithful" \| null` | Traitors win if any traitor is alive at the end. `null` only when `reason` is `cost_cap`. |
 | `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds"` | Why it ended. |
 | `rounds` | integer | Rounds played (the last round may be partial). |
 | `survivors` | `{ name: string, role: "traitor" \| "faithful" }[]` | Players alive at the end, with their final role. |
+| `costCap` | `{ maxUsd: number, spentUsd: number }` (optional) | Present only when `reason` is `cost_cap`: the cap and what had been spent. |
 
 ## Turn
 
@@ -64,6 +65,11 @@ One call to a player for one decision, with the retry and fallback record.
 | `private_notes` | string | The player's stated strategy for this turn. `""` on fallback. |
 | `action` | Action | The accepted action, or the fallback action. |
 | `fallback` | boolean | `true` if no valid reply was obtained and a deterministic fallback action was used. |
+
+A game stopped by the cost cap ends mid-round. Before each model call the engine
+checks whether spend so far plus the dearest single call so far would pass the cap;
+if so it stops before the call. If that happens before a retry, the turn is settled
+with its fallback (`fallback: true`, one attempt) and the next turn stops the game.
 
 Night turns happen twice in a round when traitors disagree: the second set of
 `night` turns is the single re-proposal.

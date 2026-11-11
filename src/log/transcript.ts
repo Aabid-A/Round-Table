@@ -110,7 +110,9 @@ export function renderTranscript(log: GameLog): string {
   }
 
   const r = log.result;
-  out.push('', `=== Result: the ${r.winner}s win (${r.reason.replace(/_/g, ' ')}, round ${r.rounds}) ===`);
+  const outcome = r.winner === null ? 'No winner' : `The ${r.winner}s win`;
+  out.push('', `=== Result: ${outcome} (${r.reason.replace(/_/g, ' ')}, round ${r.rounds}) ===`);
+  if (r.costCap) out.push(`Stopped early: the next call could pass the $${r.costCap.maxUsd} cost cap ($${r.costCap.spentUsd} spent).`);
   out.push(`Survivors: ${r.survivors.map((s) => `${s.name} (${s.role})`).join(', ')}`);
   return `${out.join('\n')}\n`;
 }
