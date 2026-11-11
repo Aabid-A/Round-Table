@@ -116,6 +116,19 @@ describe('RoomConnection', () => {
     expect(JSON.parse(sockets[0]!.sent[0]!)).toEqual({ t: 'rejoin', code: 'AB2CD', token: 'tok' });
   });
 
+  it('closes and stops retrying when the page goes away, but keeps the seat for a reload', () => {
+    saved = { code: 'AB2CD', token: 'tok' };
+    conn.send({ t: 'start' });
+    sockets[0]!.open();
+    conn.dispose();
+    expect(sockets[0]!.closed).toBe(true);
+    sockets[0]!.drop();
+    vi.advanceTimersByTime(5000);
+    expect(sockets).toHaveLength(1);
+    expect(saved).toEqual({ code: 'AB2CD', token: 'tok' });
+    expect(events.some((e) => e.kind === 'offline')).toBe(false);
+  });
+
   it('forgets the seat and closes when the person leaves, without reconnecting', () => {
     saved = { code: 'AB2CD', token: 'tok' };
     conn.send({ t: 'start' });

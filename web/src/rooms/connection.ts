@@ -84,6 +84,17 @@ export class RoomConnection {
     this.opts.onEvent({ kind: 'leave' });
   }
 
+  /** The page is going away: close the socket and stop retrying, but keep the saved seat so a reload can resume. */
+  dispose(): void {
+    this.done = true;
+    this.queue = [];
+    this.stopTimer();
+    const socket = this.socket;
+    this.socket = null;
+    this.open = false;
+    socket?.close();
+  }
+
   private stopTimer(): void {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
