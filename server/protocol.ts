@@ -1,4 +1,5 @@
 import { nameProblem } from '../src/cast.js';
+import { normalizeCode } from '../src/roomCode.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import type { GameLog } from '../src/engine/types.js';
 import type { Phase } from '../src/types.js';
@@ -30,9 +31,7 @@ export const LIMITS = {
   turnMs: 90_000,
 } as const;
 
-export const CODE_LENGTH = 5;
-/** Letters and digits that are hard to confuse when read aloud. */
-export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export { CODE_ALPHABET, CODE_LENGTH, normalizeCode } from '../src/roomCode.js';
 export const MAX_HUMANS = 8;
 
 // ---- client -> server ----
@@ -50,12 +49,6 @@ export type Parsed = { ok: true; msg: ClientMessage } | { ok: false; error: stri
 
 const fail = (error: string): Parsed => ({ ok: false, error });
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-
-export const normalizeCode = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
-  const code = value.trim().toUpperCase();
-  return code.length === CODE_LENGTH && [...code].every((c) => CODE_ALPHABET.includes(c)) ? code : null;
-};
 
 /** Check one incoming message. Anything unexpected is refused with a short reason; nothing here throws. */
 export function parseClientMessage(text: string): Parsed {
