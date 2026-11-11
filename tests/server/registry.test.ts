@@ -118,4 +118,46 @@ describe('Registry', () => {
     first.value.close('left');
     expect(registry.create(mock, undefined, '10.0.0.1').ok).toBe(false); // the other two are still open
   });
+
+  it('closes a lobby that has had nobody connected for two minutes, so it stops holding its owner\'s room limit', () => {
+    let now = 0;
+    const registry = new Registry({ now: () => now });
+    const mine = Array.from({ length: LIMITS.roomsPerOwner }, () => registry.create(mock, undefined, '10.0.0.1'));
+    const rooms = mine.map((r) => {
+      if (!r.ok) throw new Error('create');
+      r.value.join('Host', new FakeConn());
+      return r.value;
+    });
+    expect(registry.create(mock, undefined, '10.0.0.1').ok).toBe(false);
+    for (const room of rooms) room.detach(room.seats[0]!.conn!); // everyone leaves
+    now = 1000;
+    registry.sweep(); // first seen empty at 1000
+    now = 1000 + LIMITS.emptyLobbyMs - 1;
+    expect(registry.sweep()).toBe(0);
+    now = 1000 + LIMITS.emptyLobbyMs;
+    expect(registry.sweep()).toBe(LIMITS.roomsPerOwner);
+    expect(registry.create(mock, undefined, '10.0.0.1').ok).toBe(true);
+  });
+
+  it('does not close a lobby someone comes back to, nor one that is running', () => {
+    let now = 0;
+    const registry = new Registry({ now: () => now });
+    const a = registry.create(mock);
+    const b = registry.create(mock);
+    if (!a.ok || !b.ok) throw new Error('create');
+    const conn = new FakeConn();
+    const joined = a.value.join('Quinn', conn);
+    b.value.join('Rae', new FakeConn());
+    if (!joined.ok) throw new Error('join');
+    b.value.phase = 'playing'; // a game under way is handled by the abandon timer, not this
+    a.value.detach(conn);
+    now = 1000;
+    registry.sweep();
+    now = 1000 + LIMITS.emptyLobbyMs - 1;
+    a.value.rejoin(joined.value.token, new FakeConn()); // comes back just in time
+    expect(registry.sweep()).toBe(0);
+    now = 1000 + 5 * LIMITS.emptyLobbyMs;
+    expect(registry.sweep()).toBe(0); // the lobby has a person again, and the playing room is left alone
+    expect(registry.size).toBe(2);
+  });
 });

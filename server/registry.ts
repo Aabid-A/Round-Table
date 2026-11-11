@@ -15,6 +15,8 @@ const randomCode = (): string => Array.from({ length: CODE_LENGTH }, () => CODE_
 /** Every live room on this server, by code. Rooms live in memory only: a restart ends them. */
 export class Registry {
   private readonly rooms = new Map<string, Room>();
+  /** When each lobby was first seen with nobody connected. */
+  private readonly emptySince = new Map<string, number>();
   private readonly now: () => number;
   private readonly makeCode: () => string;
   private readonly maxRoomsPerOwner: number;
@@ -57,15 +59,20 @@ export class Registry {
     return room;
   }
 
-  /** Remove rooms that closed, rooms older than the room lifetime, and rooms that finished a while ago. Returns how many were removed. */
+  /** Remove rooms that closed, rooms older than the room lifetime, rooms that finished a while ago, and lobbies nobody is in. Returns how many were removed. */
   sweep(): number {
     let removed = 0;
     for (const [code, room] of this.rooms) {
       const now = this.now();
       const old = now - room.createdAt >= LIMITS.roomTtlMs;
       const doneLongAgo = room.finishedAt !== null && now - room.finishedAt >= LIMITS.finishedTtlMs;
-      if (room.phase !== 'closed' && !old && !doneLongAgo) continue;
-      room.close('This room expired.'); // does nothing for a room that already closed
+      const empty = room.phase === 'lobby' && room.seats.every((seat) => seat.conn === null);
+      if (!empty) this.emptySince.delete(code);
+      else if (!this.emptySince.has(code)) this.emptySince.set(code, now);
+      const abandoned = empty && now - (this.emptySince.get(code) ?? now) >= LIMITS.emptyLobbyMs;
+      if (room.phase !== 'closed' && !old && !doneLongAgo && !abandoned) continue;
+      this.emptySince.delete(code);
+      room.close(abandoned ? 'This room was left empty.' : 'This room expired.'); // does nothing for a room that already closed
       this.rooms.delete(code);
       removed++;
     }

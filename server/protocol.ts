@@ -34,6 +34,8 @@ export const LIMITS = {
   roomTtlMs: 2 * 60 * 60 * 1000,
   /** A finished room is deleted this long after its game ended (long enough to reload and see the result). */
   finishedTtlMs: 15 * 60 * 1000,
+  /** A lobby with nobody connected is closed after this long, so abandoned rooms do not hold a person's room limit for hours. */
+  emptyLobbyMs: 2 * 60 * 1000,
   /** How long a person has for one turn. */
   turnMs: 90_000,
 } as const;

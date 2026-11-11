@@ -87,6 +87,7 @@ could guess which seats are people.
 | Connections at once | 400, and 20 per network address |
 | Open rooms per network address | 3 (finished rooms do not count) |
 | Room lifetime | 2 hours from creation, or 15 minutes after the game ended |
+| Empty lobby | closed after 2 minutes with nobody connected |
 | People per room | 8 |
 | Text | names 20 characters; speech 600; a message or a note 300 |
 
