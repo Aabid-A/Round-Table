@@ -166,6 +166,9 @@ test('quit really stops the game: no further calls to OpenRouter after it', asyn
 test('real models: the key goes only to OpenRouter, is not stored or shown, and the spend cap stops the game', async ({ page, context }) => {
   const KEY = 'sk-e2e-not-a-real-key';
   const requests: { url: string; headers: Record<string, string>; body: string }[] = [];
+  const consoleText: string[] = [];
+  page.on('console', (m) => consoleText.push(m.text()));
+  page.on('pageerror', (e) => consoleText.push(String(e)));
   page.on('request', (r) => requests.push({ url: r.url(), headers: r.headers(), body: r.postData() ?? '' }));
   await page.route(OPENROUTER, (route) =>
     route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.6 } }), contentType: 'application/json' }),
@@ -197,6 +200,10 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
   expect(stored).toEqual({ local: '{}', session: '{}', cookie: '' });
   expect(await context.cookies()).toEqual([]);
   expect(await page.locator('body').innerText()).not.toContain(KEY);
+  expect(await page.title(), 'title').not.toContain(KEY);
+  expect(page.url(), 'url').not.toContain(KEY);
+  expect(consoleText.join('\n'), 'console').not.toContain(KEY);
+  expect(await page.evaluate(() => document.documentElement.outerHTML.includes('sk-e2e')), 'DOM (inputs, attributes)').toBe(false);
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download the game log' }).click()]);
   expect(readFileSync((await download.path())!, 'utf8')).not.toContain(KEY);
 });

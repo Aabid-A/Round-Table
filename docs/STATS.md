@@ -22,6 +22,9 @@ that page. `?page=stats&stats=<name>` reads `web/public/<name>.json` instead.
 by a cost cap has none). `models` is sorted by betrayal index, best first, then more games,
 then model name.
 
+Logs from solo play (`?mode=play`) have one seat with `model: "human"`. It gets its own row, so
+read it as a person, not a model, and leave it out of any model ranking you publish.
+
 Per model:
 
 | Field | Meaning |
