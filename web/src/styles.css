@@ -19,6 +19,12 @@
   --target: 44px;
   --seat-w: 76px;
   --motion: 160ms;
+  --w-app: 960px;
+  --w-narrow: 520px;
+  --w-table: 560px;
+  --w-aside: 320px;
+  --w-chip: 180px;
+  --w-scrub: 160px;
 
   --bg: #f6f6f3;
   --surface: #ffffff;
@@ -99,7 +105,7 @@ label {
 }
 
 .app {
-  max-width: 960px;
+  max-width: var(--w-app);
   margin: 0 auto;
   padding: var(--space-4);
 }
@@ -151,7 +157,7 @@ h3 {
 .loader {
   display: grid;
   gap: var(--space-4);
-  max-width: 520px;
+  max-width: var(--w-narrow);
   margin: var(--space-7) auto;
   padding: 0 var(--space-4);
 }
@@ -202,7 +208,7 @@ h3 {
 }
 @media (min-width: 880px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) var(--w-aside);
     align-items: start;
   }
 }
@@ -223,7 +229,7 @@ h3 {
 /* Table */
 .table {
   position: relative;
-  width: min(100%, 560px);
+  width: min(100%, var(--w-table));
   margin: 0 auto;
   aspect-ratio: 1;
   border: 1px solid var(--border);
@@ -440,7 +446,7 @@ h3 {
   gap: var(--space-2) var(--space-3);
 }
 .scrub {
-  flex: 1 1 160px;
+  flex: 1 1 var(--w-scrub);
   min-height: var(--target);
   accent-color: var(--accent);
 }
@@ -476,7 +482,7 @@ h3 {
 }
 .result-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--w-chip), 1fr));
   gap: var(--space-2);
   margin: 0;
   padding: 0;
