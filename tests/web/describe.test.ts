@@ -45,6 +45,13 @@ describe('describeStep', () => {
     expect(view((s) => s.kind === 'event' && s.event.type === 'banishment').card?.body).toMatch(/They were a (traitor|faithful)\./);
   });
 
+  it('says so when a vote event has no leaders instead of printing undefined', () => {
+    const step = steps.find((s) => s.kind === 'event' && s.event.type === 'vote')!;
+    if (step.kind !== 'event' || step.event.type !== 'vote') throw new Error('expected a vote');
+    const v = describeStep({ ...step, event: { ...step.event, leaders: [], tally: {} } }, log);
+    expect(v.card?.body).toBe('No votes were cast.');
+  });
+
   it('ends on a result card that names the winner and lists survivors', () => {
     const v = describeStep(steps.at(-1)!, log);
     expect(v.card?.title).toBe(`The ${log.result.winner}s win`);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { GameLog } from '../../src/engine/types.js';
+import { ErrorBoundary } from './ErrorBoundary.js';
 import { Loader } from './Loader.js';
 import { Player } from './Player.js';
 import { loadFromFile, loadFromName, logNameFromSearch, type LoadResult } from './load.js';
@@ -24,17 +25,26 @@ export function App() {
     void loadFromName(name, import.meta.env.BASE_URL).then(settle);
   }, []);
 
-  if (state.kind === 'ready') {
-    return <Player log={state.log} onReload={() => setState({ kind: 'idle' })} />;
-  }
-  return (
+  const loader = (status: 'idle' | 'loading' | 'error', message: string | null) => (
     <Loader
-      status={state.kind === 'error' ? 'error' : state.kind === 'loading' ? 'loading' : 'idle'}
-      message={state.kind === 'error' ? state.message : state.kind === 'loading' ? state.what : null}
+      status={status}
+      message={message}
       onFile={(file) => {
         setState({ kind: 'loading', what: file.name });
         void loadFromFile(file).then(settle);
       }}
     />
+  );
+
+  if (state.kind === 'ready') {
+    return (
+      <ErrorBoundary key={state.log.seed} fallback={(message) => loader('error', message)}>
+        <Player log={state.log} onReload={() => setState({ kind: 'idle' })} />
+      </ErrorBoundary>
+    );
+  }
+  return loader(
+    state.kind === 'error' ? 'error' : state.kind === 'loading' ? 'loading' : 'idle',
+    state.kind === 'error' ? state.message : state.kind === 'loading' ? state.what : null,
   );
 }

@@ -116,7 +116,12 @@ function describeEvent(e: GameEvent): StepView {
       v.rows = e.votes.map((x) => ({ label: x.voter, value: x.target }));
       v.card = {
         title: e.stage === 'vote' ? 'Vote result' : 'Revote result',
-        body: e.leaders.length > 1 ? `Tie between ${e.leaders.join(' and ')}.` : `${e.leaders[0]} has the most votes.`,
+        body:
+          e.leaders.length === 0
+            ? 'No votes were cast.'
+            : e.leaders.length > 1
+              ? `Tie between ${e.leaders.join(' and ')}.`
+              : `${e.leaders[0]} has the most votes.`,
         tone: 'neutral',
       };
       break;
