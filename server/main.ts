@@ -1,3 +1,4 @@
+import { msFromEnv } from './config.js';
 import { startServer } from './server.js';
 
 const port = Number(process.env.PORT ?? 8787);
@@ -7,7 +8,17 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) {
 }
 const host = process.env.HOST;
 
-const server = await startServer({ port, ...(host ? { host } : {}) });
+let turnMs: number;
+let abandonMs: number;
+try {
+  turnMs = msFromEnv(process.env, 'TURN_MS', 90_000);
+  abandonMs = msFromEnv(process.env, 'ABANDON_MS', 2 * 60_000);
+} catch (e) {
+  console.error(e instanceof Error ? e.message : String(e));
+  process.exit(1);
+}
+
+const server = await startServer({ port, turnMs, abandonMs, ...(host ? { host } : {}) });
 console.log(`Round Table rooms: listening on port ${server.port}${host ? ` (${host})` : ''}. Rooms live in memory and end when this stops.`);
 
 const stop = (): void => {
