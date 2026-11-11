@@ -58,3 +58,33 @@ export async function playTurns(page: Page, note: string, forbid: string[] = [],
   }
   return answered;
 }
+
+/**
+ * Lets a test slow down the turns the server sends this page, so a short-lived screen (the waiting line after you answer) can be
+ * looked at without a race. Call it before opening the page; then set `window.__hold` to a number of milliseconds, and back to 0.
+ */
+export async function holdTurns(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const original = Object.getOwnPropertyDescriptor(WebSocket.prototype, 'onmessage');
+    if (!original) return;
+    Object.defineProperty(WebSocket.prototype, 'onmessage', {
+      configurable: true,
+      get: original.get as () => unknown,
+      set(handler: ((e: MessageEvent) => void) | null) {
+        original.set?.call(
+          this,
+          handler &&
+            ((e: MessageEvent) => {
+              const hold = (window as unknown as { __hold?: number }).__hold;
+              try {
+                if (hold && (JSON.parse(String(e.data)) as { t?: string }).t === 'turn') return void setTimeout(() => handler(e), hold);
+              } catch {
+                /* not JSON: pass it on */
+              }
+              handler(e);
+            }),
+        );
+      },
+    });
+  });
+}

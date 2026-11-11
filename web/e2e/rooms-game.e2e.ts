@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { joinByInvite, makeRoom, playTurns } from './rooms-helpers.js';
+import { holdTurns, joinByInvite, makeRoom, playTurns } from './rooms-helpers.js';
 
 test.setTimeout(180_000);
 
@@ -99,6 +99,7 @@ test('a host alone with practice AIs can start at once and play through', async 
 });
 
 test('on your turn there is a clock and the form; between turns the status says nothing about who is acting', async ({ page }) => {
+  await holdTurns(page);
   await makeRoom(page, 'Quinn', LONE_HOST_SEED);
   await page.getByRole('button', { name: 'Start the game' }).click();
   const form = page.getByTestId('turn-form');
@@ -107,7 +108,9 @@ test('on your turn there is a clock and the form; between turns the status says 
   await expect(form).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('clock')).toContainText('Time left');
   await expect(page.getByTestId('clock')).toContainText('fallback move');
-  // Answer once and look at the waiting line that follows.
+  // Answer once and look at the waiting line that follows. The next turn is held back for two seconds, because with instant
+  // practice AIs it could otherwise arrive before the test looks, and the line is only there until it does.
+  await page.evaluate(() => ((window as unknown as { __hold: number }).__hold = 2000));
   await playTurnOnce(page);
   await expect(waiting).toBeVisible({ timeout: 30_000 });
   const line = await waiting.innerText();
