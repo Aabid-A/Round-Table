@@ -1,0 +1,16 @@
+/* The rooms pages reuse the form, button and notice styles from styles.css and play/play.css. */
+.rooms {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+.room-section {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.room-section h2 {
+  margin: 0;
+  font-size: var(--fs-l);
+}
