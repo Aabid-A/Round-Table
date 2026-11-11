@@ -110,6 +110,14 @@ http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice a
 each with a recording-mode URL (and a two-faces URL where the moment is speech against
 private notes). `--json` prints JSON. Rules and options: [docs/HIGHLIGHTS.md](docs/HIGHLIGHTS.md).
 
+### Season stats (the Betrayal Index)
+
+`npm run stats -- games/` totals a folder of game logs per model: games, wins by role, times
+caught as a traitor, faithfuls voted out by its traitor vote, recruit offers accepted and the
+fallback rate, plus a betrayal index. It prints JSON; add `--out web/public/stats.json` and
+open `?page=stats` on the replay page for a sortable table. Definitions:
+[docs/STATS.md](docs/STATS.md).
+
 Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
 `npx playwright install chromium` once first.
 

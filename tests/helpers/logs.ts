@@ -9,6 +9,7 @@ export interface TurnSpec {
   action: Action;
   speech?: string;
   notes?: string;
+  fb?: boolean;
 }
 
 /** An event, written compactly: everything except round, afterTurn and visibleTo. */
@@ -22,7 +23,12 @@ export type Spec = TurnSpec | EventSpec;
 const isEvent = (s: Spec): s is EventSpec => 'ev' in s;
 
 /** Build a valid schemaVersion 1 log by hand, so a rule can be tested on exactly the moment it should find. */
-export function logFrom(roles: Record<string, Role>, specs: Spec[], result: Partial<GameResult> = {}): GameLog {
+export function logFrom(
+  roles: Record<string, Role>,
+  specs: Spec[],
+  result: Partial<GameResult> = {},
+  models: Record<string, string> = {},
+): GameLog {
   const names = Object.keys(roles);
   const turns: Turn[] = [];
   const events: GameEvent[] = [];
@@ -41,7 +47,7 @@ export function logFrom(roles: Record<string, Role>, specs: Spec[], result: Part
         speech: s.speech ?? '',
         private_notes: s.notes ?? '',
         action: s.action,
-        fallback: false,
+        fallback: s.fb ?? false,
       });
     }
   }
@@ -49,7 +55,7 @@ export function logFrom(roles: Record<string, Role>, specs: Spec[], result: Part
     schemaVersion: 1,
     seed: 1,
     settings: { maxRounds: 6, traitors: 2 },
-    cast: names.map((name) => ({ name, model: 'mock' })),
+    cast: names.map((name) => ({ name, model: models[name] ?? 'mock' })),
     roles,
     systemPrompt: '',
     turns,

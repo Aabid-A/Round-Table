@@ -1,0 +1,87 @@
+{
+  "statsVersion": 1,
+  "games": 2,
+  "decidedGames": 2,
+  "models": [
+    {
+      "model": "model-b",
+      "games": 1,
+      "asTraitor": {
+        "games": 1,
+        "wins": 1
+      },
+      "asFaithful": {
+        "games": 0,
+        "wins": 0
+      },
+      "caughtAsTraitor": 1,
+      "faithfulsBanishedByTraitorVote": 1,
+      "recruitOffersReceived": 0,
+      "recruitOffersAccepted": 0,
+      "turns": 1,
+      "fallbackTurns": 0,
+      "fallbackRate": 0,
+      "betrayalIndex": 2
+    },
+    {
+      "model": "model-a",
+      "games": 2,
+      "asTraitor": {
+        "games": 2,
+        "wins": 1
+      },
+      "asFaithful": {
+        "games": 0,
+        "wins": 0
+      },
+      "caughtAsTraitor": 1,
+      "faithfulsBanishedByTraitorVote": 1,
+      "recruitOffersReceived": 0,
+      "recruitOffersAccepted": 0,
+      "turns": 2,
+      "fallbackTurns": 0,
+      "fallbackRate": 0,
+      "betrayalIndex": 1
+    },
+    {
+      "model": "model-c",
+      "games": 3,
+      "asTraitor": {
+        "games": 1,
+        "wins": 1
+      },
+      "asFaithful": {
+        "games": 2,
+        "wins": 1
+      },
+      "caughtAsTraitor": 0,
+      "faithfulsBanishedByTraitorVote": 0,
+      "recruitOffersReceived": 1,
+      "recruitOffersAccepted": 1,
+      "turns": 3,
+      "fallbackTurns": 0,
+      "fallbackRate": 0,
+      "betrayalIndex": 0.67
+    },
+    {
+      "model": "model-d",
+      "games": 2,
+      "asTraitor": {
+        "games": 0,
+        "wins": 0
+      },
+      "asFaithful": {
+        "games": 2,
+        "wins": 1
+      },
+      "caughtAsTraitor": 0,
+      "faithfulsBanishedByTraitorVote": 0,
+      "recruitOffersReceived": 0,
+      "recruitOffersAccepted": 0,
+      "turns": 1,
+      "fallbackTurns": 1,
+      "fallbackRate": 1,
+      "betrayalIndex": 0
+    }
+  ]
+}
