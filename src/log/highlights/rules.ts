@@ -88,3 +88,77 @@ export const traitorVotesTraitor: Rule = (ctx) =>
       ];
     });
   });
+
+/** Does the traitor have this player on their private murder list, and is the player still in the game at `turnId`? */
+const stillMarked = (ctx: Context, traitor: string, target: string, round: number, turnId: number): boolean =>
+  traitor !== target && ctx.nightTargets(traitor, round).has(target) && !ctx.isOutAt(target, turnId);
+
+/** A traitor whispers to a player they proposed to murder and who is still alive. */
+export const whispersToNightTarget: Rule = (ctx) =>
+  ctx.events('whisper').flatMap((e) => {
+    const turn = ctx.turnsOf(e.round, 'whispers').find((t) => t.player === e.from);
+    if (!turn || !ctx.isTraitorAt(e.from, turn.id) || !stillMarked(ctx, e.from, e.to, e.round, turn.id)) return [];
+    return [
+      {
+        rule: 'whispers_to_night_target' as const,
+        score: 85,
+        title: `${e.from}, a traitor, whispers to ${e.to}, a player they proposed to murder`,
+        from: turn.id,
+        to: turn.id,
+        facesTurn: turn.id,
+        round: e.round,
+      },
+    ];
+  });
+
+/** At the round table a traitor accuses someone who is accusing a player the traitor proposed to murder. */
+export const defendsNightTarget: Rule = (ctx) => {
+  const out: Highlight[] = [];
+  const rounds = [...new Set(ctx.log.turns.filter((t) => t.phase === 'round_table').map((t) => t.round))];
+  for (const round of rounds) {
+    const turns = ctx.turnsOf(round, 'round_table');
+    const suspectOf = new Map(turns.map((t) => [t.player, (t.action as { suspect: string }).suspect]));
+    for (const t of turns) {
+      const accused = suspectOf.get(t.player) as string;
+      if (!ctx.isTraitorAt(t.player, t.id)) continue;
+      const protectedPlayer = suspectOf.get(accused);
+      if (protectedPlayer === undefined || protectedPlayer === accused) continue;
+      if (!stillMarked(ctx, t.player, protectedPlayer, round, t.id)) continue;
+      out.push({
+        rule: 'defends_night_target',
+        score: 70,
+        title: `${t.player}, a traitor, accuses ${accused} for suspecting ${protectedPlayer}, a player they proposed to murder`,
+        from: t.id,
+        to: t.id,
+        facesTurn: t.id,
+        round,
+      });
+    }
+  }
+  return out;
+};
+
+/** In a revote a traitor votes for the other tied player, saving a player they proposed to murder. */
+export const savesNightTargetInRevote: Rule = (ctx) =>
+  ctx.events('vote').flatMap((e) => {
+    if (e.stage !== 'revote') return [];
+    const first = [...ctx.events('vote')].reverse().find((v) => v.stage === 'vote' && v.round === e.round && v.afterTurn < e.afterTurn);
+    const stage = ctx.stageTurns(e.round, 'revote');
+    const last = stage.at(-1);
+    if (!first || !last) return [];
+    return e.votes.flatMap((v) => {
+      const turn = stage.find((t) => t.player === v.voter);
+      if (!turn || !ctx.isTraitorAt(v.voter, turn.id)) return [];
+      return first.leaders
+        .filter((p) => p !== v.target && stillMarked(ctx, v.voter, p, e.round, turn.id))
+        .map((p) => ({
+          rule: 'saves_night_target_in_revote' as const,
+          score: 88,
+          title: `${v.voter}, a traitor, votes against ${v.target} in the revote, saving ${p}, a player they proposed to murder`,
+          from: turn.id,
+          to: last.id,
+          facesTurn: turn.id,
+          round: e.round,
+        }));
+    });
+  });

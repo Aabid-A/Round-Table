@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildContext } from '../../src/log/highlights/context.js';
-import { faithfulBannishedByMajority, finalReveal, recruitAccepted, traitorVotesTraitor } from '../../src/log/highlights/rules.js';
+import { faithfulBannishedByMajority, finalReveal, recruitAccepted, traitorVotesTraitor, whispersToNightTarget, defendsNightTarget, savesNightTargetInRevote } from '../../src/log/highlights/rules.js';
 import { logFrom, type Spec } from '../helpers/logs.js';
 
 const roles = { T1: 'traitor', T2: 'traitor', F1: 'faithful', F2: 'faithful', F3: 'faithful', F4: 'faithful' } as const;
@@ -111,5 +111,71 @@ describe('traitorVotesTraitor', () => {
       ...voteSpecs('vote', [{ voter: 'F3', target: 'T1' }, { voter: 'F1', target: 'T1' }], 2),
     ]);
     expect(traitorVotesTraitor(buildContext(log)).map((h) => h.title)).toEqual(['F3, a traitor, votes against fellow traitor T1']);
+  });
+});
+
+describe('night-target rules', () => {
+  // T1 proposed F1, T2 proposed F2; F2 was murdered, so F1 is the surviving target of T1.
+  const night: Spec[] = [
+    { r: 1, phase: 'night', p: 'T1', action: { target: 'F1' } },
+    { r: 1, phase: 'night', p: 'T2', action: { target: 'F2' } },
+    { r: 1, ev: { type: 'murder', victim: 'F2', proposals: [], method: 'random' } },
+    { r: 1, ev: { type: 'breakfast', victim: 'F2', role: 'faithful' } },
+  ];
+  const whisperSpecs = (from: string, to: string): Spec[] => [
+    { r: 1, phase: 'whispers', p: from, action: { to, message: 'psst' }, notes: 'keep them close' },
+    { r: 1, ev: { type: 'whisper', from, to, message: 'psst' } },
+  ];
+  const table = (suspects: Record<string, string>): Spec[] =>
+    Object.entries(suspects).map(([p, suspect]) => ({ r: 1, phase: 'round_table' as const, p, action: { suspect, reason: 'because' }, speech: 'hm' }));
+
+  describe('whispersToNightTarget', () => {
+    it('finds a traitor whispering to a player they proposed to murder who is still alive', () => {
+      const log = logFrom({ ...roles }, [...night, ...whisperSpecs('T1', 'F1')]);
+      expect(whispersToNightTarget(buildContext(log))).toEqual([
+        { rule: 'whispers_to_night_target', score: 85, title: 'T1, a traitor, whispers to F1, a player they proposed to murder', from: 2, to: 2, facesTurn: 2, round: 1 },
+      ]);
+    });
+    it('ignores a whisper to someone they never proposed, a faithful whispering, and a whisper to the victim', () => {
+      expect(whispersToNightTarget(buildContext(logFrom({ ...roles }, [...night, ...whisperSpecs('T1', 'F3')])))).toEqual([]);
+      expect(whispersToNightTarget(buildContext(logFrom({ ...roles }, [...night, ...whisperSpecs('F3', 'F1')])))).toEqual([]);
+      expect(whispersToNightTarget(buildContext(logFrom({ ...roles }, [...night, ...whisperSpecs('T2', 'F2')])))).toEqual([]);
+    });
+  });
+
+  describe('defendsNightTarget', () => {
+    it('finds a traitor accusing the player who accuses their night target', () => {
+      const log = logFrom({ ...roles }, [...night, ...table({ F3: 'F1', T1: 'F3' })]);
+      const found = defendsNightTarget(buildContext(log));
+      expect(found).toEqual([
+        { rule: 'defends_night_target', score: 70, title: 'T1, a traitor, accuses F3 for suspecting F1, a player they proposed to murder', from: 3, to: 3, facesTurn: 3, round: 1 },
+      ]);
+    });
+    it('ignores a traitor who accuses someone unrelated, or whose target is dead', () => {
+      expect(defendsNightTarget(buildContext(logFrom({ ...roles }, [...night, ...table({ F3: 'F1', T1: 'F4' })])))).toEqual([]);
+      expect(defendsNightTarget(buildContext(logFrom({ ...roles }, [...night, ...table({ F3: 'F2', T2: 'F3' })])))).toEqual([]);
+    });
+  });
+
+  describe('savesNightTargetInRevote', () => {
+    const revote = (votes: { voter: string; target: string }[]): Spec[] => [
+      { r: 1, ev: { type: 'vote', stage: 'vote', votes: [], tally: {}, leaders: ['F1', 'F3'] } },
+      ...votes.map((v) => ({ r: 1, phase: 'revote' as const, p: v.voter, action: { target: v.target } }) as Spec),
+      { r: 1, ev: { type: 'vote', stage: 'revote', votes, tally: {}, leaders: [] } },
+    ];
+    it('finds a traitor voting for the other tied player, saving their night target', () => {
+      const log = logFrom({ ...roles }, [...night, ...revote([{ voter: 'T1', target: 'F3' }, { voter: 'F4', target: 'F1' }])]);
+      expect(savesNightTargetInRevote(buildContext(log))).toEqual([
+        { rule: 'saves_night_target_in_revote', score: 88, title: 'T1, a traitor, votes against F3 in the revote, saving F1, a player they proposed to murder', from: 2, to: 3, facesTurn: 2, round: 1 },
+      ]);
+    });
+    it('ignores a traitor who votes for their own night target, and a tie that does not include it', () => {
+      expect(savesNightTargetInRevote(buildContext(logFrom({ ...roles }, [...night, ...revote([{ voter: 'T1', target: 'F1' }])])))).toEqual([]);
+      const other = logFrom({ ...roles }, [...night,
+        { r: 1, ev: { type: 'vote', stage: 'vote', votes: [], tally: {}, leaders: ['F3', 'F4'] } },
+        { r: 1, phase: 'revote', p: 'T1', action: { target: 'F3' } },
+        { r: 1, ev: { type: 'vote', stage: 'revote', votes: [{ voter: 'T1', target: 'F3' }], tally: {}, leaders: [] } }]);
+      expect(savesNightTargetInRevote(buildContext(other))).toEqual([]);
+    });
   });
 });
