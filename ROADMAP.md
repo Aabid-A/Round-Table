@@ -76,7 +76,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
   `npm run card -- <log> <turnId>` saves PNGs to `.artifacts/cards/` with
   Playwright. Run `/design-review`.
 
-- [ ] **M8. Guess the traitor.** `?mode=guess` turns any episode into a game
+- [x] **M8. Guess the traitor.** `?mode=guess` turns any episode into a game
   for the viewer. This is what a Twitter post links to.
   - Roles and private notes stay hidden. After each round table the viewer
     picks who they think the traitors are; picks lock before the vote.
