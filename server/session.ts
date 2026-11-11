@@ -219,6 +219,8 @@ export class Session {
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
     else if (room.phase === 'finished' && rt?.log && rt.outcome) this.tell({ t: 'finished', log: rt.log, you: seat.name, outcome: rt.outcome });
     else {
+      const alias = room.aliasOf(seat.name);
+      if (alias !== null) this.tell({ t: 'alias', alias });
       this.tell({ t: 'status', phase: room.status });
       rt?.seatPlayers.get(seat.name)?.resend();
     }

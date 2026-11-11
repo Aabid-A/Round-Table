@@ -98,6 +98,11 @@ export class Room {
     return { ok: true, value: seat };
   }
 
+  /** The alias this person plays under, once an alias game has started. */
+  aliasOf(name: string): string | null {
+    return Object.entries(this.people).find(([, person]) => person === name)?.[0] ?? null;
+  }
+
   /** A person leaves the lobby for good: their seat goes. */
   removeSeat(name: string): void {
     const i = this.seats.findIndex((s) => s.name === name);

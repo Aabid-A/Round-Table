@@ -30,7 +30,7 @@ export class TestClient {
       this.send({
         t: 'answer',
         turn: m.turn,
-        answer: { ...emptyAnswer(), speech: spec.speechLabel ? `${label} speaks` : '', message: spec.messageLabel ? 'because' : '', note: `HUMANNOTE-${label}-${m.turn}`, choice: spec.choices[0]!.value },
+        answer: { ...emptyAnswer(), speech: spec.speechLabel ? 'I have a feeling about this.' : '', message: spec.messageLabel ? 'because' : '', note: `HUMANNOTE-${label}-${m.turn}`, choice: spec.choices[0]!.value },
       });
     });
   }

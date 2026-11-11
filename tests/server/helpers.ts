@@ -24,7 +24,7 @@ export function autoSeat(name: string, forward: (m: ServerMessage) => void, time
       forward(m);
       if (m.t !== 'turn') return;
       const spec = formFor(m.phase, m.options);
-      seat.answer(m.turn, { ...emptyAnswer(), speech: spec.speechLabel ? `${name} speaks` : '', message: spec.messageLabel ? 'because' : '', note: `HUMANNOTE-${name}-${m.turn}`, choice: spec.choices[0]!.value });
+      seat.answer(m.turn, { ...emptyAnswer(), speech: spec.speechLabel ? 'I have a feeling about this.' : '', message: spec.messageLabel ? 'because' : '', note: `HUMANNOTE-${name}-${m.turn}`, choice: spec.choices[0]!.value });
     },
   });
   return seat;
