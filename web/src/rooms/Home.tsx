@@ -25,6 +25,8 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
   const [models, setModels] = useState('');
   const [cap, setCap] = useState('1.00');
 
+  // One primary button on the page: joining when the person came from an invite, making a room otherwise.
+  const joinIsPrimary = inviteCode !== null;
   const shown = problem ?? serverError;
   const clear = (): void => {
     setProblem(null);
@@ -83,7 +85,7 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
             Your name at the table
             <input type="text" value={joinName} maxLength={20} autoComplete="off" onChange={(e) => (setJoinName(e.target.value), clear())} />
           </label>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className={joinIsPrimary ? 'btn btn-primary' : 'btn'}>
             Join room
           </button>
         </form>
@@ -143,7 +145,7 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
                 </label>
               </>
             )}
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className={joinIsPrimary ? 'btn' : 'btn btn-primary'}>
               Make room
             </button>
           </form>
