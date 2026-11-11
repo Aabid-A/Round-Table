@@ -82,6 +82,18 @@ test('arrow keys still step after the notes switch was used', async ({ page }) =
   await expect(page.getByLabel('Show private notes')).toBeChecked();
 });
 
+test('announces each step to screen readers when stepping by hand, and stays quiet while playing', async ({ page }) => {
+  await openFixture(page);
+  const note = page.getByTestId('announcement');
+  await expect(note).toHaveAttribute('role', 'status');
+  await expect(note).toContainText(/Proposes murdering/);
+  await page.keyboard.press('Space');
+  await expect(note).toHaveText('');
+  await page.keyboard.press('Space');
+  await expect(note).not.toHaveText('');
+  await expect(page.getByRole('button', { name: /^(Play|Pause)$/ })).not.toHaveAttribute('aria-pressed', /.*/);
+});
+
 test('rejects a log with another schemaVersion with a clear message', async ({ page }) => {
   await page.goto('/');
   await page.locator('input[type=file]').setInputFiles({

@@ -18,7 +18,7 @@ export function Controls(p: Props) {
         <button type="button" className="btn" onClick={p.onPrev} disabled={p.index === 0}>
           Previous
         </button>
-        <button type="button" className="btn btn-primary" onClick={p.onToggle} aria-pressed={p.playing}>
+        <button type="button" className="btn btn-primary" onClick={p.onToggle}>
           {p.playing ? 'Pause' : 'Play'}
         </button>
         <button type="button" className="btn" onClick={p.onNext} disabled={p.index >= p.count - 1}>
