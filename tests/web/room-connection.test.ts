@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RoomConnection, type Saved, type SocketLike, type Store } from '../../web/src/rooms/connection.js';
+import { RoomConnection, sessionStore, type Saved, type SocketLike, type Store } from '../../web/src/rooms/connection.js';
 import type { RoomEvent } from '../../web/src/rooms/state.js';
 
 class FakeSocket implements SocketLike {
@@ -126,5 +126,35 @@ describe('RoomConnection', () => {
     expect(events.at(-1)).toEqual({ kind: 'leave' });
     vi.advanceTimersByTime(5000);
     expect(sockets).toHaveLength(1);
+  });
+});
+
+describe('sessionStore', () => {
+  const memory = () => {
+    const data = new Map<string, string>();
+    return { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v), removeItem: (k: string) => void data.delete(k) };
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('keeps the seat in this tab and forgets it on clear', () => {
+    vi.stubGlobal('sessionStorage', memory());
+    const s = sessionStore();
+    expect(s.load()).toBeNull();
+    s.save({ code: 'AB2CD', token: 'tok' });
+    expect(s.load()).toEqual({ code: 'AB2CD', token: 'tok' });
+    s.clear();
+    expect(s.load()).toBeNull();
+  });
+
+  it('ignores a damaged entry, and works without storage at all', () => {
+    const bad = memory();
+    bad.setItem('round-table-room', '{"code":5}');
+    vi.stubGlobal('sessionStorage', bad);
+    expect(sessionStore().load()).toBeNull();
+    const blocked = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); }, removeItem: () => { throw new Error('blocked'); } };
+    vi.stubGlobal('sessionStorage', blocked);
+    const s = sessionStore();
+    expect(s.load()).toBeNull();
+    expect(() => (s.save({ code: 'AB2CD', token: 'tok' }), s.clear())).not.toThrow();
   });
 });

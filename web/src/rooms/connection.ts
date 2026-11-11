@@ -138,3 +138,31 @@ export class RoomConnection {
     this.opts.onEvent({ kind: 'message', msg });
   }
 }
+
+/** The seat is kept in sessionStorage: it belongs to this tab and goes when the tab does. Unavailable storage just means no resume. */
+export function sessionStore(key = 'round-table-room'): Store {
+  return {
+    load() {
+      try {
+        const v = JSON.parse(sessionStorage.getItem(key) ?? 'null') as Partial<Saved> | null;
+        return v && typeof v.code === 'string' && typeof v.token === 'string' ? { code: v.code, token: v.token } : null;
+      } catch {
+        return null;
+      }
+    },
+    save(saved) {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(saved));
+      } catch {
+        /* storage blocked: the seat just cannot be resumed after a reload */
+      }
+    },
+    clear() {
+      try {
+        sessionStorage.removeItem(key);
+      } catch {
+        /* nothing to clear */
+      }
+    },
+  };
+}
