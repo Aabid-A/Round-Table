@@ -1,4 +1,5 @@
 import type { CastMember } from './types.js';
+import { createRng } from './engine/rng.js';
 import { MOCK_CAST } from './players/mock.js';
 
 /** The `model` of a seat played by a person. */
@@ -30,3 +31,18 @@ export function parseModels(text: string): { ok: true; models: string[] } | { ok
   return { ok: true, models };
 }
 
+
+/** Seats at the table. */
+export const TABLE_SEATS = 8;
+
+/**
+ * Eight seats: the people (1 to 8, `model: "human"`) and AIs for the rest, all in an order the seed decides.
+ * `models` gives the AI seats their model IDs, repeating if there are fewer IDs than seats; null means mock AIs.
+ */
+export function buildRoomCast(humans: string[], models: string[] | null, seed: number): CastMember[] {
+  if (humans.length < 1 || humans.length > TABLE_SEATS) throw new Error(`a room seats 1 to ${TABLE_SEATS} people`);
+  if (models !== null && models.length === 0) throw new Error('give at least one model ID, or none for mock AIs');
+  const ai = AI_NAMES.slice(0, TABLE_SEATS - humans.length).map((name, i) => ({ name, model: models ? (models[i % models.length] as string) : 'mock' }));
+  const people = humans.map((name) => ({ name, model: HUMAN_MODEL }));
+  return createRng(seed).shuffle([...ai, ...people]);
+}
