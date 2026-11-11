@@ -39,7 +39,12 @@ describe('npm run highlights', () => {
       [[], 'usage:'],
       [[logPath, '--limit', 'x'], '--limit must be'],
       [[logPath, '--aspect', '4x3'], '--aspect must be'],
-      [[logPath, '--base', 'nope'], '--base must be a full URL'],
+      [[logPath, '--base', 'nope'], '--base must be a full http or https URL'],
+      [[logPath, '--base', 'localhost:5173/'], '--base must be a full http or https URL'],
+      [[logPath, '--base', 'javascript:alert(1)'], '--base must be a full http or https URL'],
+      [[logPath, '--limit', ''], '--limit must be a whole number'],
+      [[logPath, '--limit', ' '], '--limit must be a whole number'],
+      [[logPath, '--limit', '1.5'], '--limit must be a whole number'],
       [[logPath, '--name', '../x'], 'not a plain log name'],
       [[join(tmpdir(), 'does-not-exist.json')], 'ENOENT'],
     ];

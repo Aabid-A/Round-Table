@@ -90,4 +90,12 @@ describe('findHighlights', () => {
       }
     }
   });
+
+  it('rejects a bad limit or base instead of slicing oddly or printing a broken URL', () => {
+    for (const limit of [-1, 1.5, Number.NaN]) expect(() => findHighlights(rich(), { name: 'g', limit }), String(limit)).toThrow('limit must be');
+    for (const base of ['localhost:5173/', 'javascript:alert(1)', 'nope', '']) {
+      expect(() => findHighlights(rich(), { name: 'g', base }), base).toThrow('base must be');
+    }
+    expect(findHighlights(rich(), { name: 'g', base: 'https://example.test/x?a=1' })[0]!.url).toContain('https://example.test/x?a=1&mode=record');
+  });
 });

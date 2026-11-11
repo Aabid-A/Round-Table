@@ -11,7 +11,7 @@ npm run highlights -- games/mock-seed-1.json --json --limit 5 --aspect 9x16
 ```
 
 Options: `--json` (JSON instead of text), `--limit N` (keep the best N), `--base URL`
-(where the replay page is served; default `http://localhost:5173/`), `--name NAME` (the
+(where the replay page is served, an http or https URL; default `http://localhost:5173/`), `--name NAME` (the
 log's name in `web/public/games/`; default is the file name without `.json`),
 `--aspect 16x9|9x16` (added to the URLs).
 
@@ -47,20 +47,24 @@ Ties on score go to the earlier moment.
 
 ## Rules
 
-"Night target" means a player a traitor proposed to murder in a night up to that round,
-who was not the one murdered and is still in the game. A recruit counts as a traitor from
+"Night target" means a player a traitor finally proposed to murder in a night up to that
+round (a first-pass proposal they replaced does not count), who is still in the game. Titles
+say which round the proposal was in. A recruit counts as a traitor from
 the turn after they accept.
 
 | Rule | Score | Finds |
 |---|---|---|
 | `recruit_accepted` | 90 | A faithful accepts a recruitment offer. Clip: the offer to the answer. |
-| `saves_night_target_in_revote` | 88 | In a revote a traitor votes for the other tied player, saving a night target. |
+| `saves_night_target_in_revote` | 88 | In a revote after a two-way tie, a traitor votes for the other tied player, saving a night target. A three-way tie is not counted. |
 | `whispers_to_night_target` | 85 | A traitor whispers to a night target. |
 | `notes_contradict_praise` | 85, or 75 | A player's speech praises someone and the same turn's private notes name them (85 when the notes scheme against them: target, frame, lie and similar words). |
 | `traitor_votes_traitor` | 80 | A traitor votes against a fellow traitor, in the vote or the revote. |
 | `defends_night_target` | 70 | At the round table a traitor accuses someone who is accusing their night target. |
 | `faithful_banished_by_majority` | 55 to 85 | A faithful is banished with more than half of the votes; a bigger share scores higher. A plain top count (say 2 of 5) does not qualify. |
-| `final_reveal` | 50 | The last turns and the result. Always present. |
+| `final_reveal` | 50 | The last turns and the result. Present in every log that has at least one turn. |
 
 `notes_contradict_praise` reads the words of the speech and notes with simple word lists
-(see `src/log/highlights/rules.ts`). It finds a name only as a whole word.
+(see `src/log/highlights/rules.ts`). It judges one clause at a time (split at commas and
+"but"), skips negated clauses ("I do not trust Bo"), and finds a name only as a whole word
+with the same capital letters. It can still be fooled by sarcasm or praise words used another
+way, so check the two-faces clip before posting.

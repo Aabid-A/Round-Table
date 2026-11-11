@@ -57,6 +57,8 @@ function recordUrl(base: string, name: string, params: Record<string, string | n
 export function findHighlights(log: GameLog, opts: FindOptions): RankedHighlight[] {
   if (!isValidLogName(opts.name)) throw new Error(`"${opts.name}" is not a plain log name (letters, digits, dot, dash, underscore)`);
   const base = opts.base ?? DEFAULT_BASE;
+  if (!/^https?:\/\//i.test(base) || !URL.canParse(base)) throw new Error('base must be a full http or https URL such as http://localhost:5173/');
+  if (opts.limit !== undefined && (!Number.isInteger(opts.limit) || opts.limit < 0)) throw new Error('limit must be a whole number, 0 or more');
   const ctx = buildContext(log);
   const seen = new Set<string>();
   const all: Highlight[] = [];
