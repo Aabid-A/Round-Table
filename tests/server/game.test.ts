@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runRoomGame } from '../../server/game.js';
+import { AI_NAMES } from '../../src/cast.js';
 import { autoRoom } from './helpers.js';
 
 describe('runRoomGame', () => {
@@ -68,5 +69,52 @@ describe('runRoomGame', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(calls).toBe(callsAtAbort);
     expect(log.turns.some((t) => t.fallback)).toBe(true);
+  });
+
+  describe('with aliases', () => {
+    const aliasRoom = (names: string[], seed = 3) => {
+      const made = autoRoom(names, { mode: 'mock' }, seed);
+      made.room.aliases = true;
+      return made;
+    };
+
+    it('seats everyone under the eight AI names and records who is behind each', async () => {
+      const { room, seatPlayers } = aliasRoom(['Quinn', 'Rae']);
+      const log = await runRoomGame(room, { seatPlayers });
+      expect(log.cast.map((c) => c.name)).toEqual(AI_NAMES);
+      expect(log.cast.filter((c) => c.model === 'human')).toHaveLength(2);
+      expect(Object.values(room.people).sort()).toEqual(['Quinn', 'Rae']);
+      for (const alias of Object.keys(room.people)) expect(log.cast.find((c) => c.name === alias)?.model).toBe('human');
+      // Their turns were played, under the aliases (someone murdered on the first night has none, so look at both together).
+      const theirs = log.turns.filter((t) => t.player in room.people);
+      expect(theirs.length).toBeGreaterThan(0);
+      expect(theirs.every((t) => !t.fallback)).toBe(true);
+    });
+
+    it('tells each person their own alias and no one else\'s, and never puts a real name in a prompt', async () => {
+      const { room, conns, seatPlayers } = aliasRoom(['Quinn', 'Rae']);
+      await runRoomGame(room, { seatPlayers });
+      let withTurns = 0;
+      for (const name of ['Quinn', 'Rae']) {
+        const sent = conns.get(name)!.sent;
+        const aliases = sent.flatMap((m) => (m.t === 'alias' ? [m.alias] : []));
+        expect(aliases).toEqual([room.aliasOf(name)]);
+        const prompts = sent.flatMap((m) => (m.t === 'turn' ? [m.user] : [])).join('\n');
+        for (const real of ['Quinn', 'Rae']) expect(prompts, `${name}'s prompts mention ${real}`).not.toContain(real);
+        if (prompts !== '') {
+          withTurns++;
+          expect(prompts).toContain(`You are ${aliases[0]}.`);
+        } // (someone murdered on the first night has no turns)
+      }
+      expect(withTurns).toBeGreaterThan(0);
+    });
+
+    it('is the same game for the same seed', async () => {
+      const play = async () => {
+        const { room, seatPlayers } = aliasRoom(['Quinn']);
+        return runRoomGame(room, { seatPlayers });
+      };
+      expect(await play()).toEqual(await play());
+    });
   });
 });

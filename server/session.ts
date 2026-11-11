@@ -1,4 +1,7 @@
 import type { GameLog } from '../src/engine/types.js';
+import { outcomeFor, type Guess, type RoomOutcome } from '../src/roomResult.js';
+import { roomLogName } from '../src/roomCode.js';
+import { Guessing } from './guessing.js';
 import { runRoomGame } from './game.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import { RateLimiter } from './rateLimit.js';
@@ -12,6 +15,9 @@ export interface Runtime {
   seatPlayers: Map<string, SeatPlayer>;
   abort: AbortController;
   log: GameLog | null;
+  outcome: RoomOutcome | null;
+  /** The guessing step, while it runs (alias games only). */
+  guessing: Guessing | null;
   /** Set while every person is disconnected during a game; when it fires the room closes. */
   abandonTimer: ReturnType<typeof setTimeout> | null;
 }
@@ -25,6 +31,8 @@ export interface SessionOptions {
   allowSeed?: boolean;
   /** How long a running game may have nobody connected before the room closes and the AIs stop. */
   abandonMs: number;
+  /** Saves a finished game's log under a plain name. Absent means nothing is saved. */
+  saveLog?: (name: string, log: GameLog) => Promise<unknown>;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   now?: () => number;
@@ -75,6 +83,7 @@ export class Session {
     if (!room) return;
     room.detach(this.conn);
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage()); // so friends see who is offline
+    this.deps.runtimes.get(room.code)?.guessing?.connectionLost(); // nobody is held up for long by someone who has gone
     // A game with nobody watching still spends the host's money on the AIs, so it does not run on forever.
     const rt = this.deps.runtimes.get(room.code);
     if (rt && room.phase === 'playing' && room.seats.every((s) => s.conn === null) && !rt.abandonTimer) {
@@ -99,6 +108,8 @@ export class Session {
         return this.start();
       case 'leave':
         return this.leave();
+      case 'guess':
+        return this.guess(msg.ai);
       case 'answer':
         return this.answer(msg.turn, msg.answer);
     }
@@ -107,12 +118,13 @@ export class Session {
   private runtime(room: Room): Runtime {
     let rt = this.deps.runtimes.get(room.code);
     if (!rt) {
-      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, abandonTimer: null };
+      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, outcome: null, guessing: null, abandonTimer: null };
       const made = rt;
       this.deps.runtimes.set(room.code, made);
       room.onClose(() => {
         made.abort.abort();
         if (made.abandonTimer) clearTimeout(made.abandonTimer);
+        made.guessing?.cancel();
         for (const p of made.seatPlayers.values()) p.cancel();
         this.deps.runtimes.delete(room.code);
       });
@@ -135,7 +147,7 @@ export class Session {
   private create(msg: Extract<ClientMessage, { t: 'create' }>): void {
     if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
-    const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner);
+    const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner, msg.aliases === true);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });
     const sat = this.sit(made.value, msg.name);
     if (!sat.ok) made.value.close(sat.error);
@@ -167,15 +179,34 @@ export class Session {
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
-        room.phase = 'finished';
-        room.finishedAt = (options.now ?? Date.now)();
-        for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name });
+        if (!room.aliases) return this.finish(room, rt, log, null);
+        // Before anyone learns who was who, each person guesses which seats were AIs.
+        room.phase = 'guessing';
+        rt.guessing = new Guessing(room, log, LIMITS.guessMs, (guesses) => this.finish(room, rt, log, guesses), options.now);
+        rt.guessing.start();
       },
       (e: unknown) => {
         options.log(`game error: ${e instanceof Error ? e.name : 'unknown'}`);
         room.close('The game stopped because of an error.');
       },
     );
+  }
+
+  /** Keep a normal log of the game. A failure is noted by error name only and never stops the game's ending. */
+  private save(room: Room, log: GameLog): void {
+    const { saveLog, log: note } = this.deps.options;
+    saveLog?.(roomLogName(room.code, room.seed), log).catch((e: unknown) => note(`log save error: ${e instanceof Error ? e.name : 'unknown'}`));
+  }
+
+  /** The game, and the guessing if there was any, are over: tell everyone how it went. */
+  private finish(room: Room, rt: Runtime, log: GameLog, guesses: Guess[] | null): void {
+    if (room.phase === 'closed') return;
+    rt.outcome = outcomeFor(log, room.people, guesses);
+    // Saved only now: the log names who was an AI and holds every note, so it is not written before the guessing is over.
+    this.save(room, log);
+    room.phase = 'finished';
+    room.finishedAt = (this.deps.options.now ?? Date.now)();
+    for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });
   }
 
   /** Leave on purpose. In the lobby the seat goes (and the room, if it is the host's); in a game the seat stays and plays on with fallbacks. */
@@ -188,6 +219,13 @@ export class Session {
     this.room = null;
     this.seat = null;
     room.broadcast(room.lobbyMessage());
+  }
+
+  private guess(ai: string[]): void {
+    const { room, seat } = this;
+    if (!room || !seat) return this.tell({ t: 'error', message: 'Create or join a room first.' });
+    if (room.phase !== 'guessing') return this.tell({ t: 'error', message: 'There is nothing to guess right now.' });
+    this.deps.runtimes.get(room.code)?.guessing?.submit(seat.name, ai);
   }
 
   private answer(turn: number, answer: HumanAnswer): void {
@@ -214,8 +252,14 @@ export class Session {
       rt.abandonTimer = null;
     }
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
-    else if (room.phase === 'finished' && rt?.log) this.tell({ t: 'finished', log: rt.log, you: seat.name });
+    else if (room.phase === 'guessing') {
+      const alias = room.aliasOf(seat.name);
+      if (alias !== null) this.tell({ t: 'alias', alias });
+      rt?.guessing?.resend(seat.name);
+    } else if (room.phase === 'finished' && rt?.log && rt.outcome) this.tell({ t: 'finished', log: rt.log, you: seat.name, outcome: rt.outcome });
     else {
+      const alias = room.aliasOf(seat.name);
+      if (alias !== null) this.tell({ t: 'alias', alias });
       this.tell({ t: 'status', phase: room.status });
       rt?.seatPlayers.get(seat.name)?.resend();
     }

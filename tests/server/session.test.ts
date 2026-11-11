@@ -3,15 +3,16 @@ import { LIMITS } from '../../server/protocol.js';
 import { Registry } from '../../server/registry.js';
 import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
+import { RECONNECT_GRACE_MS } from '../../server/guessing.js';
 import { FakeConn, waitFor } from './helpers.js';
 
-function server(turnMs = 1000, allowSeed = true) {
+function server(turnMs = 1000, allowSeed = true, saveLog?: (name: string, log: unknown) => Promise<unknown>) {
   const registry = new Registry();
   const runtimes = new Map<string, Runtime>();
   const logged: string[] = [];
   const open = () => {
     const conn = new FakeConn();
-    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, log: (l) => logged.push(l) } });
+    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, ...(saveLog ? { saveLog } : {}), log: (l) => logged.push(l) } });
     const send = (m: unknown) => session.handle(JSON.stringify(m));
     /** Answer every turn at once, as a patient person would. */
     const autoplay = () => {
@@ -38,6 +39,18 @@ describe('Session: creating, joining and rejoining', () => {
     expect(joined).toMatchObject({ t: 'joined', you: 'Quinn', host: true });
     expect(joined.code).toMatch(/^[A-HJ-NP-Z2-9]{5}$/);
     expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', code: joined.code, mode: 'mock', aiSeats: 7, seats: [{ name: 'Quinn', connected: true, host: true }] });
+  });
+
+  it('makes an alias room when asked, and shows that in the lobby', () => {
+    const s = server();
+    const host = s.open();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', aliases: true });
+    const room = s.registry.get(joinedOf(host.conn).code)!;
+    expect(room.aliases).toBe(true);
+    expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: true });
+    const plain = s.open();
+    plain.send({ t: 'create', name: 'Rae', mode: 'mock' });
+    expect(plain.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: false });
   });
 
   it('lets friends join by code in any case and tells everyone', () => {
@@ -185,6 +198,129 @@ describe('Session: creating, joining and rejoining', () => {
     const late = s.open();
     late.send({ t: 'join', code, name: 'Sam' });
     expect(messages(late.conn)).toEqual(['That game has already started.']);
+  });
+
+  describe('saving the log', () => {
+    it('saves the log once, under the room code and seed, as soon as the game ends', async () => {
+      const saved: { name: string; log: { seed: number } }[] = [];
+      const s = server(1000, true, async (name, log) => void saved.push({ name, log: log as { seed: number } }));
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+      const code = joinedOf(host.conn).code;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'finished'));
+      expect(saved.map((x) => x.name)).toEqual([`room-${code}-seed-4`]);
+      expect(saved[0]!.log.seed).toBe(4);
+    });
+
+    it('saves an alias game only once the guessing is over, never before it', async () => {
+      const saved: string[] = [];
+      const s = server(1000, true, async (name) => void saved.push(name));
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4, aliases: true });
+      const code = joinedOf(host.conn).code;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'guess'));
+      expect(saved).toEqual([]); // the log names who was an AI: not written while people are still guessing
+      host.send({ t: 'guess', ai: [] });
+      expect(saved).toEqual([`room-${code}-seed-4`]);
+    });
+
+    it('a failed save is noted by name only and does not stop the game', async () => {
+      const s = server(1000, true, async () => {
+        throw new Error('disk full: sk-never-in-logs');
+      });
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4, aliases: true });
+      const room = s.registry.get(joinedOf(host.conn).code)!;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'guess'));
+      host.send({ t: 'guess', ai: [] });
+      expect(room.phase).toBe('finished');
+      await waitFor(() => s.logged.length > 0); // the failure is reported when the rejected save settles
+      expect(s.logged).toEqual(['log save error: Error']);
+      expect(s.logged.join()).not.toContain('sk-never');
+    });
+  });
+
+  describe('an alias game', () => {
+    const play = async (seed = 4) => {
+      const s = server();
+      const host = s.open();
+      const friend = s.open();
+      host.autoplay();
+      friend.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', aliases: true, seed });
+      const joined = joinedOf(host.conn);
+      friend.send({ t: 'join', code: joined.code, name: 'Rae' });
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'guess') && friend.conn.sent.some((m) => m.t === 'guess'));
+      return { s, host, friend, joined, room: s.registry.get(joined.code)! };
+    };
+    const asked = (c: FakeConn) => c.sent.find((m) => m.t === 'guess') as Extract<(typeof c.sent)[number], { t: 'guess' }>;
+
+    it('asks everyone to guess before it tells anyone anything, then scores them and reveals who was who', async () => {
+      const { host, friend, room } = await play();
+      expect(room.phase).toBe('guessing');
+      for (const c of [host.conn, friend.conn]) {
+        expect(c.sent.some((m) => m.t === 'finished'), 'finished before the guess').toBe(false);
+        expect(asked(c).seats).toHaveLength(8);
+      }
+      // Each is told their own alias first, and it is the seat they guess as.
+      expect(asked(host.conn).you).toBe(room.aliasOf('Quinn'));
+      expect(asked(friend.conn).you).toBe(room.aliasOf('Rae'));
+      expect(asked(host.conn).you).not.toBe(asked(friend.conn).you);
+
+      host.send({ t: 'guess', ai: [] });
+      expect(room.phase).toBe('guessing'); // still waiting for Rae
+      friend.send({ t: 'guess', ai: asked(friend.conn).seats.filter((n) => n !== asked(friend.conn).you) });
+      expect(room.phase).toBe('finished');
+      const done = host.conn.sent.find((m) => m.t === 'finished') as Extract<(typeof host.conn.sent)[number], { t: 'finished' }>;
+      expect(done.outcome.people.map((p) => p.person).sort()).toEqual(['Quinn', 'Rae']);
+      expect(done.outcome.scores?.map((x) => x.person).sort()).toEqual(['Quinn', 'Rae']);
+      // Calling no one an AI is right about the one other person only; calling every seat an AI is right about the six AIs only.
+      const score = (name: string) => done.outcome.scores!.find((x) => x.person === name)!;
+      expect(score('Quinn')).toMatchObject({ correct: 1, of: 7 });
+      expect(score('Rae')).toMatchObject({ correct: 6, of: 7 });
+      expect(done.outcome.fooling).toHaveLength(8);
+      expect(friend.conn.sent.some((m) => m.t === 'finished')).toBe(true);
+    });
+
+    it('says there is nothing to guess outside the guessing step, and takes a second answer for nothing', async () => {
+      const { host, friend } = await play();
+      host.send({ t: 'guess', ai: [] });
+      host.send({ t: 'guess', ai: ['Aria'] }); // a second go is ignored, not an error
+      friend.send({ t: 'guess', ai: [] });
+      host.send({ t: 'guess', ai: [] }); // the step is over
+      expect(host.conn.sent.filter((m) => m.t === 'error').map((m) => (m as { message: string }).message)).toEqual(['There is nothing to guess right now.']);
+    });
+
+    it('does not wait for someone who left for longer than the grace, and gives a returning person the log', async () => {
+      const { s, host, friend, joined, room } = await play();
+      const back = s.open();
+      friend.session.disconnect();
+      host.send({ t: 'guess', ai: [] }); // the only person still connected has answered, but Rae may be reloading
+      expect(room.phase).toBe('guessing');
+      await waitFor(() => room.phase === 'finished', RECONNECT_GRACE_MS + 3000); // then the grace runs out
+      const rae = room.seats.find((x) => x.name === 'Rae')!;
+      back.send({ t: 'rejoin', code: joined.code, token: rae.token });
+      expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'finished']);
+      const done = back.conn.sent[1] as Extract<(typeof back.conn.sent)[number], { t: 'finished' }>;
+      expect(done.outcome.scores?.map((x) => x.person)).toEqual(['Quinn']); // Rae was not scored
+    }, 20_000); // waits out the real reconnect grace
+
+    it('returns to the question for someone who reloads while guessing', async () => {
+      const { s, host, joined, room } = await play();
+      const quinn = room.seats.find((x) => x.name === 'Quinn')!;
+      host.session.disconnect();
+      const back = s.open();
+      back.send({ t: 'rejoin', code: joined.code, token: quinn.token });
+      expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'alias', 'guess']);
+      expect(back.conn.sent[1]).toEqual({ t: 'alias', alias: room.aliasOf('Quinn') });
+    });
   });
 
   it('gives the finished log back to someone who rejoins after the end', async () => {

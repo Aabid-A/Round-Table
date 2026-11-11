@@ -74,3 +74,10 @@
 .room-actions {
   margin-top: var(--space-5);
 }
+/* The end screen is long: give each section room, and the copy button room under its box. */
+.room-end h2 {
+  margin: var(--space-5) 0 var(--space-3);
+}
+.copy-row {
+  margin-top: var(--space-3);
+}

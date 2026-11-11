@@ -46,3 +46,21 @@ export function buildRoomCast(humans: string[], models: string[] | null, seed: n
   const people = humans.map((name) => ({ name, model: HUMAN_MODEL }));
   return createRng(seed).shuffle([...ai, ...people]);
 }
+
+/**
+ * Alias mode: every seat, people and AIs alike, gets one of the eight AI names, and the table order is the same fixed list,
+ * so a name or a position says nothing about who is a person. `people` says which alias each person got; keep it private
+ * until the game is over. Model IDs are used in turn for the AI seats, as in buildRoomCast.
+ */
+export function buildAliasCast(humans: string[], models: string[] | null, seed: number): { cast: CastMember[]; people: Record<string, string> } {
+  if (humans.length < 1 || humans.length > TABLE_SEATS) throw new Error(`a room seats 1 to ${TABLE_SEATS} people`);
+  if (models !== null && models.length === 0) throw new Error('give at least one model ID, or none for mock AIs');
+  const seats: (string | null)[] = createRng(seed).shuffle([...humans, ...Array<null>(TABLE_SEATS - humans.length).fill(null)]);
+  let nextAi = 0;
+  const cast = AI_NAMES.map((alias, i): CastMember => {
+    if (seats[i] !== null) return { name: alias, model: HUMAN_MODEL };
+    return { name: alias, model: models ? (models[nextAi++ % models.length] as string) : 'mock' };
+  });
+  const people = Object.fromEntries(AI_NAMES.flatMap((alias, i) => (seats[i] !== null ? [[alias, seats[i] as string]] : [])));
+  return { cast, people };
+}

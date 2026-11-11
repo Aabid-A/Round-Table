@@ -24,6 +24,7 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
   const [key, setKey] = useState('');
   const [models, setModels] = useState('');
   const [cap, setCap] = useState('1.00');
+  const [aliases, setAliases] = useState(false);
 
   // One primary button on the page: joining when the person came from an invite, making a room otherwise.
   const joinIsPrimary = inviteCode !== null;
@@ -40,7 +41,7 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
     onJoin(checked.value);
   };
   const create = (): void => {
-    const checked = checkCreate({ name, real, key, models, cap });
+    const checked = checkCreate({ name, real, key, models, cap, aliases });
     if (!checked.ok) return setProblem(checked.message);
     clear();
     setKey(''); // the key leaves this page with the message; the page keeps no copy
@@ -125,6 +126,10 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
                 Real models through OpenRouter
               </label>
             </fieldset>
+            <label className="choice" data-on={aliases}>
+              <input type="checkbox" checked={aliases} onChange={(e) => (setAliases(e.target.checked), clear())} />
+              Human or AI? Everyone plays under an alias, so nobody knows who is a friend and who is an AI
+            </label>
             {real && (
               <>
                 <label className="field">

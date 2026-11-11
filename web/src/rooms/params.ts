@@ -1,4 +1,4 @@
-import { normalizeCode } from '../../../src/roomCode.js';
+import { normalizeCode, roomLogName } from '../../../src/roomCode.js';
 
 /** ?mode=room, or an invite link (?room=CODE), opens the rooms page. */
 export const isRoomMode = (search: string): boolean => {
@@ -30,4 +30,12 @@ export function roomServerUrl(configured: string | undefined, loc: { protocol: s
 /** The link a host shares: the same page, opened on the join form with the code filled in. */
 export function inviteLink(loc: { origin: string; pathname: string }, code: string): string {
   return `${loc.origin}${loc.pathname}?mode=room&room=${code}`;
+}
+
+/**
+ * The replay link for a finished room game: the replay page opening `<room log name>`. It works where that log file has been put
+ * in web/public/games/ (the room server saves it as `<LOG_DIR>/<name>.json`).
+ */
+export function replayLink(loc: { origin: string; pathname: string }, code: string, seed: number): string {
+  return `${loc.origin}${loc.pathname}?log=${roomLogName(code, seed)}`;
 }

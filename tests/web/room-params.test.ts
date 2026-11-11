@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inviteLink, isRoomMode, roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
+import { inviteLink, isRoomMode, replayLink, roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
 
 describe('isRoomMode and roomCodeFromSearch', () => {
   it('opens the rooms page for ?mode=room or a valid invite code', () => {
@@ -42,5 +42,11 @@ describe('roomSeedFromSearch', () => {
     expect(roomSeedFromSearch('?mode=room&seed=5')).toBe(5);
     expect(roomSeedFromSearch('?seed=0')).toBe(0);
     for (const bad of ['', '?seed=', '?seed=-1', '?seed=1.5', '?seed=abc', '?seed=1234567890']) expect(roomSeedFromSearch(bad), bad).toBeUndefined();
+  });
+});
+
+describe('replayLink', () => {
+  it('opens the replay page on the room\'s saved log', () => {
+    expect(replayLink({ origin: 'https://play.example.org', pathname: '/table/' }, 'AB2CD', 42)).toBe('https://play.example.org/table/?log=room-AB2CD-seed-42');
   });
 });

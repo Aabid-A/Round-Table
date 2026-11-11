@@ -17,7 +17,7 @@ export interface Seat {
   conn: Conn | null;
 }
 
-export type RoomPhase = 'lobby' | 'playing' | 'finished' | 'closed';
+export type RoomPhase = 'lobby' | 'playing' | 'guessing' | 'finished' | 'closed';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 const refuse = (error: string): { ok: false; error: string } => ({ ok: false, error });
@@ -27,6 +27,10 @@ export class Room {
   phase: RoomPhase = 'lobby';
   /** The phase everyone was last told, so a person who comes back mid-phase can be told too. */
   status: PublicPhase | null = null;
+  /** Every seat plays under an alias, so nobody can tell friends from AIs until the end. */
+  aliases = false;
+  /** Alias to real name, kept private until the game is over. Empty without aliases. */
+  people: Record<string, string> = {};
   /** Who made the room (a network address), for the per-address room limit. */
   owner: string | null = null;
   /** When the game ended, for expiry. */
@@ -94,6 +98,11 @@ export class Room {
     return { ok: true, value: seat };
   }
 
+  /** The alias this person plays under, once an alias game has started. */
+  aliasOf(name: string): string | null {
+    return Object.entries(this.people).find(([, person]) => person === name)?.[0] ?? null;
+  }
+
   /** A person leaves the lobby for good: their seat goes. */
   removeSeat(name: string): void {
     const i = this.seats.findIndex((s) => s.name === name);
@@ -114,7 +123,7 @@ export class Room {
   }
 
   lobbyMessage(): ServerMessage {
-    return { t: 'lobby', code: this.code, mode: this.mode, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
+    return { t: 'lobby', code: this.code, mode: this.mode, aliases: this.aliases, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
   }
 
   broadcast(message: ServerMessage): void {

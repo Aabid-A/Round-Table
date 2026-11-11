@@ -117,7 +117,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     and assert that no client received hidden information.
   - Run `/design-review` on the lobby and game screens.
 
-- [ ] **M11. Human or AI?** The room mode built for sharing.
+- [x] **M11. Human or AI?** The room mode built for sharing.
   - Optional mode: every seat gets an alias, so nobody knows which players
     are their friends and which are models.
   - End screen: who was human, who was a traitor, who fooled whom, and one

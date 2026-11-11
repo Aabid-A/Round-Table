@@ -35,7 +35,9 @@ replayable; everything with I/O sits at the edges. The spec is `docs/GAME.md`.
   every limit), `room.ts` and `registry.ts` (seats, codes, expiry),
   `seatPlayer.ts` (a person as a `Player`, with a turn timer), `game.ts`
   (runs one room's game), `session.ts` (one connection's messages),
-  `server.ts` (the sockets). No game rules here: it calls the engine.
+  `guessing.ts` (the after-game guess in alias rooms), `saveLog.ts` (the saved
+  log file), `address.ts` (where a connection came from), `server.ts` (the
+  sockets). No game rules here: it calls the engine.
 - `config/` cast (`cast.json`, OpenRouter model IDs) and game settings.
 - `tests/` mirrors `src/` (`src/engine/x.ts` -> `tests/engine/x.test.ts`).
 

@@ -1,7 +1,9 @@
 import { WebSocketServer, type WebSocket } from 'ws';
+import type { GameLog } from '../src/engine/types.js';
 import { addressOf } from './address.js';
 import { LIMITS, type ServerMessage } from './protocol.js';
 import { Registry } from './registry.js';
+import { saveLog } from './saveLog.js';
 import type { Conn } from './room.js';
 import { Session, type Runtime } from './session.js';
 
@@ -15,6 +17,8 @@ export interface ServerOptions {
   sweepMs?: number;
   /** Let the page choose a room's seed (tests and replays only: the seed decides every role). */
   allowSeed?: boolean;
+  /** Folder to save each finished game's log in. Absent means logs are not saved. */
+  logDir?: string;
   /** Take a client's address from the last X-Forwarded-For entry (set this only behind a single reverse proxy you run). */
   trustProxy?: boolean;
   /** Connections one address may hold. */
@@ -77,6 +81,7 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
           abandonMs: opts.abandonMs ?? 2 * 60_000,
           log,
           ...(opts.allowSeed ? { allowSeed: true } : {}),
+          ...(opts.logDir !== undefined ? { saveLog: (name: string, log: GameLog) => saveLog(opts.logDir as string, name, log) } : {}),
           ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
           ...(opts.aiTimeoutMs !== undefined ? { aiTimeoutMs: opts.aiTimeoutMs } : {}),
         },

@@ -22,6 +22,20 @@ describe('parseClientMessage', () => {
     });
   });
 
+  it('reads the aliases option for either kind of room, and only when it is true', () => {
+    expect(ok({ t: 'create', name: 'Quinn', mode: 'mock', aliases: true })).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock', aliases: true } });
+    expect(ok({ t: 'create', name: 'Quinn', mode: 'mock', aliases: false })).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock' } });
+    const real = ok({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-x', models: ['a/b'], maxCostUsd: 1, aliases: true });
+    expect(real.ok && real.msg).toMatchObject({ aliases: true });
+    expect(error({ t: 'create', name: 'Quinn', mode: 'mock', aliases: 'yes' })).toBe('Aliases must be on or off.');
+  });
+
+  it('reads a guess: up to eight names, once each', () => {
+    expect(ok({ t: 'guess', ai: ['Aria', 'Bram', 'Aria'] })).toEqual({ ok: true, msg: { t: 'guess', ai: ['Aria', 'Bram'] } });
+    expect(ok({ t: 'guess', ai: [] })).toEqual({ ok: true, msg: { t: 'guess', ai: [] } });
+    for (const bad of [undefined, 'Aria', [1], [''], ['x'.repeat(21)], Array(9).fill('Aria')]) expect(error({ t: 'guess', ai: bad }), String(bad)).toBe('That guess is not valid.');
+  });
+
   it('refuses text that is not JSON, not an object, or has no type', () => {
     expect(parseClientMessage('nope')).toEqual({ ok: false, error: 'Messages must be JSON.' });
     expect(parseClientMessage('[1]')).toEqual({ ok: false, error: 'Messages need a type.' });

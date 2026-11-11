@@ -1,6 +1,7 @@
 import { nameProblem } from '../src/cast.js';
 import type { PublicPhase } from '../src/publicPhase.js';
 import { normalizeCode } from '../src/roomCode.js';
+import type { RoomOutcome } from '../src/roomResult.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import type { GameLog } from '../src/engine/types.js';
 import type { Phase } from '../src/types.js';
@@ -36,6 +37,8 @@ export const LIMITS = {
   finishedTtlMs: 15 * 60 * 1000,
   /** A lobby with nobody connected is closed after this long (long enough to switch apps to share the code), so abandoned rooms do not hold a person's room limit for hours. */
   emptyLobbyMs: 10 * 60 * 1000,
+  /** How long people have to guess which seats were AIs, after an alias game. */
+  guessMs: 60_000,
   /** How long a person has for one turn. */
   turnMs: 90_000,
 } as const;
@@ -49,11 +52,13 @@ export const MAX_HUMANS = 8;
 export type AiSetup = { mode: 'mock' } | { mode: 'openrouter'; key: string; models: string[]; maxCostUsd: number };
 
 export type ClientMessage =
-  | ({ t: 'create'; name: string; seed?: number } & AiSetup)
+  | ({ t: 'create'; name: string; seed?: number; aliases?: true } & AiSetup)
   | { t: 'join'; code: string; name: string }
   | { t: 'rejoin'; code: string; token: string }
   | { t: 'start' }
   | { t: 'leave' }
+  /** After the game: the aliases this person thinks were AIs. */
+  | { t: 'guess'; ai: string[] }
   | { t: 'answer'; turn: number; answer: HumanAnswer };
 
 export type Parsed = { ok: true; msg: ClientMessage } | { ok: false; error: string };
@@ -85,7 +90,8 @@ export function parseClientMessage(text: string): Parsed {
       if (typeof n !== 'string') return fail(n.error);
       const seed = raw.seed;
       if (seed !== undefined && !(typeof seed === 'number' && Number.isInteger(seed) && seed >= 0 && seed < 2 ** 31)) return fail('The seed must be a whole number.');
-      const seedPart = seed === undefined ? {} : { seed: seed as number };
+      if (raw.aliases !== undefined && typeof raw.aliases !== 'boolean') return fail('Aliases must be on or off.');
+      const seedPart = { ...(seed === undefined ? {} : { seed: seed as number }), ...(raw.aliases === true ? { aliases: true as const } : {}) };
       if (raw.mode === 'mock') return { ok: true, msg: { t: 'create', name: n, mode: 'mock', ...seedPart } };
       if (raw.mode !== 'openrouter') return fail('Choose practice AIs or real models.');
       const key = typeof raw.key === 'string' ? raw.key.trim() : '';
@@ -114,6 +120,11 @@ export function parseClientMessage(text: string): Parsed {
       return { ok: true, msg: { t: 'start' } };
     case 'leave':
       return { ok: true, msg: { t: 'leave' } };
+    case 'guess': {
+      const ai = raw.ai;
+      if (!Array.isArray(ai) || ai.length > MAX_HUMANS || !ai.every((n) => typeof n === 'string' && n.length > 0 && n.length <= LIMITS.name)) return fail('That guess is not valid.');
+      return { ok: true, msg: { t: 'guess', ai: [...new Set(ai as string[])] } };
+    }
     case 'answer': {
       const a = raw.answer;
       if (typeof raw.turn !== 'number' || !Number.isInteger(raw.turn) || !isObject(a)) return fail('That answer is incomplete.');
@@ -138,13 +149,17 @@ export interface SeatInfo {
 
 export type ServerMessage =
   | { t: 'joined'; code: string; token: string; you: string; host: boolean }
-  | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
+  | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; aliases: boolean; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
+  /** Private to one seat, when the game starts in alias mode: the name this person plays under. */
+  | { t: 'alias'; alias: string }
+  /** After the game in alias mode: guess which seats were AIs. `seats` are all the aliases; `you` is this person's own. */
+  | { t: 'guess'; seats: string[]; you: string; timeoutMs: number; sent: boolean }
   /** Shown to everyone while the game runs. Only the public phase, and only when it changes: never who is acting, or how many turns a phase took. */
   | { t: 'status'; phase: PublicPhase | null }
   /** Private to one seat. */
   | { t: 'turn'; turn: number; phase: Phase; options: string[]; user: string; timeoutMs: number; error: string | null }
   /** Private to one seat: that turn is no longer waiting for an answer (time ran out). */
   | { t: 'turn_over'; turn: number }
-  | { t: 'finished'; log: GameLog; you: string }
+  | { t: 'finished'; log: GameLog; you: string; outcome: RoomOutcome }
   | { t: 'error'; message: string }
   | { t: 'closed'; reason: string };

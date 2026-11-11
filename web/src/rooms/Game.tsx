@@ -3,7 +3,7 @@ import type { HumanAnswer } from '../../../src/players/human.js';
 import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import { HumanForm } from '../play/HumanForm.js';
 import type { Identity, TurnInfo } from './state.js';
-import { formatLeft, LOW_MS } from './time.js';
+import { Clock } from './Clock.js';
 
 /** What is happening, in words that say nothing about who is acting. */
 const PHASE_LINE: Record<PublicPhase, string> = {
@@ -26,23 +26,6 @@ interface Props {
   offline: boolean;
   onAnswer: (turn: number, answer: HumanAnswer) => void;
   onLeave: () => void;
-}
-
-/** Counts down this person's turn. The server owns the real clock; this only shows it. */
-function Clock({ timeoutMs }: { timeoutMs: number }) {
-  const [left, setLeft] = useState(timeoutMs);
-  useEffect(() => {
-    const end = Date.now() + timeoutMs;
-    const tick = setInterval(() => setLeft(Math.max(0, end - Date.now())), 250);
-    return () => clearInterval(tick);
-  }, [timeoutMs]);
-  const low = left <= LOW_MS;
-  return (
-    <p className="clock" data-low={low} data-testid="clock">
-      {low ? 'Hurry: ' : ''}
-      Time left <strong>{formatLeft(left)}</strong>. If it runs out, a fallback move is made for you.
-    </p>
-  );
 }
 
 /** Takes focus when it appears, so focus is not lost when the form goes away. */
@@ -68,7 +51,7 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
     <main className="app play" data-testid="room-game">
       <header className="topbar">
         <h1>Round Table</h1>
-        <span className="muted">You are {me.you}</span>
+        <span className="muted">You are {me.alias ?? me.you}</span>
       </header>
 
       {offline && (
@@ -84,7 +67,7 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
 
       {open && turn ? (
         <>
-          <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} />
+          <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
           {turn.error && (
             <p className="notice notice-error" role="alert">
               {turn.error}

@@ -22,6 +22,7 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `MAX_ROOMS_PER_ADDRESS` | server | Open rooms one network address may have. Default 3 (finished rooms do not count). |
 | `MAX_CONNECTIONS_PER_ADDRESS` | server | Connections one network address may hold. Default 20. |
 | `TRUST_PROXY` | server | Set to `1` only behind exactly one reverse proxy that you run: the address is then the last `X-Forwarded-For` entry, the one your proxy added (earlier entries are whatever the client sent). Without it, every client behind the proxy looks like one address and shares these limits. |
+| `LOG_DIR` | server | Folder where each finished game's log is saved. Default `games/`; `LOG_DIR=none` turns saving off. See "Saved logs". |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
 Time values are whole milliseconds from 100 to 86400000. A bad value stops the server and names the
@@ -41,6 +42,43 @@ to another server.
 
 Reloading the page takes your seat back (the room code and a seat token are kept in the tab's session
 storage). A dropped connection reconnects on its own. `&seed=N` on the making page fixes the game, but only on a server started with `ALLOW_SEED=1`; otherwise it is ignored.
+
+## Human or AI?
+
+Tick **Human or AI?** when making a room and nobody knows which seats are friends and which are AIs.
+
+- Every seat, people and AIs, plays under one of the eight AI names (Aria, Bram, Cleo...), in the same table order. A
+  person's real name appears in no prompt and on no other page while the game runs. Each person is told only their own
+  alias, when the game starts. Prompts, speeches and the log use the aliases. (A person can still give themselves away by what
+  they type, and AI calls and people take different amounts of time.)
+- When the game ends, **before** anyone is told who was who, each person ticks the seats they think were AIs (not their own).
+  The room waits for everyone still connected, up to 60 seconds; a person who left or was too slow is not scored.
+- Then the finished log and the outcome are sent: who was behind each alias, who was a traitor, each person's score
+  (right calls out of the other seven seats), and for each seat the people who got it wrong ("who fooled whom").
+- The end screen has a **result card** (a 1200x675 picture; its headline is how many people trusted the traitor, such as
+  "3 of 4 humans trusted the AI traitor") and a **share text** with the replay link.
+
+"Trusted the traitor" means: among the people who voted at least once, those who never voted to banish that traitor. The
+traitor is the AI one who lasted longest, or a human one if no AI was a traitor. Someone who accepted a recruitment counts as
+a traitor, both as a candidate for the headline and as someone on the traitors' side (so not among the people who trusted).
+People who never got to vote (murdered on the first night, say) are left out.
+
+The share text says how many people and AIs were at the table, how that person did at guessing, and the replay link. It says
+nothing about who won, who was a traitor, which seats were AIs, or who trusted whom, so it can be posted before anyone has
+watched the replay.
+
+## Saved logs
+
+When a game ends the server saves its log as `<LOG_DIR>/room-<code>-seed-<seed>.json`: the same format the command line saves
+([LOG.md](LOG.md)), so replay, highlights, cards and stats work on it. In an alias room the seat names are the aliases and the
+people's real names are not in the file. The log is written (through a temporary file and a rename, removed if the write fails) once the game and any
+guessing are over, never before, since it names who was an AI. It has the host's key scrubbed out like everything else.
+Saving is on by default (`games/`); `LOG_DIR=none` turns it off. There is no limit on how many logs pile up: clear the
+folder when you like.
+
+The replay link in the share text is `?log=room-<code>-seed-<seed>` on the page's address. It works where that file is in
+`web/public/games/` (point `LOG_DIR` there, or copy the file). A log holds every private note, so treat the folder as private
+until you choose what to publish.
 
 ## AI seats
 
@@ -87,6 +125,7 @@ could guess which seats are people.
 | Connections at once | 400, and 20 per network address |
 | Open rooms per network address | 3 (finished rooms do not count) |
 | Room lifetime | 2 hours from creation, or 15 minutes after the game ended |
+| Guessing after an alias game | 60 seconds |
 | Empty lobby | closed after 10 minutes with nobody connected (leaving on purpose frees it at once) |
 | People per room | 8 |
 | Text | names 20 characters; speech 600; a message or a note 300 |
@@ -101,24 +140,27 @@ JSON text over a WebSocket. The types are in [`server/protocol.ts`](../server/pr
 
 | From the page | Meaning |
 |---|---|
-| `create` | Make a room (name, practice or real models, optional seed) |
+| `create` | Make a room (name, practice or real models, optional aliases, optional seed) |
 | `join` | Take a seat by room code and name |
 | `rejoin` | Take a seat back by room code and seat token |
 | `start` | Host only: start the game |
 | `leave` | Leave the lobby on purpose (the host leaving closes the room); in a game it does nothing and the seat plays on |
 | `answer` | Answer the turn with this number |
+| `guess` | After an alias game: the seats you think were AIs |
 
 | From the server | Meaning |
 |---|---|
 | `joined` | Your seat and your token |
-| `lobby` | Who is in the room |
+| `lobby` | Who is in the room, and whether it plays under aliases |
+| `alias` | Your alias, when an alias game starts (you only) |
+| `guess` | Ask for a guess: the seats, your own seat, the time left (you only) |
 | `status` | The phase (everyone) |
 | `turn` / `turn_over` | Your turn, and that it timed out (you only) |
-| `finished` | The log (everyone, at the end) |
+| `finished` | The log and the outcome (everyone, at the end) |
 | `error` / `closed` | A refusal, or that the room is gone |
 
 ## Not in the box
 
-Rooms live in memory: stopping the server ends them. Nothing is saved on the server. There is no spectator
+Rooms live in memory: stopping the server ends them. Only finished games' logs are saved (see "Saved logs"). There is no spectator
 view (a person who is out of the game waits until the end), no way to remove an offline seat, and no
 accounts. Deploying it is up to you.

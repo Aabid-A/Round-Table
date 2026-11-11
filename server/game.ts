@@ -1,4 +1,4 @@
-import { buildRoomCast } from '../src/cast.js';
+import { buildAliasCast, buildRoomCast } from '../src/cast.js';
 import { runGame } from '../src/engine/game.js';
 import { DEFAULT_SETTINGS, type GameLog } from '../src/engine/types.js';
 import { createMockPlayers } from '../src/players/mock.js';
@@ -31,11 +31,14 @@ export interface RunRoomOptions {
 export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<GameLog> {
   const setup = room.takeSetup();
   const secrets = setup.mode === 'openrouter' ? [setup.key] : [];
-  const cast = buildRoomCast(
-    room.seats.map((s) => s.name),
-    setup.mode === 'openrouter' ? setup.models : null,
-    room.seed,
-  );
+  const humans = room.seats.map((s) => s.name);
+  const models = setup.mode === 'openrouter' ? setup.models : null;
+  // With aliases every seat plays under one of the same eight names; `people` says which person is behind each, and stays
+  // on the server until the game is over. Without them people keep their own names.
+  const seating = room.aliases ? buildAliasCast(humans, models, room.seed) : { cast: buildRoomCast(humans, models, room.seed), people: {} };
+  const { cast } = seating;
+  room.people = seating.people;
+  const personAt = (seatName: string): string => (room.aliases ? (seating.people[seatName] ?? seatName) : seatName);
   const aiCast = cast.filter((c) => c.model !== HUMAN_MODEL);
 
   const { signal } = opts;
@@ -71,10 +74,12 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
         );
   for (const c of cast) {
     if (c.model !== HUMAN_MODEL) continue;
-    const seat = opts.seatPlayers.get(c.name);
-    if (!seat) throw new Error(`no connection handler for ${c.name}`);
+    const seat = opts.seatPlayers.get(personAt(c.name));
+    if (!seat) throw new Error(`no connection handler for ${personAt(c.name)}`);
     base[c.name] = seat.player;
   }
+  // Each person is told their own alias, and nobody else's.
+  for (const [alias, person] of Object.entries(room.people)) room.sendTo(person, { t: 'alias', alias });
 
   const players: Record<string, Player> = {};
   // Tell everyone the phase only when it changes. One status per turn would show how many turns a phase took, and so how many
