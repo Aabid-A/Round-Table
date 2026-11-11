@@ -256,6 +256,35 @@ test('a practice game with no AI naming you says so, and play again returns to t
   await expect(page.getByRole('button', { name: 'Take a seat' })).toBeVisible();
 });
 
+test('the note card keeps a very long word and a very long note inside its box', async ({ page }) => {
+  await page.goto('/?mode=play');
+  const result = await page.evaluate(async () => {
+    const url = '/src/play/noteCard.ts'; // the dev server serves source modules, so the test can call the real drawing code
+    const { drawNoteCard, NOTE_CARD } = (await import(/* @vite-ignore */ url)) as typeof import('../src/play/noteCard.js');
+    const base = { turnId: 0, round: 1, phase: 'round_table', player: 'Bram', model: 'vendor/model-x', said: '' };
+    const draw = (thought: string): { right: boolean; bottom: boolean } => {
+      const canvas = document.createElement('canvas');
+      drawNoteCard(canvas, { ...base, thought }, 'Sam');
+      const ctx = canvas.getContext('2d')!;
+      const { width, height } = NOTE_CARD;
+      const bg = Array.from(ctx.getImageData(width - 1, height - 1, 1, 1).data).join(',');
+      const clear = (x: number, y: number, w: number, h: number): boolean => {
+        const d = ctx.getImageData(x, y, w, h).data;
+        for (let i = 0; i < d.length; i += 4) if (`${d[i]},${d[i + 1]},${d[i + 2]},${d[i + 3]}` !== bg) return false;
+        return true;
+      };
+      // The strip to the right of the box, and the strip below it, hold only background.
+      return { right: clear(width - 60, 232, 60, height - 232), bottom: clear(0, height - 60, width, 60) };
+    };
+    return {
+      longWord: draw(`See https://example.test/${'a'.repeat(300)} for what I mean about Sam`),
+      longText: draw(Array.from({ length: 80 }, () => 'Sam is hard to read').join(' ')),
+      short: draw('Sam seems fine.'),
+    };
+  });
+  expect(result).toEqual({ longWord: { right: true, bottom: true }, longText: { right: true, bottom: true }, short: { right: true, bottom: true } });
+});
+
 test('the other pages still open at their own addresses', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
