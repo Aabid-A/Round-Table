@@ -51,7 +51,7 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
     <main className="app play" data-testid="room-game">
       <header className="topbar">
         <h1>Round Table</h1>
-        <span className="muted">You are {me.you}</span>
+        <span className="muted">You are {me.alias ?? me.you}</span>
       </header>
 
       {offline && (
