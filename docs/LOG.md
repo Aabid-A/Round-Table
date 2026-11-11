@@ -45,7 +45,7 @@ Rules for readers:
 | Field | Type | Meaning |
 |---|---|---|
 | `winner` | `"traitor" \| "faithful" \| null` | Traitors win if any traitor is alive at the end. `null` only when `reason` is `cost_cap`. |
-| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds"` | Why it ended. |
+| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds" \| "cost_cap"` | Why it ended. `cost_cap` means the game was stopped early by the cost cap. |
 | `rounds` | integer | Rounds played (the last round may be partial). |
 | `survivors` | `{ name: string, role: "traitor" \| "faithful" }[]` | Players alive at the end, with their final role. |
 | `costCap` | `{ maxUsd: number, spentUsd: number }` (optional) | Present only when `reason` is `cost_cap`: the cap and what had been spent. |
