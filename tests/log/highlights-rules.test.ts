@@ -224,6 +224,24 @@ describe('notesContradictPraise', () => {
     expect(find('I trust T1, honestly.', 'T1 is me.', 'T1')).toEqual([]);
   });
 
+  it('does not count a clause about someone else, or a negated one, as praise', () => {
+    expect(find('I trust F1, but F2 is lying to us.', 'F2 is a traitor.')).toEqual([]);
+    expect(find('I trust F1, but F2 is lying to us.', 'F1 is a target.').map((h) => h.title)).toHaveLength(1);
+    expect(find('I do not trust F1.', 'F1 is a target.')).toEqual([]);
+    expect(find("F1 isn't honest.", 'F1 is a target.')).toEqual([]);
+    expect(find('F1 is not innocent at all.', 'F1 is a target.')).toEqual([]);
+  });
+
+  it('matches names as written: a cast name that is also a word, and names in other alphabets', () => {
+    const ctxFor = (name: string, speech: string, notes: string) =>
+      notesContradictPraise(buildContext(logFrom({ [name]: 'faithful', T1: 'traitor' }, turnWith(speech, notes))));
+    expect(ctxFor('Will', 'I trust that it will work.', 'Will is my target.')).toEqual([]);
+    expect(ctxFor('Will', 'I trust Will.', 'Will is my target.')).toHaveLength(1);
+    expect(ctxFor('Zoë', 'I trust Zoëlle.', 'Zoë is my target.')).toEqual([]);
+    expect(ctxFor('Zoë', 'I trust Zoë.', 'Zoë is my target.')).toHaveLength(1);
+    expect(ctxFor('Émile', 'I vouch for Émile.', 'Émile is my target.')).toHaveLength(1);
+  });
+
   it('finds several players praised in one turn, and handles names with punctuation safely', () => {
     expect(find('I trust F1. I also vouch for F2.', 'F1 is a target. F2 is a lie.').map((h) => h.title)).toHaveLength(2);
     const odd = logFrom({ 'A.B': 'faithful', T1: 'traitor' }, turnWith('I trust A.B fully.', 'A.B is my target.'));

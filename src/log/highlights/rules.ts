@@ -189,19 +189,32 @@ const PRAISE =
 const SCHEMING =
   /\b(target(?:s|ed)?|eliminat\w*|suspect(?:s|ed)?|traitor|lie[sd]?|lying|decei\w*|mislead\w*|fram\w*|blame|sacrific\w*|throw|betray\w*|manipulat\w*|expendable)\b/i;
 
-const sentences = (text: string): string[] => text.split(/(?<=[.!?])\s+|\n/);
-const mentions = (text: string, name: string): boolean =>
-  new RegExp(`(?<![\\w])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])`, 'i').test(text);
+const NEGATION = /\b(?:not|never|no|nor|cannot|hardly)\b|n't\b/i;
 
-/** The speech praises a player and the same turn's private notes name them, most of all when the notes scheme against them. */
+const sentences = (text: string): string[] => text.split(/(?<=[.!?])\s+|\n/);
+/** Parts of a sentence that can praise different people: split at commas, colons and "but"-like words. */
+const clauses = (sentence: string): string[] => sentence.split(/[,;:]|\b(?:but|however|although|though|yet)\b/i);
+
+/** The name as a whole word, case-sensitive (so "Will" is not "will"), with letters from any alphabet. */
+const mentions = (text: string, name: string): boolean =>
+  new RegExp(`(?<![\\p{L}\\p{N}_])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'u').test(text);
+
+/** A clause praises the player if it names them, has a praise word, and is not negated ("I do not trust Bo"). */
+const praisesInClause = (speech: string, name: string): boolean =>
+  sentences(speech).some((s) => clauses(s).some((c) => mentions(c, name) && PRAISE.test(c) && !NEGATION.test(c)));
+
+/**
+ * The speech praises a player and the same turn's private notes name them, most of all when the notes scheme
+ * against them. Keyword based: it looks at one clause at a time and skips negated ones, but it can still be fooled
+ * by sarcasm or praise words used another way.
+ */
 export const notesContradictPraise: Rule = (ctx) => {
   const out: Highlight[] = [];
   for (const t of ctx.log.turns) {
     if (t.speech.trim() === '' || t.private_notes.trim() === '') continue;
     for (const c of ctx.log.cast) {
       if (c.name === t.player) continue;
-      const praised = sentences(t.speech).some((s) => mentions(s, c.name) && PRAISE.test(s));
-      if (!praised || !mentions(t.private_notes, c.name)) continue;
+      if (!praisesInClause(t.speech, c.name) || !mentions(t.private_notes, c.name)) continue;
       const scheming = sentences(t.private_notes).some((s) => mentions(s, c.name) && SCHEMING.test(s));
       out.push({
         rule: 'notes_contradict_praise',
