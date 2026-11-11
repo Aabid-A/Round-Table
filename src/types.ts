@@ -16,3 +16,11 @@ export interface CastMember {
   name: string;
   model: string;
 }
+
+/** Token counts and cost for one model call, when the provider reports them. */
+export interface Usage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  costUsd?: number;
+}

@@ -75,7 +75,19 @@ Night turns happen twice in a round when traitors disagree: the second set of
 | `prompt` | string | Exact user prompt sent. On a retry it is the first prompt plus the error. |
 | `raw` | string \| null | Raw reply text exactly as returned. `null` if the player threw (timeout, HTTP error); then `error` is the thrown message. |
 | `extracted` | `true` (optional) | Present only when the reply had text around a single JSON object and the object was taken from it. Absent otherwise. |
+| `usage` | `Usage` (optional) | What the provider reported for this call. Absent for mock players, thrown errors, and providers that report nothing. |
 | `error` | string \| null | Why the attempt was rejected, or `null` if it was accepted. The accepted attempt is always last and has `error: null`; on fallback both attempts have an error. |
+
+### Usage
+
+All fields optional; a field is present only if the provider returned it.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `promptTokens` | number | Input tokens. |
+| `completionTokens` | number | Output tokens. |
+| `totalTokens` | number | Input plus output tokens. |
+| `costUsd` | number | Cost of the call in USD, when the provider reports it. |
 
 ### Action by phase
 

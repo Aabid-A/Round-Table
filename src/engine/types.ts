@@ -1,4 +1,4 @@
-import type { CastMember, Phase, Role } from '../types.js';
+import type { CastMember, Phase, Role, Usage } from '../types.js';
 
 export type EndReason = 'no_traitors' | 'no_faithfuls' | 'two_remaining' | 'endgame_vote' | 'max_rounds';
 
@@ -45,6 +45,8 @@ export interface TurnAttempt {
   error: string | null;
   /** Present and true only when the JSON object was taken from text around it. */
   extracted?: true;
+  /** Token counts and cost the provider reported for this attempt, if any. */
+  usage?: Usage;
 }
 
 export interface Turn {

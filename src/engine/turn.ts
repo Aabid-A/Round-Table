@@ -1,5 +1,6 @@
 import type { Player } from '../players/player.js';
 import type { Rng } from './rng.js';
+import type { Usage } from '../types.js';
 import type { Action, GameState, PhaseRequest, Turn, TurnAttempt } from './types.js';
 import { fallbackAction, parseReply } from './validate.js';
 
@@ -41,14 +42,16 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
     let raw: string | null = null;
     let error: string | null = null;
     let extracted = false;
+    let usage: Usage | undefined;
     try {
       const impl = ctx.players[player];
       if (!impl) throw new Error(`no player implementation for ${player}`);
-      raw = await impl.respond({ system: ctx.systemPrompt, user, phase, player, options });
-      if (typeof raw !== 'string') {
-        raw = null;
-        throw new Error('player returned a non-string reply');
-      }
+      const reply = await impl.respond({ system: ctx.systemPrompt, user, phase, player, options });
+      if (typeof reply === 'string') raw = reply;
+      else if (reply && typeof reply.text === 'string') {
+        raw = reply.text;
+        usage = reply.usage;
+      } else throw new Error('player returned a non-string reply');
       const parsed = parseReply(phase, raw, options);
       if (parsed.ok) {
         accepted = parsed.reply;
@@ -58,7 +61,13 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
     } catch (e) {
       error = errorMessage(e);
     }
-    attempts.push({ prompt: user, raw, error, ...(extracted ? { extracted: true as const } : {}) });
+    attempts.push({
+      prompt: user,
+      raw,
+      error,
+      ...(extracted ? { extracted: true as const } : {}),
+      ...(usage ? { usage } : {}),
+    });
     if (error !== null) user = baseUser + retryNote(raw, error);
   }
 

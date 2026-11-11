@@ -1,4 +1,4 @@
-import type { Phase } from '../types.js';
+import type { Phase, Usage } from '../types.js';
 
 /** What the engine hands a player for one attempt at one turn. */
 export interface PromptRequest {
@@ -10,7 +10,10 @@ export interface PromptRequest {
   options: string[];
 }
 
-/** Takes a prompt, returns the raw reply text. May throw (timeout, HTTP error). */
+/** Raw reply text, or the text plus the provider's usage numbers for the call. */
+export type PlayerReply = string | { text: string; usage?: Usage };
+
+/** Takes a prompt, returns the raw reply. May throw (timeout, HTTP error). */
 export interface Player {
-  respond(request: PromptRequest): Promise<string>;
+  respond(request: PromptRequest): Promise<PlayerReply>;
 }
