@@ -51,10 +51,11 @@
   gap: var(--rec-gap);
   padding: var(--rec-gap);
 }
-.rec-stage[data-mode='faces'] {
+.rec[data-aspect] .rec-stage[data-mode='faces'] {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
   align-items: center;
+  align-content: stretch;
 }
 .rec[data-aspect='16x9'] .rec-stage {
   grid-template-columns: 1fr 1fr;
