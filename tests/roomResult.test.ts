@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isHumanSeat, scoreGuesses, whoFooledWhom } from '../src/roomResult.js';
+import { isHumanSeat, scoreGuesses, trustedTraitor, trustHeadline, whoFooledWhom } from '../src/roomResult.js';
 import { logFrom } from './helpers/logs.js';
 
 // Four seats: Aria and Bram are AIs, Cleo and Dax are people.
@@ -48,5 +48,43 @@ describe('whoFooledWhom', () => {
   it('is empty of fooling when everyone guessed right', () => {
     const scores = scoreGuesses(log, [{ seat: 'Cleo', ai: ['Aria', 'Bram'] }, { seat: 'Dax', ai: ['Aria', 'Bram'] }]);
     expect(whoFooledWhom(log, scores).every((r) => r.fooled.length === 0)).toBe(true);
+  });
+});
+
+describe('trustedTraitor', () => {
+  const vote = (r: number, votes: [string, string][]) => ({ r, ev: { type: 'vote' as const, stage: 'vote' as const, votes: votes.map(([voter, target]) => ({ voter, target })), tally: {}, leaders: [] } });
+  const models = { Cleo: 'human', Dax: 'human', Eve: 'human' };
+  const roles = { Aria: 'traitor', Bram: 'faithful', Cleo: 'faithful', Dax: 'faithful', Eve: 'faithful', Fay: 'traitor' } as const;
+
+  it('counts the people who never voted against the AI traitor, among the people who voted', () => {
+    const l = logFrom({ ...roles }, [
+      vote(1, [['Cleo', 'Aria'], ['Dax', 'Bram'], ['Eve', 'Bram']]),
+      vote(2, [['Cleo', 'Fay'], ['Dax', 'Fay'], ['Eve', 'Bram']]),
+    ], {}, models);
+    // Aria is an AI traitor still there at the end; only Cleo voted against Aria.
+    const t = trustedTraitor(l);
+    expect(t).toEqual({ seat: 'Aria', isAi: true, trusted: 2, of: 3 });
+    expect(trustHeadline(t!)).toBe('2 of 3 humans trusted the AI traitor');
+  });
+
+  it('picks the AI traitor who lasted longest', () => {
+    const l = logFrom({ ...roles }, [
+      vote(1, [['Cleo', 'Bram'], ['Dax', 'Bram'], ['Eve', 'Bram']]),
+      { r: 1, ev: { type: 'banishment', player: 'Aria', role: 'traitor', method: 'majority' } },
+    ], {}, models);
+    expect(trustedTraitor(l)?.seat).toBe('Fay'); // Aria was banished in round 1, Fay never was
+  });
+
+  it('leaves out a person who never got to vote, and says "human" when no AI was a traitor', () => {
+    const l = logFrom({ Aria: 'faithful', Bram: 'faithful', Cleo: 'traitor', Dax: 'faithful', Eve: 'faithful' }, [
+      vote(1, [['Dax', 'Bram']]), // Eve never voted
+    ], {}, { Cleo: 'human', Dax: 'human', Eve: 'human' });
+    const t = trustedTraitor(l);
+    expect(t).toEqual({ seat: 'Cleo', isAi: false, trusted: 1, of: 1 });
+    expect(trustHeadline(t!)).toBe('1 of 1 human trusted the human traitor');
+  });
+
+  it('is null when no person voted', () => {
+    expect(trustedTraitor(logFrom({ ...roles }, [], {}, models))).toBeNull();
   });
 });

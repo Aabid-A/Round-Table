@@ -47,3 +47,42 @@ export function whoFooledWhom(log: GameLog, scores: GuessScore[]): Fooling[] {
   rows.sort((a, b) => b.fooled.length - a.fooled.length || a.order - b.order);
   return rows.map(({ seat, isAi, fooled }) => ({ seat, isAi, fooled }));
 }
+
+export interface TrustedTraitor {
+  /** The traitor the headline is about: an AI one if any traitor was an AI, and the one who lasted longest. */
+  seat: string;
+  isAi: boolean;
+  /** People who never voted to banish them. */
+  trusted: number;
+  /** People who voted at least once (someone who never got to vote could not show distrust, so is left out). */
+  of: number;
+}
+
+/** The round a seat left the game (murdered or banished), or Infinity if it was still there at the end. */
+function exitRound(log: GameLog, name: string): number {
+  for (const e of log.events) {
+    if (e.type === 'banishment' && e.player === name) return e.round;
+    if (e.type === 'breakfast' && e.victim === name) return e.round;
+  }
+  return Infinity;
+}
+
+/** How many people trusted the traitor: the figure for the group card. Null when there is nothing to say (no people who voted). */
+export function trustedTraitor(log: GameLog): TrustedTraitor | null {
+  const traitors = log.cast.filter((c) => log.roles[c.name] === 'traitor');
+  const ais = traitors.filter((c) => c.model !== 'human');
+  const pool = ais.length > 0 ? ais : traitors;
+  if (pool.length === 0) return null;
+  // Longest-lasting first; a tie keeps seat order.
+  const chosen = pool.reduce((best, c) => (exitRound(log, c.name) > exitRound(log, best.name) ? c : best));
+  const votes = log.events.flatMap((e) => (e.type === 'vote' ? e.votes : []));
+  const voters = log.cast.filter((c) => c.model === 'human' && c.name !== chosen.name && votes.some((v) => v.voter === c.name));
+  if (voters.length === 0) return null;
+  const distrusted = voters.filter((c) => votes.some((v) => v.voter === c.name && v.target === chosen.name)).length;
+  return { seat: chosen.name, isAi: chosen.model !== 'human', trusted: voters.length - distrusted, of: voters.length };
+}
+
+/** "3 of 4 humans trusted the AI traitor". */
+export function trustHeadline(t: TrustedTraitor): string {
+  return `${t.trusted} of ${t.of} human${t.of === 1 ? '' : 's'} trusted the ${t.isAi ? 'AI' : 'human'} traitor`;
+}
