@@ -8,3 +8,6 @@ export function normalizeCode(value: unknown): string | null {
   const code = value.trim().toUpperCase();
   return code.length === CODE_LENGTH && [...code].every((c) => CODE_ALPHABET.includes(c)) ? code : null;
 }
+
+/** The name a room's saved log goes by: the file is `<name>.json`, and `?log=<name>` opens it in the replay page. */
+export const roomLogName = (code: string, seed: number): string => `room-${code}-seed-${seed}`;
