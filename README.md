@@ -37,6 +37,19 @@ npm run game -- --cast config/cast.json
 [openrouter.ai/models](https://openrouter.ai/models) before running. `config/cast.json`
 is gitignored.
 
+Many games at once, one summary line per game (seed, winner, reason, rounds,
+fallbacks, log path). Seeds can be `1-20`, `7` or `1,5,9-12`:
+
+```bash
+npm run games -- --mock --seeds 1-20
+```
+
+Spend cap, for real games: `--max-cost-usd <n>` on `game` or `games` stops a game
+cleanly before a call that could pass `n` USD in total (spend so far plus the dearest
+call yet). The log ends with `reason: "cost_cap"`. It needs OpenRouter to report a
+cost; if none is reported the commands warn that the cap could not apply. Every
+attempt records the response's `usage` (tokens, and cost when returned) in the log.
+
 Each game writes `games/<name>.json` and prints its path. Print the readable
 transcript (public speech with each player's hidden private notes beneath it):
 
