@@ -5,7 +5,7 @@ import { End } from './End.js';
 import { Game } from './Game.js';
 import { Home } from './Home.js';
 import { Lobby } from './Lobby.js';
-import { roomCodeFromSearch, roomServerUrl } from './params.js';
+import { roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from './params.js';
 import { initialState, roomReducer } from './state.js';
 
 /** ?mode=room, or an invite link: play a game with friends through a room server. */
@@ -31,7 +31,10 @@ export function RoomPage() {
         serverError={state.error}
         offline={!state.online}
         onDismissError={() => dispatch({ kind: 'dismissError' })}
-        onCreate={(m) => connection.send(m)}
+        onCreate={(m) => {
+          const seed = roomSeedFromSearch(window.location.search);
+          connection.send(seed === undefined ? m : { ...m, seed });
+        }}
         onJoin={(m) => connection.send(m)}
       />
     );

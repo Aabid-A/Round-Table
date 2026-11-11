@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inviteLink, isRoomMode, roomCodeFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
+import { inviteLink, isRoomMode, roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
 
 describe('isRoomMode and roomCodeFromSearch', () => {
   it('opens the rooms page for ?mode=room or a valid invite code', () => {
@@ -34,5 +34,13 @@ describe('roomServerUrl', () => {
 describe('inviteLink', () => {
   it('opens the rooms page on the join form with the code', () => {
     expect(inviteLink({ origin: 'https://play.example.org', pathname: '/table/' }, 'AB2CD')).toBe('https://play.example.org/table/?mode=room&room=AB2CD');
+  });
+});
+
+describe('roomSeedFromSearch', () => {
+  it('reads a whole-number seed, and is undefined otherwise so the server picks', () => {
+    expect(roomSeedFromSearch('?mode=room&seed=5')).toBe(5);
+    expect(roomSeedFromSearch('?seed=0')).toBe(0);
+    for (const bad of ['', '?seed=', '?seed=-1', '?seed=1.5', '?seed=abc', '?seed=1234567890']) expect(roomSeedFromSearch(bad), bad).toBeUndefined();
   });
 });

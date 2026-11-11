@@ -9,6 +9,12 @@ export const isRoomMode = (search: string): boolean => {
 /** The room code in an invite link, if there is a valid one. */
 export const roomCodeFromSearch = (search: string): string | null => normalizeCode(new URLSearchParams(search).get('room'));
 
+/** ?seed=<whole number> fixes the room's game (for tests and replays of a shared setup). Without it the server picks one. */
+export function roomSeedFromSearch(search: string): number | undefined {
+  const raw = new URLSearchParams(search).get('seed');
+  return raw !== null && /^\d{1,9}$/.test(raw) ? Number(raw) : undefined;
+}
+
 export const DEFAULT_ROOM_PORT = 8787;
 
 /**
