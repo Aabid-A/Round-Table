@@ -73,6 +73,11 @@ export function Lobby({ me, lobby, serverError, onStart, onLeave }: Props) {
                 </li>
               ))}
             </ul>
+            {lobby.aliases && (
+              <p className="notice" data-testid="alias-note">
+                Human or AI? Everyone plays under an alias, and you will be told yours when the game starts. At the end you guess which seats were AIs.
+              </p>
+            )}
             <p className="muted" data-testid="ai-seats">
               {lobby.aiSeats} AI seat{lobby.aiSeats === 1 ? '' : 's'} will be filled by {lobby.mode === 'mock' ? 'practice AIs' : 'real models'}.
             </p>
