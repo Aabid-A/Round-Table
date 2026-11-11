@@ -50,8 +50,9 @@ storage). A dropped connection reconnects on its own. `&seed=N` on the making pa
 The key is sent once, when the room is made. The server keeps it in a private field of that room, in
 memory only, and uses it to call OpenRouter. It is:
 
-- never written to a log, an error message or the game log (error text and the finished log are scrubbed,
-  including text a provider echoes back, and the retry prompts that carry error text);
+- never written to a log, an error message or the game log. What a provider sends back is scrubbed as it
+  arrives, before anything cuts or reads it (so a key echoed across a truncation point is still found), and
+  error text and the finished log are scrubbed again. The retry prompts that carry error text are covered too;
 - never sent to any client, including the host;
 - erased when the game ends, when the room closes, and when the room expires.
 

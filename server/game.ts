@@ -43,6 +43,18 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   const fetchImpl: typeof fetch = signal
     ? ((url: string, init?: RequestInit) => baseFetch(url, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, signal]) : signal })) as typeof fetch
     : baseFetch;
+  // Scrub what the provider sends back before anything reads it. The OpenRouter player cuts an error body to 120 characters, which could
+  // leave only the front of a key that a provider echoed; a model reply that repeated the key would go into later prompts. Both
+  // are masked here, while the whole key is still there to find.
+  const scrubbedFetch: typeof fetch = secrets.length
+    ? ((async (url: string, init?: RequestInit) => {
+        const res = await fetchImpl(url, init);
+        const headers = new Headers(res.headers);
+        headers.delete('content-length');
+        headers.delete('content-encoding');
+        return new Response(redact(await res.text(), secrets), { status: res.status, statusText: res.statusText, headers });
+      }) as typeof fetch)
+    : fetchImpl;
   const base: Record<string, Player> =
     setup.mode === 'mock'
       ? createMockPlayers(aiCast, room.seed)
@@ -52,7 +64,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
             createOpenRouterPlayer({
               model: c.model,
               apiKey: setup.key,
-              fetchImpl,
+              fetchImpl: scrubbedFetch,
               ...(opts.aiTimeoutMs !== undefined ? { timeoutMs: opts.aiTimeoutMs } : {}),
             }),
           ]),

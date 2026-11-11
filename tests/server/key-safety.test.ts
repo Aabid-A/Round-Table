@@ -64,6 +64,8 @@ describe('the host key never leaves the room', () => {
     expect(calls.length).toBeGreaterThan(20);
     expect(calls.every((c) => c.auth === `Bearer ${KEY}`)).toBe(true); // it did reach OpenRouter's request
     expect(JSON.stringify(done.log)).toContain('[redacted]'); // the echo was masked in the log
+    // A model that repeats the key must not get it into later prompts, which go to other providers.
+    expect(calls.filter((c) => c.body.includes('FAKEKEY'))).toEqual([]);
     expect(everything()).not.toContain(KEY);
     expect(everything()).not.toContain('FAKEKEY');
     expect([...server.registry['rooms'].values()].every((r) => (r.takeSetup().mode === 'mock'))).toBe(true); // the key was dropped
@@ -84,6 +86,24 @@ describe('the host key never leaves the room', () => {
     expect(calls.filter((c) => c.body.includes(KEY))).toEqual([]);
     expect(everything()).not.toContain(KEY);
     expect(everything()).not.toContain('FAKEKEY');
+  });
+
+  it('is masked even when a provider echoes it where the error text gets cut, so only the front of the key would survive', async () => {
+    // The OpenRouter player keeps the first 120 characters of an error body. Put the key across that cut.
+    const body = `${'x'.repeat(100)}${KEY}${'y'.repeat(50)}`;
+    await begin(stub(() => new Response(body, { status: 500 })));
+    const host = await connect();
+    host.autoplay('Quinn');
+    host.send(createRoom('Quinn'));
+    await host.next('joined');
+    host.send({ t: 'start' });
+    const done = await host.next('finished');
+    const errors = done.log.turns.flatMap((t) => t.attempts.map((a) => a.error ?? ''));
+    expect(errors.some((e) => e.includes('HTTP 500') && e.includes('xxxx'))).toBe(true); // the failure shows, with the rest of the body
+    expect(calls.some((c) => c.body.includes('Your previous request failed'))).toBe(true);
+    expect(calls.filter((c) => c.body.includes('FAKEKEY') || c.body.includes('sk-or-v1'))).toEqual([]);
+    expect(everything()).not.toContain('FAKEKEY');
+    expect(everything()).not.toContain('sk-or-v1');
   });
 
   it('stays out of every message and log when the AI calls time out', async () => {
