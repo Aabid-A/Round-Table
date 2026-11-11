@@ -89,7 +89,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     game that day.
   - Playwright tests. Run `/design-review`.
 
-- [ ] **M9. Take a seat (solo).** One human plays against seven AIs in the
+- [x] **M9. Take a seat (solo).** One human plays against seven AIs in the
   browser.
   - A `HumanPlayer` implements the `Player` interface; the engine runs in the
     browser unchanged. The UI collects each phase's action and speech.
