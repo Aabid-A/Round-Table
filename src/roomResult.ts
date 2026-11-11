@@ -49,13 +49,20 @@ export function whoFooledWhom(log: GameLog, scores: GuessScore[]): Fooling[] {
 }
 
 export interface TrustedTraitor {
-  /** The traitor the headline is about: an AI one if any traitor was an AI, and the one who lasted longest. */
+  /** The traitor the headline is about: an AI one if any traitor (a recruit included) was an AI, and the one who lasted longest. */
   seat: string;
   isAi: boolean;
-  /** People who never voted to banish them. */
+  /** People who never voted to banish them (people who ended as traitors themselves are not counted). */
   trusted: number;
   /** People who voted at least once (someone who never got to vote could not show distrust, so is left out). */
   of: number;
+}
+
+/** Who ended the game as a traitor: the starting traitors, and anyone who accepted a recruitment. */
+function finalTraitors(log: GameLog): Set<string> {
+  const names = new Set(log.cast.filter((c) => log.roles[c.name] === 'traitor').map((c) => c.name));
+  for (const e of log.events) if (e.type === 'recruit' && e.accepted) names.add(e.offeredTo);
+  return names;
 }
 
 /** The round a seat left the game (murdered or banished), or Infinity if it was still there at the end. */
@@ -69,14 +76,16 @@ function exitRound(log: GameLog, name: string): number {
 
 /** How many people trusted the traitor: the figure for the group card. Null when there is nothing to say (no people who voted). */
 export function trustedTraitor(log: GameLog): TrustedTraitor | null {
-  const traitors = log.cast.filter((c) => log.roles[c.name] === 'traitor');
+  const traitorNames = finalTraitors(log);
+  const traitors = log.cast.filter((c) => traitorNames.has(c.name));
   const ais = traitors.filter((c) => c.model !== 'human');
   const pool = ais.length > 0 ? ais : traitors;
   if (pool.length === 0) return null;
   // Longest-lasting first; a tie keeps seat order.
   const chosen = pool.reduce((best, c) => (exitRound(log, c.name) > exitRound(log, best.name) ? c : best));
   const votes = log.events.flatMap((e) => (e.type === 'vote' ? e.votes : []));
-  const voters = log.cast.filter((c) => c.model === 'human' && c.name !== chosen.name && votes.some((v) => v.voter === c.name));
+  // People who are themselves traitors by the end are on the traitors' side, so they are not among those who trusted or doubted one.
+  const voters = log.cast.filter((c) => c.model === 'human' && !traitorNames.has(c.name) && votes.some((v) => v.voter === c.name));
   if (voters.length === 0) return null;
   const distrusted = voters.filter((c) => votes.some((v) => v.voter === c.name && v.target === chosen.name)).length;
   return { seat: chosen.name, isAi: chosen.model !== 'human', trusted: voters.length - distrusted, of: voters.length };

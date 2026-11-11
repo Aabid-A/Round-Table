@@ -84,6 +84,30 @@ describe('trustedTraitor', () => {
     expect(trustHeadline(t!)).toBe('1 of 1 human trusted the human traitor');
   });
 
+  const recruit = (r: number, offeredBy: string, offeredTo: string) => ({ r, ev: { type: 'recruit' as const, offeredBy, offeredTo, accepted: true } });
+
+  it('counts an AI recruited into the traitors as a traitor, so the headline can be about it', () => {
+    // Cleo, a person, starts as a traitor and recruits Aria, an AI; Dax and Eve are people.
+    const l = logFrom(
+      { Aria: 'faithful', Bram: 'faithful', Cleo: 'traitor', Dax: 'faithful', Eve: 'faithful', Fay: 'faithful' },
+      [vote(1, [['Dax', 'Bram'], ['Eve', 'Cleo']]), recruit(1, 'Cleo', 'Aria')],
+      {},
+      { Cleo: 'human', Dax: 'human', Eve: 'human' },
+    );
+    expect(trustedTraitor(l)).toEqual({ seat: 'Aria', isAi: true, trusted: 2, of: 2 }); // not 'the human traitor' Cleo
+  });
+
+  it('does not count a person who was recruited into the traitors among those who trusted one', () => {
+    // Aria is the AI traitor; Cleo, a person, accepts a recruitment; only Dax voted against Aria.
+    const l = logFrom(
+      { Aria: 'traitor', Bram: 'faithful', Cleo: 'faithful', Dax: 'faithful', Eve: 'faithful', Fay: 'faithful' },
+      [vote(1, [['Cleo', 'Bram'], ['Dax', 'Aria'], ['Eve', 'Bram']]), recruit(1, 'Aria', 'Cleo')],
+      {},
+      { Cleo: 'human', Dax: 'human', Eve: 'human' },
+    );
+    expect(trustedTraitor(l)).toEqual({ seat: 'Aria', isAi: true, trusted: 1, of: 2 }); // Dax distrusted, Eve trusted; Cleo is on their side
+  });
+
   it('is null when no person voted', () => {
     expect(trustedTraitor(logFrom({ ...roles }, [], {}, models))).toBeNull();
   });

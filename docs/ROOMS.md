@@ -59,8 +59,9 @@ Tick **Human or AI?** when making a room and nobody knows which seats are friend
   "3 of 4 humans trusted the AI traitor") and a **share text** with the replay link.
 
 "Trusted the traitor" means: among the people who voted at least once, those who never voted to banish that traitor. The
-traitor is the AI one who lasted longest, or a human one if no AI was a traitor. People who never got to vote (murdered on the
-first night, say) are left out.
+traitor is the AI one who lasted longest, or a human one if no AI was a traitor. Someone who accepted a recruitment counts as
+a traitor, both as a candidate for the headline and as someone on the traitors' side (so not among the people who trusted).
+People who never got to vote (murdered on the first night, say) are left out.
 
 The share text says how many people and AIs were at the table, how that person did at guessing, and the replay link. It says
 nothing about who won, who was a traitor, which seats were AIs, or who trusted whom, so it can be posted before anyone has
