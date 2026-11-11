@@ -11,7 +11,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
 
 ## Milestones
 
-- [ ] **M1. Hardening from the PR #1 review.**
+- [x] **M1. Hardening from the PR #1 review.**
   - The system prompt takes the endgame threshold and "two remaining" rule
     from the engine's constants, not hardcoded text.
   - `/code-structure`: say the engine may import shared *types* (such as

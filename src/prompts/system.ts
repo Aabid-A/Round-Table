@@ -1,3 +1,5 @@
+import { ENDGAME_AT, END_AT_REMAINING } from '../engine/types.js';
+
 export interface RulesInfo {
   players: number;
   traitors: number;
@@ -19,7 +21,7 @@ How a round works:
 4. Round table: every player speaks in turn and MUST name one suspect and give a reason.
 5. Banishment vote: every player votes for one player. The player with the most votes is banished and their role is revealed. A tie is settled by a revote between the tied players, then at random.
 After a traitor is banished, if traitors remain, a surviving traitor may offer one faithful the chance to become a traitor. The faithful accepts or refuses.
-When 4 or fewer players remain, after each banishment the survivors vote to end the game or banish again. A strict majority for "end" ends it. The game also ends if 2 players remain, if no traitors remain, or after round ${info.maxRounds}.
+When ${ENDGAME_AT} or fewer players remain, after each banishment the survivors vote to end the game or banish again. A strict majority for "end" ends it. The game also ends if ${END_AT_REMAINING} players remain, if no traitors remain, or after round ${info.maxRounds}.
 If any traitor is still in the game at the end, the traitors win. Otherwise the faithfuls win.
 
 You only know what your prompt tells you. Use the public history, your role and the whispers you sent or received. Play to win, using the strategy you think best.

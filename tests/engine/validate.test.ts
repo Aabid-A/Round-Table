@@ -10,6 +10,7 @@ describe('parseReply', () => {
     const raw = '```json\n' + ok('', { target: 'Bram' }) + '\n```';
     expect(parseReply('vote', raw, opts)).toEqual({
       ok: true,
+      extracted: false,
       reply: { speech: '', private_notes: 'n', action: { target: 'Bram' } },
     });
   });
@@ -44,6 +45,62 @@ describe('parseReply', () => {
     expect(parseReply('recruit_respond', ok('', { accept: 'yes' }), [])).toMatchObject({ ok: false });
     expect(parseReply('endgame_vote', ok('', { choice: 'end' }), [])).toMatchObject({ ok: true });
     expect(parseReply('endgame_vote', ok('', { choice: 'maybe' }), [])).toMatchObject({ ok: false });
+  });
+});
+
+describe('parseReply with text around the JSON', () => {
+  const json = ok('', { target: 'Bram' });
+
+  it('extracts a single object after a sentence and marks it extracted', () => {
+    const r = parseReply('vote', `Sure, here is my answer:\n${json}\nGood luck!`, opts);
+    expect(r).toMatchObject({ ok: true, extracted: true, reply: { action: { target: 'Bram' } } });
+  });
+
+  it('is not fooled by braces inside strings or by a fenced block with prose', () => {
+    const tricky = JSON.stringify({ speech: 'a } brace { here', private_notes: 'say "hi" {x}', action: { target: 'Cleo' } });
+    expect(parseReply('vote', `Thinking... ${tricky} done`, opts)).toMatchObject({ ok: true, extracted: true, reply: { speech: 'a } brace { here', action: { target: 'Cleo' } } });
+    expect(parseReply('vote', 'My reply:\n```json\n' + json + '\n```', opts)).toMatchObject({ ok: true, extracted: true });
+  });
+
+  it('rejects text with no object, or with more than one', () => {
+    expect(parseReply('vote', 'I think Bram.', opts)).toEqual({ ok: false, error: 'reply is not valid JSON' });
+    expect(parseReply('vote', `${json} and also ${ok('', { target: 'Cleo' })}`, opts)).toEqual({
+      ok: false,
+      error: 'reply contains more than one JSON object',
+    });
+  });
+
+  it('finds the object after a stray unmatched brace in the prose', () => {
+    expect(parseReply('vote', `Note { I will vote.\n${json}`, opts)).toMatchObject({ ok: true, extracted: true });
+    expect(parseReply('vote', `${json}\nNote { that was it`, opts)).toMatchObject({ ok: true, extracted: true });
+  });
+
+  it('does not blow up on many unmatched braces', () => {
+    for (const braces of [10_000, 60_000]) {
+      const before = '{'.repeat(braces) + json;
+      const after = json + '{'.repeat(braces);
+      expect(() => parseReply('vote', before, opts)).not.toThrow();
+      expect(() => parseReply('vote', after, opts)).not.toThrow();
+      expect(parseReply('vote', after, opts)).toMatchObject({ ok: true, extracted: true });
+    }
+    expect(parseReply('vote', `${'{'.repeat(50)}${json}`, opts)).toMatchObject({ ok: true, extracted: true });
+  });
+
+  it('stays strict when prose holds another complete object', () => {
+    expect(parseReply('vote', `Format is {"speech":"..."} and here: ${json}`, opts)).toEqual({
+      ok: false,
+      error: 'reply contains more than one JSON object',
+    });
+    expect(parseReply('vote', `{} ${json}`, opts)).toMatchObject({ ok: false });
+  });
+
+  it('still validates the extracted object', () => {
+    expect(parseReply('vote', `Here: ${ok('', { target: 'Zed' })}`, opts)).toMatchObject({ ok: false });
+  });
+
+  it('does not echo the reply in errors', () => {
+    const r = parseReply('vote', 'SECRET {not json} SECRET', opts);
+    expect(JSON.stringify(r)).not.toContain('SECRET');
   });
 });
 

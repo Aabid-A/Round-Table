@@ -12,6 +12,9 @@ export const DEFAULT_SETTINGS: GameSettings = { maxRounds: 6, traitors: 2 };
 /** Survivors at or below this count trigger the end-or-banish vote. */
 export const ENDGAME_AT = 4;
 
+/** The game ends when this many players or fewer remain. */
+export const END_AT_REMAINING = 2;
+
 // ---- Actions (one per phase) ----
 
 export interface NightAction { target: string }
@@ -40,6 +43,8 @@ export interface TurnAttempt {
   raw: string | null;
   /** Why this attempt was rejected, or null if it was accepted. */
   error: string | null;
+  /** Present and true only when the JSON object was taken from text around it. */
+  extracted?: true;
 }
 
 export interface Turn {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { END_AT_REMAINING, ENDGAME_AT } from '../../src/engine/types.js';
 import { createState, viewFor, addEvent, eventBase } from '../../src/engine/state.js';
 import type { PhaseRequest } from '../../src/engine/types.js';
 import { MOCK_CAST } from '../../src/players/mock.js';
@@ -77,5 +78,11 @@ describe('buildSystemPrompt', () => {
     expect(text).toContain('Three of them are secret TRAITORS');
     expect(text).toContain('after round 4');
     expect(buildSystemPrompt({ players: 8, traitors: 1, maxRounds: 6 })).toContain('One of them is a secret TRAITOR');
+  });
+
+  it('takes the endgame thresholds from the engine constants', () => {
+    const text = buildSystemPrompt({ players: 8, traitors: 2, maxRounds: 6 });
+    expect(text).toContain(`When ${ENDGAME_AT} or fewer players remain`);
+    expect(text).toContain(`also ends if ${END_AT_REMAINING} players remain`);
   });
 });

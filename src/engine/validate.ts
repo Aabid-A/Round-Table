@@ -7,7 +7,9 @@ export interface ParsedReply {
   action: Action;
 }
 
-export type ParseResult = { ok: true; reply: ParsedReply } | { ok: false; error: string };
+export type ParseResult =
+  | { ok: true; reply: ParsedReply; /** True when the JSON was taken from text around it. */ extracted: boolean }
+  | { ok: false; error: string };
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -18,6 +20,77 @@ function stripFences(raw: string): string {
   const t = raw.trim();
   const m = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);
   return m ? (m[1] as string) : t;
+}
+
+const MAX_SCAN_CHARS = 200_000;
+const MAX_RESTARTS = 100;
+
+/** One pass from `from`: closed top-level {...} spans, plus the start of an unclosed one (or -1). */
+function scanSpans(text: string, from: number): { spans: string[]; unclosedStart: number } {
+  const spans: string[] = [];
+  let depth = 0;
+  let start = from;
+  let inString = false;
+  let escaped = false;
+  for (let i = from; i < text.length; i++) {
+    const ch = text[i];
+    if (depth > 0 && inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === '}' && depth > 0) {
+      depth--;
+      if (depth === 0) spans.push(text.slice(start, i + 1));
+    } else if (ch === '"' && depth > 0) {
+      inString = true;
+    }
+  }
+  return { spans, unclosedStart: depth > 0 ? start : -1 };
+}
+
+/**
+ * Balanced top-level {...} spans in text, ignoring braces inside JSON strings.
+ * A '{' that never closes (prose like "Note { I will vote") must not hide a later
+ * object, so scanning restarts after it. Bounded so hostile replies cannot cost much.
+ */
+function objectSpans(raw: string): string[] {
+  const text = raw.length > MAX_SCAN_CHARS ? raw.slice(0, MAX_SCAN_CHARS) : raw;
+  const spans: string[] = [];
+  let from = 0;
+  for (let restarts = 0; restarts <= MAX_RESTARTS; restarts++) {
+    const pass = scanSpans(text, from);
+    spans.push(...pass.spans);
+    if (pass.unclosedStart < 0) break;
+    from = pass.unclosedStart + 1;
+  }
+  return spans;
+}
+
+type Decoded = { json: unknown; extracted: boolean } | { error: string };
+
+/** Parse a reply as JSON; failing that, take the single JSON object written among other text. */
+function decode(raw: string): Decoded {
+  try {
+    return { json: JSON.parse(stripFences(raw)), extracted: false };
+  } catch {
+    // Fall through: models often write a sentence before or after their JSON.
+  }
+  const objects: unknown[] = [];
+  for (const span of objectSpans(raw)) {
+    try {
+      const value: unknown = JSON.parse(span);
+      if (isRecord(value)) objects.push(value);
+    } catch {
+      // Not JSON: ignore this span.
+    }
+  }
+  if (objects.length === 1) return { json: objects[0], extracted: true };
+  return { error: objects.length === 0 ? 'reply is not valid JSON' : 'reply contains more than one JSON object' };
 }
 
 /** Validate and normalise an action for a phase. Returns the action or an error string. */
@@ -64,19 +137,16 @@ export function validateAction(phase: Phase, raw: unknown, options: string[]): {
 
 /** Parse a raw model reply. Error messages never echo the reply text or private_notes (they may quote a short invalid target, which only goes back to the same player). */
 export function parseReply(phase: Phase, raw: string, options: string[]): ParseResult {
-  let json: unknown;
-  try {
-    json = JSON.parse(stripFences(raw));
-  } catch {
-    return { ok: false, error: 'reply is not valid JSON' };
-  }
+  const decoded = decode(raw);
+  if ('error' in decoded) return { ok: false, error: decoded.error };
+  const { json, extracted } = decoded;
   if (!isRecord(json)) return { ok: false, error: 'reply must be a JSON object' };
   if (typeof json.speech !== 'string') return { ok: false, error: '"speech" must be a string' };
   if (typeof json.private_notes !== 'string') return { ok: false, error: '"private_notes" must be a string' };
   if (phase === 'round_table' && json.speech.trim() === '') return { ok: false, error: '"speech" must not be empty at the round table' };
   const result = validateAction(phase, json.action, options);
   if ('error' in result) return { ok: false, error: result.error };
-  return { ok: true, reply: { speech: json.speech, private_notes: json.private_notes, action: result.action } };
+  return { ok: true, extracted, reply: { speech: json.speech, private_notes: json.private_notes, action: result.action } };
 }
 
 /** Deterministic fallback when a player gives no valid reply. `index` varies the pick. */

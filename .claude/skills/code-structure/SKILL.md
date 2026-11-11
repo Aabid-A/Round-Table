@@ -34,7 +34,9 @@ replayable; everything with I/O sits at the edges. The spec is `docs/GAME.md`.
 - `tests/` mirrors `src/` (`src/engine/x.ts` -> `tests/engine/x.test.ts`).
 
 Dependency direction: `cli` -> `engine`, `players`, `prompts`, `log`.
-`engine` imports none of the others except shared types. `players` and
+`engine` may import shared *types* (such as `Player`) from the others, but
+never an implementation (no mock, OpenRouter or replay player, no prompt
+builder: the CLI injects those). `players` and
 `prompts` and `log` never import `cli`.
 
 ## Hard rules
