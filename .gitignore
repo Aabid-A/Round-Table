@@ -1,6 +1,10 @@
 node_modules
 .env
-games/
+/games/
 .artifacts/
 worktrees/
 config/cast.json
+web/dist
+playwright-report
+test-results
+web/public/games/*.json

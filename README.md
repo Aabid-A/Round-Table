@@ -60,6 +60,31 @@ npm run transcript -- games/mock-seed-1.json
 
 The log format is in [docs/LOG.md](docs/LOG.md).
 
+## Replay page
+
+A web app in `web/` that plays a game log like an episode: players around a table, a
+speech bubble on the speaker, vote tallies, murders, banishments and role reveals, then a
+result screen. A switch shows or hides each player's private notes (marked "hidden from
+players"). Space plays or pauses; the arrow keys step.
+
+```bash
+npm run web
+```
+
+Open the address it prints, then choose a log file, or copy a log into
+`web/public/games/` (its `.json` files are gitignored) and open `?log=<name>`:
+
+```bash
+cp games/mock-seed-1.json web/public/games/
+# then open http://localhost:5173/?log=mock-seed-1
+```
+
+Logs with a `schemaVersion` other than 1 are rejected with a message. `npm run build:web`
+writes a static site to `web/dist/`; nothing is deployed.
+
+Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
+`npx playwright install chromium` once first.
+
 ## Work
 
 All changes follow [AGENTS.md](AGENTS.md).
