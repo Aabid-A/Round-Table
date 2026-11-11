@@ -111,6 +111,22 @@ test('what you know is shown as text, the task has no JSON-format lines, and the
   if (phase === 'round_table') await expect(send).toBeDisabled(); // still needs speech and a reason
 });
 
+test('the setup error goes away when you change a field, and each turn names its choices', async ({ page }) => {
+  await page.goto('/?mode=play&seed=5');
+  await page.getByLabel('Your name at the table').fill('Aria');
+  await page.getByRole('button', { name: 'Take a seat' }).click();
+  await expect(page.getByRole('alert')).toBeVisible();
+  await page.getByLabel('Your name at the table').fill('Sam');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Take a seat' }).click();
+  const form = page.locator('[data-testid=turn-form][data-turn="1"]');
+  await expect(form).toBeVisible();
+  const legend = form.locator('fieldset.choices > legend');
+  await expect(legend).toBeVisible(); // the choices have a visible heading
+  expect((await legend.innerText()).trim()).not.toBe('');
+  await expect(form.getByRole('group', { name: (await legend.innerText()).trim() })).toBeVisible();
+});
+
 test('quit goes back to the setup, and the game stops', async ({ page }) => {
   await startPractice(page);
   await expect(page.locator('[data-testid=turn-form]')).toBeVisible();

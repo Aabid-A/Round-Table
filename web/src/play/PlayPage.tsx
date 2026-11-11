@@ -150,16 +150,16 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
       >
         <label className="field">
           Your name at the table
-          <input type="text" value={name} maxLength={20} onChange={(e) => setName(e.target.value)} autoComplete="off" />
+          <input type="text" value={name} maxLength={20} onChange={(e) => (setName(e.target.value), setProblem(null))} autoComplete="off" />
         </label>
         <fieldset className="choices">
           <legend>Who plays against you?</legend>
           <label className="choice" data-on={!real}>
-            <input type="radio" name={`${id}-ai`} checked={!real} onChange={() => setReal(false)} />
+            <input type="radio" name={`${id}-ai`} checked={!real} onChange={() => (setReal(false), setProblem(null))} />
             Practice AIs (no key, nothing leaves your browser)
           </label>
           <label className="choice" data-on={real}>
-            <input type="radio" name={`${id}-ai`} checked={real} onChange={() => setReal(true)} />
+            <input type="radio" name={`${id}-ai`} checked={real} onChange={() => (setReal(true), setProblem(null))} />
             Real models through OpenRouter
           </label>
         </fieldset>
@@ -167,7 +167,7 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
           <>
             <label className="field">
               Your OpenRouter key
-              <input type="password" value={key} onChange={(e) => setKey(e.target.value)} autoComplete="off" spellCheck={false} />
+              <input type="password" value={key} onChange={(e) => (setKey(e.target.value), setProblem(null))} autoComplete="off" spellCheck={false} />
             </label>
             <p className="hint" data-testid="key-note">
               The key stays in this tab&rsquo;s memory. It is sent only to OpenRouter, never saved, and not put in the game log. Closing or
@@ -175,11 +175,11 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
             </p>
             <label className="field">
               Seven model IDs, one per line (see openrouter.ai/models)
-              <textarea rows={7} value={models} onChange={(e) => setModels(e.target.value)} spellCheck={false} />
+              <textarea rows={7} value={models} onChange={(e) => (setModels(e.target.value), setProblem(null))} spellCheck={false} />
             </label>
             <label className="field">
               Spend cap in US dollars. The game stops before a call that could pass it.
-              <input type="text" inputMode="decimal" value={cap} onChange={(e) => setCap(e.target.value)} />
+              <input type="text" inputMode="decimal" value={cap} onChange={(e) => (setCap(e.target.value), setProblem(null))} />
             </label>
           </>
         )}

@@ -18,6 +18,8 @@ export const emptyAnswer = (): HumanAnswer => ({ speech: '', note: '', choice: n
 /** What the form for a phase asks. */
 export interface FormSpec {
   title: string;
+  /** The visible heading above the list of choices. */
+  choiceLabel: string;
   choices: { value: string; label: string }[];
   /** Label for the "none" choice, if the phase allows not choosing. */
   noneLabel: string | null;
@@ -28,24 +30,25 @@ export interface FormSpec {
 const names = (options: string[]) => options.map((o) => ({ value: o, label: o }));
 
 export function formFor(phase: Phase, options: string[]): FormSpec {
-  const base: FormSpec = { title: '', choices: names(options), noneLabel: null, speechLabel: null, messageLabel: null };
+  const base: FormSpec = { title: '', choiceLabel: '', choices: names(options), noneLabel: null, speechLabel: null, messageLabel: null };
   switch (phase) {
     case 'night':
-      return { ...base, title: 'Night: choose who the traitors murder' };
+      return { ...base, title: 'Night: choose who the traitors murder', choiceLabel: 'Who do the traitors murder?' };
     case 'whispers':
-      return { ...base, title: 'Whispers: send one private message, or stay quiet', noneLabel: 'Send no whisper', messageLabel: 'Your message' };
+      return { ...base, title: 'Whispers: send one private message, or stay quiet', choiceLabel: 'Whisper to', noneLabel: 'Send no whisper', messageLabel: 'Your message' };
     case 'round_table':
-      return { ...base, title: 'Round table: speak, then name a suspect', speechLabel: 'What you say to the table', messageLabel: 'Why you suspect them' };
+      return { ...base, title: 'Round table: speak, then name a suspect', choiceLabel: 'Who do you suspect?', speechLabel: 'What you say to the table', messageLabel: 'Why you suspect them' };
     case 'vote':
-      return { ...base, title: 'Banishment vote: who goes?' };
+      return { ...base, title: 'Banishment vote: who goes?', choiceLabel: 'Vote to banish' };
     case 'revote':
-      return { ...base, title: 'Revote: choose between the tied players' };
+      return { ...base, title: 'Revote: choose between the tied players', choiceLabel: 'Revote for' };
     case 'recruit_choose':
-      return { ...base, title: 'A traitor was banished: offer someone a place among the traitors?', noneLabel: 'Make no offer' };
+      return { ...base, title: 'A traitor was banished: offer someone a place among the traitors?', choiceLabel: 'Offer a place to', noneLabel: 'Make no offer' };
     case 'recruit_respond':
       return {
         ...base,
         title: 'You have been offered a place among the traitors',
+        choiceLabel: 'Your answer',
         choices: [
           { value: 'accept', label: 'Accept and become a traitor' },
           { value: 'refuse', label: 'Refuse and stay faithful' },
@@ -55,6 +58,7 @@ export function formFor(phase: Phase, options: string[]): FormSpec {
       return {
         ...base,
         title: 'Few players remain: end the game or banish again?',
+        choiceLabel: 'Your choice',
         choices: [
           { value: 'end', label: 'End the game now' },
           { value: 'banish', label: 'Banish again' },

@@ -48,7 +48,7 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
       )}
 
       <fieldset className="choices">
-        <legend className="sr-only">{spec.title}</legend>
+        <legend>{spec.choiceLabel}</legend>
         {spec.choices.map((c) => (
           <label key={c.value} className="choice" data-on={a.choice === c.value}>
             <input type="radio" name={`${id}-choice`} checked={a.choice === c.value} onChange={() => set({ choice: c.value })} />

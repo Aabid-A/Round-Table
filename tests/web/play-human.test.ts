@@ -42,6 +42,17 @@ describe('buildHumanReply', () => {
   });
 });
 
+describe('formFor', () => {
+  it('gives every phase a title and a visible heading for its choices', () => {
+    for (const p of PHASES) {
+      const spec = formFor(p, optionsFor(p));
+      expect(spec.title, p).not.toBe('');
+      expect(spec.choiceLabel, p).not.toBe('');
+      expect(spec.choices.length, p).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('isComplete', () => {
   it('needs a choice, and speech and a reason at the round table', () => {
     const rt = formFor('round_table', options);
