@@ -6,6 +6,8 @@ import { finalRoles } from '../replay/timeline.js';
 import { END_REASONS, WINNER } from '../result.js';
 import { groupCardPng } from './groupCard.js';
 import { foolingLine, personOf, scoreLine } from './outcome.js';
+import { replayLink } from './params.js';
+import { shareText } from './shareText.js';
 import type { Identity } from './state.js';
 
 interface Props {
@@ -23,6 +25,7 @@ export function End({ me, log, outcome, onLeave }: Props) {
   /** The seat this person played: their alias, or their own name in a room without aliases. */
   const mySeat = me.alias ?? me.you;
   const myScore = outcome.scores?.find((x) => x.seat === mySeat);
+  const post = shareText(log, myScore, replayLink(window.location, me.code, log.seed));
   const reason = r.reason === 'cost_cap' ? "The host's spend cap stopped the game." : (END_REASONS[r.reason] ?? r.reason);
 
   return (
@@ -81,6 +84,26 @@ export function End({ me, log, outcome, onLeave }: Props) {
           </ul>
         </>
       )}
+
+      <h2>Share it, without spoilers</h2>
+      <label className="field">
+        This says nothing about who won or who was an AI.
+        <textarea readOnly rows={4} value={post} data-testid="share-text" onFocus={(e) => e.currentTarget.select()} />
+      </label>
+      <div>
+        <button
+          type="button"
+          className="btn"
+          onClick={() =>
+            navigator.clipboard.writeText(post).then(
+              () => setSaved('Text copied.'),
+              () => setSaved('Could not copy. Select the text and copy it by hand.'),
+            )
+          }
+        >
+          Copy the text
+        </button>
+      </div>
 
       <div className="controls-row room-actions">
         <button
