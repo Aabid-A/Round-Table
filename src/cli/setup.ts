@@ -19,6 +19,7 @@ export interface SetupOptions {
   cast: string | undefined;
   config: string;
   timeoutMs: string | undefined;
+  maxCostUsd?: string | undefined;
 }
 
 /** Everything that stays the same across games in one command. */
@@ -27,11 +28,26 @@ export interface Setup {
   settings: GameSettings;
   makePlayers(seed: number): Record<string, Player>;
   gameName(seed: number): string;
+  /** Stop each game before a call that would pass this many USD. */
+  maxCostUsd?: number;
 }
 
 export const USAGE = 'usage: use either --mock or --cast <path> (not both)';
 
+export function parseMaxCost(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const n = Number(value);
+  if (value.trim() === '' || !Number.isFinite(n) || n <= 0) throw new Error('--max-cost-usd must be a positive number');
+  return n;
+}
+
 export function prepareSetup(opts: SetupOptions): Setup {
+  const setup = buildSetup(opts);
+  const maxCostUsd = parseMaxCost(opts.maxCostUsd);
+  return maxCostUsd === undefined ? setup : { ...setup, maxCostUsd };
+}
+
+function buildSetup(opts: SetupOptions): Setup {
   if (opts.mock === (opts.cast !== undefined)) throw new Error(USAGE);
   const settings = loadSettings(opts.config);
   if (opts.mock) {
@@ -70,5 +86,6 @@ export function playGame(setup: Setup, seed: number): Promise<GameLog> {
     players: setup.makePlayers(seed),
     buildPrompt,
     systemPrompt: buildSystemPrompt({ players: cast.length, traitors: settings.traitors, maxRounds: settings.maxRounds }),
+    ...(setup.maxCostUsd !== undefined ? { maxCostUsd: setup.maxCostUsd } : {}),
   });
 }

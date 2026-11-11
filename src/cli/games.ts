@@ -12,6 +12,7 @@ async function main(): Promise<void> {
       seeds: { type: 'string' },
       out: { type: 'string', default: 'games' },
       config: { type: 'string', default: 'config/game.json' },
+      'max-cost-usd': { type: 'string' },
       'timeout-ms': { type: 'string', default: String(DEFAULT_TIMEOUT_MS) },
     },
   });
@@ -22,8 +23,12 @@ async function main(): Promise<void> {
     cast: values.cast,
     config: values.config as string,
     timeoutMs: values['timeout-ms'],
+    maxCostUsd: values['max-cost-usd'],
   });
-  const { failed } = await runBatch(setup, seeds, values.out as string, console.log);
+  const { failed, sawCost } = await runBatch(setup, seeds, values.out as string, console.log);
+  if (setup.maxCostUsd !== undefined && !sawCost) {
+    console.error('warning: no cost was reported, so --max-cost-usd could not apply.');
+  }
   if (failed > 0) process.exit(1);
 }
 
