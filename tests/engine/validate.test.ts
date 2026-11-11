@@ -70,6 +70,19 @@ describe('parseReply with text around the JSON', () => {
     });
   });
 
+  it('finds the object after a stray unmatched brace in the prose', () => {
+    expect(parseReply('vote', `Note { I will vote.\n${json}`, opts)).toMatchObject({ ok: true, extracted: true });
+    expect(parseReply('vote', `${json}\nNote { that was it`, opts)).toMatchObject({ ok: true, extracted: true });
+  });
+
+  it('stays strict when prose holds another complete object', () => {
+    expect(parseReply('vote', `Format is {"speech":"..."} and here: ${json}`, opts)).toEqual({
+      ok: false,
+      error: 'reply contains more than one JSON object',
+    });
+    expect(parseReply('vote', `{} ${json}`, opts)).toMatchObject({ ok: false });
+  });
+
   it('still validates the extracted object', () => {
     expect(parseReply('vote', `Here: ${ok('', { target: 'Zed' })}`, opts)).toMatchObject({ ok: false });
   });

@@ -23,13 +23,13 @@ function stripFences(raw: string): string {
 }
 
 /** Balanced top-level {...} spans in text, ignoring braces inside JSON strings. */
-function objectSpans(text: string): string[] {
+function objectSpans(text: string, from = 0): string[] {
   const spans: string[] = [];
   let depth = 0;
-  let start = 0;
+  let start = from;
   let inString = false;
   let escaped = false;
-  for (let i = 0; i < text.length; i++) {
+  for (let i = from; i < text.length; i++) {
     const ch = text[i];
     if (depth > 0 && inString) {
       if (escaped) escaped = false;
@@ -47,6 +47,8 @@ function objectSpans(text: string): string[] {
       inString = true;
     }
   }
+  // A '{' that never closed (prose like "Note { I will vote") must not hide a later object.
+  if (depth > 0) spans.push(...objectSpans(text, start + 1));
   return spans;
 }
 
