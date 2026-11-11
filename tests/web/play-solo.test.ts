@@ -13,8 +13,8 @@ const autoAnswer = async (req: PromptRequest): Promise<HumanAnswer> => {
 
 describe('nameProblem', () => {
   it('accepts a plain name and rejects anything else', () => {
-    for (const ok of ['You', 'Sam', "O'Neil", 'Anne-Marie', 'Zoë', 'Player 1']) expect(nameProblem(ok), ok).toBeNull();
-    const bad: [string, string][] = [['', 'Enter a name'], [' Sam', 'Enter a name'], ['Sam ', 'Enter a name'], ['x'.repeat(21), '20 characters'], ['<b>', 'letters, numbers'], ['-Sam', 'letters, numbers'], ['aria', "AI's name"], ['BRAM', "AI's name"]];
+    for (const ok of ['Quinn', 'Sam', "O'Neil", 'Anne-Marie', 'Zoë', 'Player 1']) expect(nameProblem(ok), ok).toBeNull();
+    const bad: [string, string][] = [['', 'Enter a name'], [' Sam', 'Enter a name'], ['Sam ', 'Enter a name'], ['x'.repeat(21), '20 characters'], ['<b>', 'letters, numbers'], ['-Sam', 'letters, numbers'], ['aria', "AI's name"], ['BRAM', "AI's name"], ['You', 'everyday word'], ['me', 'everyday word'], ['THEY', 'everyday word']];
     for (const [name, why] of bad) expect(nameProblem(name), name).toContain(why);
   });
 });

@@ -31,7 +31,7 @@ async function playThrough(page: Page, note = 'my note'): Promise<number> {
 
 async function startPractice(page: Page, name = 'Sam', query = 'seed=5'): Promise<void> {
   await page.goto(`/?mode=play&${query}`);
-  await page.getByLabel('Your name at the table').fill(name);
+  await page.getByLabel(/Your name at the table/).fill(name);
   await page.getByRole('button', { name: 'Take a seat' }).click();
 }
 
@@ -58,10 +58,13 @@ async function smartOpenRouter(page: Page, human: string): Promise<void> {
 test('the setup checks the name, and real models need a key, seven models and a cap', async ({ page }) => {
   await page.goto('/?mode=play');
   await expect(page.getByRole('heading', { level: 1, name: 'Take a seat' })).toBeVisible();
-  await page.getByLabel('Your name at the table').fill('Aria');
+  await page.getByLabel(/Your name at the table/).fill('Aria');
   await page.getByRole('button', { name: 'Take a seat' }).click();
   await expect(page.getByRole('alert')).toContainText("already an AI's name");
-  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Your name at the table/).fill('You');
+  await page.getByRole('button', { name: 'Take a seat' }).click();
+  await expect(page.getByRole('alert')).toContainText('everyday word');
+  await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await expect(page.getByLabel('Your OpenRouter key')).toHaveAttribute('type', 'password');
   await expect(page.getByLabel('Your OpenRouter key')).toHaveAttribute('autocomplete', 'new-password'); // so a password manager does not offer to save it
@@ -145,7 +148,7 @@ test('quit really stops the game: no further calls to OpenRouter after it', asyn
     await route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.0001 } }), contentType: 'application/json' }).catch(() => undefined);
   });
   await page.goto('/?mode=play&seed=5');
-  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
   await page.getByLabel(/Seven model IDs/).fill(MODELS);
@@ -168,7 +171,7 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
     route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.6 } }), contentType: 'application/json' }),
   );
   await page.goto('/?mode=play&seed=5');
-  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill(KEY);
   await page.getByLabel(/Seven model IDs/).fill(MODELS);
@@ -201,7 +204,7 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
 test('real models: what the AIs privately wrote about you is listed, and a card downloads as a 1200x675 PNG', async ({ page }) => {
   await smartOpenRouter(page, 'Sam');
   await page.goto('/?mode=play&seed=5');
-  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
   await page.getByLabel(/Seven model IDs/).fill(MODELS);
@@ -221,7 +224,7 @@ test('real models: what the AIs privately wrote about you is listed, and a card 
 test('a long list of notes about you shows the first six, and the rest on request', async ({ page }) => {
   await smartOpenRouter(page, 'Sam');
   await page.goto('/?mode=play&seed=5');
-  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
   await page.getByLabel(/Seven model IDs/).fill(MODELS);

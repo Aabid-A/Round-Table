@@ -27,6 +27,9 @@ export interface SoloSetup {
   fetchImpl?: typeof fetch;
 }
 
+/** Words that would match unrelated notes ("You should vote...") if used as a name. */
+const COMMON_WORDS = new Set(['you', 'your', 'yours', 'me', 'my', 'i', 'we', 'us', 'they', 'them', 'he', 'she', 'it', 'the', 'a', 'no', 'yes']);
+
 const AI_NAMES = MOCK_CAST.map((c) => c.name);
 
 /** A name for the human seat that is plain, short, and not one of the AI seats. Returns an error message or null. */
@@ -35,6 +38,7 @@ export function nameProblem(name: string): string | null {
   if (name.length > 20) return 'Use 20 characters or fewer.';
   if (!/^[\p{L}\p{N}][\p{L}\p{N} '-]*$/u.test(name)) return 'Use letters, numbers, spaces, apostrophes and hyphens only.';
   if (AI_NAMES.some((n) => n.toLowerCase() === name.toLowerCase())) return `${name} is already an AI's name. Choose another.`;
+  if (COMMON_WORDS.has(name.toLowerCase())) return `"${name}" is an everyday word, which would match notes that are not about you. Choose a name.`;
   return null;
 }
 

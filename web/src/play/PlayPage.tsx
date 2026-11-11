@@ -134,7 +134,7 @@ function Thinking() {
 
 function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetup) => void }) {
   const id = useId();
-  const [name, setName] = useState('You');
+  const [name, setName] = useState('Sam');
   const [real, setReal] = useState(false);
   const [key, setKey] = useState('');
   const [models, setModels] = useState('');
@@ -177,7 +177,7 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
         aria-describedby={problem ? `${id}-err` : undefined}
       >
         <label className="field">
-          Your name at the table
+          Your name at the table (not an everyday word, so the AIs' notes about you can be found)
           <input type="text" value={name} maxLength={20} onChange={(e) => (setName(e.target.value), setProblem(null))} autoComplete="off" />
         </label>
         <fieldset className="choices">
