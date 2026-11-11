@@ -17,7 +17,7 @@ export interface Seat {
   conn: Conn | null;
 }
 
-export type RoomPhase = 'lobby' | 'playing' | 'finished' | 'closed';
+export type RoomPhase = 'lobby' | 'playing' | 'guessing' | 'finished' | 'closed';
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 const refuse = (error: string): { ok: false; error: string } => ({ ok: false, error });

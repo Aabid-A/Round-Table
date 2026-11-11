@@ -37,6 +37,8 @@ export const LIMITS = {
   finishedTtlMs: 15 * 60 * 1000,
   /** A lobby with nobody connected is closed after this long (long enough to switch apps to share the code), so abandoned rooms do not hold a person's room limit for hours. */
   emptyLobbyMs: 10 * 60 * 1000,
+  /** How long people have to guess which seats were AIs, after an alias game. */
+  guessMs: 60_000,
   /** How long a person has for one turn. */
   turnMs: 90_000,
 } as const;
@@ -151,7 +153,7 @@ export type ServerMessage =
   /** Private to one seat, when the game starts in alias mode: the name this person plays under. */
   | { t: 'alias'; alias: string }
   /** After the game in alias mode: guess which seats were AIs. `seats` are all the aliases; `you` is this person's own. */
-  | { t: 'guess'; seats: string[]; you: string; timeoutMs: number }
+  | { t: 'guess'; seats: string[]; you: string; timeoutMs: number; sent: boolean }
   /** Shown to everyone while the game runs. Only the public phase, and only when it changes: never who is acting, or how many turns a phase took. */
   | { t: 'status'; phase: PublicPhase | null }
   /** Private to one seat. */

@@ -67,7 +67,7 @@ describe('roomReducer', () => {
   it('learns the alias, then guesses, then sees the outcome', () => {
     let s = run([joined, msg(lobby), msg({ t: 'alias', alias: 'Cleo' }), msg({ t: 'status', phase: 'night' })]);
     expect(s.me).toEqual({ code: 'AB2CD', you: 'Quinn', host: true, alias: 'Cleo' });
-    s = run([msg({ t: 'guess', seats: ['Aria', 'Bram', 'Cleo'], you: 'Cleo', timeoutMs: 1000 })], s);
+    s = run([msg({ t: 'guess', seats: ['Aria', 'Bram', 'Cleo'], you: 'Cleo', timeoutMs: 1000, sent: false })], s);
     expect(s.view).toEqual({ kind: 'guessing', seats: ['Aria', 'Bram', 'Cleo'], you: 'Cleo', timeoutMs: 1000, sent: false });
     // Nothing from the game can pull a person out of the guessing screen.
     expect(run([msg({ t: 'status', phase: 'vote' }), msg(turn(1)), msg(lobby)], s).view).toMatchObject({ kind: 'guessing' });

@@ -75,7 +75,7 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
     case 'alias':
       return state.me ? { ...state, me: { ...state.me, alias: msg.alias } } : state;
     case 'guess':
-      return view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'guessing', seats: msg.seats, you: msg.you, timeoutMs: msg.timeoutMs, sent: false } };
+      return view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'guessing', seats: msg.seats, you: msg.you, timeoutMs: msg.timeoutMs, sent: msg.sent } };
     case 'lobby':
       return view.kind === 'playing' || view.kind === 'guessing' || view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'lobby', lobby: msg } };
     case 'status': {
