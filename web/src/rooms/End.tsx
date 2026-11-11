@@ -1,21 +1,27 @@
 import { useMemo, useState } from 'react';
 import type { GameLog } from '../../../src/engine/types.js';
+import type { RoomOutcome } from '../../../src/roomResult.js';
 import { saveBlob } from '../download.js';
 import { finalRoles } from '../replay/timeline.js';
 import { END_REASONS, WINNER } from '../result.js';
+import { foolingLine, personOf, scoreLine } from './outcome.js';
 import type { Identity } from './state.js';
 
 interface Props {
   me: Identity;
   log: GameLog;
+  outcome: RoomOutcome;
   onLeave: () => void;
 }
 
 /** The game is over: who won, who was who, and the log to keep. */
-export function End({ me, log, onLeave }: Props) {
+export function End({ me, log, outcome, onLeave }: Props) {
   const roles = useMemo(() => finalRoles(log), [log]);
   const [saved, setSaved] = useState<string | null>(null);
   const r = log.result;
+  /** The seat this person played: their alias, or their own name in a room without aliases. */
+  const mySeat = me.alias ?? me.you;
+  const myScore = outcome.scores?.find((x) => x.seat === mySeat);
   const reason = r.reason === 'cost_cap' ? "The host's spend cap stopped the game." : (END_REASONS[r.reason] ?? r.reason);
 
   return (
@@ -37,12 +43,43 @@ export function End({ me, log, onLeave }: Props) {
         {log.cast.map((c) => (
           <li key={c.name}>
             <strong>{c.name}</strong>
-            {c.name === me.you ? ' (you)' : ''} · {roles[c.name] === 'traitor' ? 'Traitor' : 'Faithful'}
+            {c.name === mySeat ? ' (you)' : ''} · {roles[c.name] === 'traitor' ? 'Traitor' : 'Faithful'}
             <br />
-            <span className="muted">{c.model === 'human' ? 'A person' : c.model === 'mock' ? 'A practice AI' : c.model}</span>
+            <span className="muted">
+              {c.model === 'human'
+                ? outcome.people.length > 0
+                  ? `${personOf(outcome, c.name)}, a person`
+                  : 'A person'
+                : c.model === 'mock'
+                  ? 'A practice AI'
+                  : c.model}
+            </span>
           </li>
         ))}
       </ul>
+
+      {outcome.scores && (
+        <>
+          <h2>Your guess</h2>
+          <p data-testid="my-score">{myScore ? scoreLine({ ...myScore, person: 'You' }) : 'You did not send a guess in time, so it was not counted.'}</p>
+          <ul className="result-list" aria-label="Everyone's guesses" data-testid="scores">
+            {outcome.scores.map((x) => (
+              <li key={x.seat}>{scoreLine(x)}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {outcome.fooling && (
+        <>
+          <h2>Who fooled whom</h2>
+          <ul className="result-list" aria-label="Who fooled whom" data-testid="fooling">
+            {outcome.fooling.map((row) => (
+              <li key={row.seat}>{foolingLine(outcome, row)}</li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <div className="controls-row room-actions">
         <button

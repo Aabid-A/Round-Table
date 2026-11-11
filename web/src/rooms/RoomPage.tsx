@@ -67,7 +67,7 @@ export function RoomPage() {
       />
     );
   }
-  if (state.view.kind === 'finished' && state.me) return <End me={state.me} log={state.view.log} onLeave={() => connection.leave()} />;
+  if (state.view.kind === 'finished' && state.me) return <End me={state.me} log={state.view.log} outcome={state.view.outcome} onLeave={() => connection.leave()} />;
   if (state.view.kind === 'closed') {
     return (
       <main className="loader rooms" data-testid="room-closed">
