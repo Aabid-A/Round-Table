@@ -191,6 +191,27 @@ test('real models: what the AIs privately wrote about you is listed, and a card 
   expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([1200, 675]);
 });
 
+test('a long list of notes about you shows the first six, and the rest on request', async ({ page }) => {
+  await smartOpenRouter(page, 'Sam');
+  await page.goto('/?mode=play&seed=5');
+  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Real models through OpenRouter/).check();
+  await page.getByLabel('Your OpenRouter key').fill('k');
+  await page.getByLabel(/Seven model IDs/).fill(MODELS);
+  await page.getByRole('button', { name: 'Take a seat' }).click();
+  await playThrough(page);
+  const items = page.getByTestId('notes-about-you').getByRole('listitem');
+  await expect(items).toHaveCount(6);
+  const more = page.getByRole('button', { name: /Show all \d+ notes/ });
+  await expect(more).toHaveAttribute('aria-expanded', 'false');
+  const total = Number(/Show all (\d+) notes/.exec(await more.innerText())![1]);
+  expect(total).toBeGreaterThan(6);
+  await more.click();
+  await expect(items).toHaveCount(total);
+  await page.getByRole('button', { name: 'Show fewer' }).click();
+  await expect(items).toHaveCount(6);
+});
+
 test('a practice game with no AI naming you says so, and play again returns to the setup', async ({ page }) => {
   await startPractice(page);
   await playThrough(page);

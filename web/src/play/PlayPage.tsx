@@ -22,6 +22,8 @@ interface Pending {
   resolve: (a: HumanAnswer) => void;
 }
 
+const NOTES_SHOWN = 6;
+
 const WINNER = { traitor: 'The traitors win', faithful: 'The faithfuls win' } as const;
 const REASONS: Record<string, string> = {
   no_traitors: 'No traitors are left.',
@@ -196,6 +198,8 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
   const notes = useMemo(() => notesAbout(log, human), [log, human]);
   const r = log.result;
   const [note, setNote] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? notes : notes.slice(0, NOTES_SHOWN);
 
   const save = (blob: Blob, filename: string): void => {
     const url = URL.createObjectURL(blob);
@@ -251,7 +255,7 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
         </p>
       ) : (
         <ul className="missed" data-testid="notes-about-you">
-          {notes.map((n) => (
+          {shown.map((n) => (
             <li key={n.turnId}>
               <strong>
                 {n.player} · {n.model} · round {n.round}
@@ -267,6 +271,14 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
             </li>
           ))}
         </ul>
+      )}
+
+      {notes.length > NOTES_SHOWN && (
+        <p>
+          <button type="button" className="btn" aria-expanded={showAll} onClick={() => setShowAll((v) => !v)}>
+            {showAll ? `Show fewer` : `Show all ${notes.length} notes`}
+          </button>
+        </p>
       )}
 
       <div className="controls-row">
