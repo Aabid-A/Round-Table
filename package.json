@@ -17,7 +17,8 @@
     "build:web": "vite build web",
     "test:e2e": "playwright test",
     "highlights": "tsx src/cli/highlights.ts",
-    "stats": "tsx src/cli/stats.ts"
+    "stats": "tsx src/cli/stats.ts",
+    "card": "tsx src/cli/card.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",

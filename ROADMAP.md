@@ -71,7 +71,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
   faithfuls banished with their vote, recruit offers accepted, and fallback
   rate. Output as JSON, plus a stats page in the web app. Tests on fixtures.
 
-- [ ] **M7. Share cards.** `?card=<turnId>` renders a quote card ("said" vs
+- [x] **M7. Share cards.** `?card=<turnId>` renders a quote card ("said" vs
   "thought", player and model name, game and round) at 1200x675 and 1080x1350.
   `npm run card -- <log> <turnId>` saves PNGs to `.artifacts/cards/` with
   Playwright. Run `/design-review`.
