@@ -44,9 +44,10 @@ fallbacks, log path). Seeds can be `1-20`, `7` or `1,5,9-12`:
 npm run games -- --mock --seeds 1-20
 ```
 
-Spend cap, for real games: `--max-cost-usd <n>` on `game` or `games` stops a game
-cleanly before a call that could pass `n` USD in total (spend so far plus the dearest
-call yet). The log ends with `reason: "cost_cap"`. It needs OpenRouter to report a
+Spend cap, for real games: `--max-cost-usd <n>` on `game` or `games` stops each game
+cleanly before a call that could pass `n` USD (spend so far plus the dearest call
+yet). It is per game, not per batch, and a prediction: the first call, or a call dearer
+than any before it, can overshoot. The log ends with `reason: "cost_cap"`. It needs OpenRouter to report a
 cost; if none is reported the commands warn that the cap could not apply. Every
 attempt records the response's `usage` (tokens, and cost when returned) in the log.
 

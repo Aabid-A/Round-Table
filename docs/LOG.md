@@ -71,6 +71,11 @@ checks whether spend so far plus the dearest single call so far would pass the c
 if so it stops before the call. If that happens before a retry, the turn is settled
 with its fallback (`fallback: true`, one attempt) and the next turn stops the game.
 
+The cap is a prediction, not a hard ceiling: the first call, or a call dearer than any
+before it, can overshoot, and `costCap.spentUsd` can then be above `maxUsd`. A call with
+no reported cost counts as free. To replay a capped log, pass the same cap
+(`costCap.maxUsd`) as well as the same seed; without it the replay runs past the logged replies.
+
 Night turns happen twice in a round when traitors disagree: the second set of
 `night` turns is the single re-proposal.
 
