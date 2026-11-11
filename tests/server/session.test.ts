@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LIMITS } from '../../server/protocol.js';
 import { Registry } from '../../server/registry.js';
 import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
@@ -80,6 +81,20 @@ describe('Session: creating, joining and rejoining', () => {
     stranger.send({ t: 'rejoin', code, token: '00000000-0000-0000-0000-000000000000' });
     stranger.send({ t: 'rejoin', code: 'ZZZZZ', token });
     expect(stranger.conn.sent.map((m) => (m as { message?: string }).message)).toEqual(['That seat is not at this table.', 'That room has closed.']);
+  });
+
+  it('refuses a flood of messages, says so once, and works again later', () => {
+    let now = 0;
+    const registry = new Registry();
+    const conn = new FakeConn();
+    const session = new Session(conn, { registry, runtimes: new Map(), options: { turnMs: 1000, abandonMs: 5000, now: () => now, log: () => undefined } });
+    for (let i = 0; i < LIMITS.messagesPerWindow + 20; i++) session.handle('not json');
+    const errors = conn.sent.map((m) => (m as { message: string }).message);
+    expect(errors.filter((m) => m === 'Messages must be JSON.')).toHaveLength(LIMITS.messagesPerWindow);
+    expect(errors.filter((m) => m.startsWith('You are sending messages too fast'))).toHaveLength(1);
+    now = LIMITS.windowMs;
+    session.handle(JSON.stringify({ t: 'create', name: 'Quinn', mode: 'mock' }));
+    expect(conn.sent.some((m) => m.t === 'joined')).toBe(true);
   });
 
   it('forgets a room when it closes', () => {

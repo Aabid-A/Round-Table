@@ -1,7 +1,8 @@
 import type { GameLog } from '../src/engine/types.js';
 import { runRoomGame } from './game.js';
 import type { HumanAnswer } from '../src/players/human.js';
-import { parseClientMessage, type AiSetup, type ClientMessage, type ServerMessage } from './protocol.js';
+import { RateLimiter } from './rateLimit.js';
+import { LIMITS, parseClientMessage, type AiSetup, type ClientMessage, type ServerMessage } from './protocol.js';
 import type { Registry } from './registry.js';
 import { Room, type Conn, type Seat } from './room.js';
 import { SeatPlayer } from './seatPlayer.js';
@@ -21,6 +22,7 @@ export interface SessionOptions {
   abandonMs: number;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
+  now?: () => number;
   aiTimeoutMs?: number;
   /** Where the server writes what happened. Never given a message's content. */
   log: (line: string) => void;
@@ -36,14 +38,20 @@ export interface SessionDeps {
 export class Session {
   private room: Room | null = null;
   private seat: Seat | null = null;
+  private readonly limiter: RateLimiter;
 
   constructor(
     private readonly conn: Conn,
     private readonly deps: SessionDeps,
-  ) {}
+  ) {
+    this.limiter = new RateLimiter(LIMITS.messagesPerWindow, LIMITS.windowMs, deps.options.now);
+  }
 
   /** Handle one incoming text message. Never throws: a bad message gets an error reply. */
   handle(text: string): void {
+    const verdict = this.limiter.check();
+    if (verdict === 'refuse') return this.tell({ t: 'error', message: 'You are sending messages too fast. Wait a moment.' });
+    if (verdict === 'refuse-quietly') return;
     const parsed = parseClientMessage(text);
     if (!parsed.ok) return this.tell({ t: 'error', message: parsed.error });
     try {
