@@ -21,7 +21,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     Real models often write a sentence before their JSON.
   - Done when: tests cover each change and all checks pass.
 
-- [ ] **M2. Batch runs and usage tracking.**
+- [x] **M2. Batch runs and usage tracking.**
   - `npm run games -- --mock --seeds 1-20` runs many games and prints one
     summary line per game (winner, reason, rounds, fallbacks).
   - The OpenRouter player records the `usage` block of each response (tokens,

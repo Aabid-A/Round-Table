@@ -97,6 +97,28 @@ describe('privacy', () => {
   });
 });
 
+describe('usage on replies', () => {
+  it('records usage on each attempt and replays identically', async () => {
+    const good = createMockPlayer({ seed: 10, name: 'Dax' });
+    const players = createMockPlayers(MOCK_CAST, 10);
+    let n = 0;
+    players.Dax = {
+      respond: async (r) => ({ text: (await good.respond(r)) as string, usage: { promptTokens: 100, completionTokens: 20, totalTokens: 120, costUsd: ++n / 1000 } }),
+    };
+    const log = await play(players, 10);
+    const dax = log.turns.filter((t) => t.player === 'Dax');
+    expect(dax.length).toBeGreaterThan(3);
+    dax.forEach((t, i) => expect(t.attempts[0]?.usage).toEqual({ promptTokens: 100, completionTokens: 20, totalTokens: 120, costUsd: (i + 1) / 1000 }));
+    expect(log.turns.filter((t) => t.player !== 'Dax').every((t) => t.attempts.every((a) => !('usage' in a)))).toBe(true);
+    expect(await play(createReplayPlayers(log), 10)).toEqual(log);
+  });
+
+  it('still accepts a plain string reply', async () => {
+    const log = await playMock(1);
+    expect(log.turns.every((t) => t.attempts.every((a) => !('usage' in a)))).toBe(true);
+  });
+});
+
 describe('replies with text around the JSON', () => {
   it('accepts the object, marks the attempt extracted, and replays identically', async () => {
     const good = createMockPlayer({ seed: 9, name: 'Dax' });

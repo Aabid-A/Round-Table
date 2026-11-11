@@ -1,4 +1,5 @@
-import type { Player, PromptRequest } from './player.js';
+import type { Usage } from '../types.js';
+import type { Player, PlayerReply, PromptRequest } from './player.js';
 
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const DEFAULT_TIMEOUT_MS = 60_000;
@@ -12,6 +13,23 @@ export interface OpenRouterOptions {
   fetchImpl?: typeof fetch;
 }
 
+const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : undefined);
+
+/** Read the `usage` block of a response: tokens, and cost when OpenRouter returns it. */
+export function parseUsage(raw: unknown): Usage | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const u = raw as Record<string, unknown>;
+  const fields = {
+    promptTokens: num(u.prompt_tokens),
+    completionTokens: num(u.completion_tokens),
+    totalTokens: num(u.total_tokens),
+    costUsd: num(u.cost),
+  };
+  const usage: Usage = {};
+  for (const [k, v] of Object.entries(fields)) if (v !== undefined) (usage as Record<string, number>)[k] = v;
+  return Object.keys(usage).length > 0 ? usage : undefined;
+}
+
 /**
  * Player backed by OpenRouter's OpenAI-compatible chat completions endpoint.
  * Throws on timeout, non-200 or unusable responses; the engine turns that
@@ -22,7 +40,7 @@ export function createOpenRouterPlayer(opts: OpenRouterOptions): Player {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const doFetch = opts.fetchImpl ?? fetch;
   return {
-    async respond(req: PromptRequest): Promise<string> {
+    async respond(req: PromptRequest): Promise<PlayerReply> {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
@@ -53,9 +71,11 @@ export function createOpenRouterPlayer(opts: OpenRouterOptions): Player {
         } catch {
           throw new Error('OpenRouter response was not valid JSON');
         }
-        const content = (body as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
+        const parsed = body as { choices?: { message?: { content?: unknown } }[]; usage?: unknown } | null;
+        const content = parsed?.choices?.[0]?.message?.content;
         if (typeof content !== 'string' || content === '') throw new Error('OpenRouter response had no message content');
-        return content;
+        const usage = parseUsage(parsed?.usage);
+        return usage ? { text: content, usage } : content;
       } finally {
         clearTimeout(timer);
       }

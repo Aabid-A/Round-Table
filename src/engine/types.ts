@@ -1,6 +1,12 @@
-import type { CastMember, Phase, Role } from '../types.js';
+import type { CastMember, Phase, Role, Usage } from '../types.js';
 
-export type EndReason = 'no_traitors' | 'no_faithfuls' | 'two_remaining' | 'endgame_vote' | 'max_rounds';
+export type EndReason =
+  | 'no_traitors'
+  | 'no_faithfuls'
+  | 'two_remaining'
+  | 'endgame_vote'
+  | 'max_rounds'
+  | 'cost_cap';
 
 export interface GameSettings {
   maxRounds: number;
@@ -45,6 +51,8 @@ export interface TurnAttempt {
   error: string | null;
   /** Present and true only when the JSON object was taken from text around it. */
   extracted?: true;
+  /** Token counts and cost the provider reported for this attempt, if any. */
+  usage?: Usage;
 }
 
 export interface Turn {
@@ -127,10 +135,13 @@ export type PhaseRequest =
 // ---- Log ----
 
 export interface GameResult {
-  winner: Role;
+  /** Null only when the game was stopped early (`cost_cap`). */
+  winner: Role | null;
   reason: EndReason;
   rounds: number;
   survivors: { name: string; role: Role }[];
+  /** Present only when reason is `cost_cap`. */
+  costCap?: { maxUsd: number; spentUsd: number };
 }
 
 export interface GameLog {

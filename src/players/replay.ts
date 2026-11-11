@@ -1,5 +1,5 @@
 import type { GameLog } from '../engine/types.js';
-import type { Player } from './player.js';
+import type { Player, PlayerReply } from './player.js';
 
 /**
  * Players that return the raw replies recorded in a log, in order. Each call
@@ -12,12 +12,12 @@ export function createReplayPlayers(log: GameLog): Record<string, Player> {
     log.cast.map((c) => [
       c.name,
       {
-        async respond(): Promise<string> {
+        async respond(): Promise<PlayerReply> {
           const next = queue[cursor++];
           if (!next) throw new Error(`replay: no logged reply left for ${c.name}`);
           if (next.player !== c.name) throw new Error(`replay: expected ${next.player}, got ${c.name}`);
           if (next.attempt.raw === null) throw new Error(next.attempt.error ?? 'player error');
-          return next.attempt.raw;
+          return next.attempt.usage ? { text: next.attempt.raw, usage: next.attempt.usage } : next.attempt.raw;
         },
       } satisfies Player,
     ]),

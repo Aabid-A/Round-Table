@@ -44,10 +44,11 @@ Rules for readers:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `winner` | `"traitor" \| "faithful"` | Traitors win if any traitor is alive at the end. |
-| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds"` | Why it ended. |
+| `winner` | `"traitor" \| "faithful" \| null` | Traitors win if any traitor is alive at the end. `null` only when `reason` is `cost_cap`. |
+| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds" \| "cost_cap"` | Why it ended. `cost_cap` means the game was stopped early by the cost cap. |
 | `rounds` | integer | Rounds played (the last round may be partial). |
 | `survivors` | `{ name: string, role: "traitor" \| "faithful" }[]` | Players alive at the end, with their final role. |
+| `costCap` | `{ maxUsd: number, spentUsd: number }` (optional) | Present only when `reason` is `cost_cap`: the cap and what had been spent. |
 
 ## Turn
 
@@ -65,6 +66,16 @@ One call to a player for one decision, with the retry and fallback record.
 | `action` | Action | The accepted action, or the fallback action. |
 | `fallback` | boolean | `true` if no valid reply was obtained and a deterministic fallback action was used. |
 
+A game stopped by the cost cap ends mid-round. Before each model call the engine
+checks whether spend so far plus the dearest single call so far would pass the cap;
+if so it stops before the call. If that happens before a retry, the turn is settled
+with its fallback (`fallback: true`, one attempt) and the next turn stops the game.
+
+The cap is a prediction, not a hard ceiling: the first call, or a call dearer than any
+before it, can overshoot, and `costCap.spentUsd` can then be above `maxUsd`. A call with
+no reported cost counts as free. To replay a capped log, pass the same cap
+(`costCap.maxUsd`) as well as the same seed; without it the replay runs past the logged replies.
+
 Night turns happen twice in a round when traitors disagree: the second set of
 `night` turns is the single re-proposal.
 
@@ -75,7 +86,19 @@ Night turns happen twice in a round when traitors disagree: the second set of
 | `prompt` | string | Exact user prompt sent. On a retry it is the first prompt plus the error. |
 | `raw` | string \| null | Raw reply text exactly as returned. `null` if the player threw (timeout, HTTP error); then `error` is the thrown message. |
 | `extracted` | `true` (optional) | Present only when the reply had text around a single JSON object and the object was taken from it. Absent otherwise. |
+| `usage` | `Usage` (optional) | What the provider reported for this call. Absent for mock players, thrown errors, and providers that report nothing. |
 | `error` | string \| null | Why the attempt was rejected, or `null` if it was accepted. The accepted attempt is always last and has `error: null`; on fallback both attempts have an error. |
+
+### Usage
+
+All fields optional; a field is present only if the provider returned it.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `promptTokens` | number | Input tokens. |
+| `completionTokens` | number | Output tokens. |
+| `totalTokens` | number | Input plus output tokens. |
+| `costUsd` | number | Cost of the call in USD, when the provider reports it. |
 
 ### Action by phase
 

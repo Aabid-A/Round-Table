@@ -1,5 +1,6 @@
 import type { Player } from '../players/player.js';
 import type { Rng } from './rng.js';
+import { isUsableCost, type Usage } from '../types.js';
 import type { Action, GameState, PhaseRequest, Turn, TurnAttempt } from './types.js';
 import { fallbackAction, parseReply } from './validate.js';
 
@@ -9,7 +10,36 @@ export interface EngineContext {
   players: Record<string, Player>;
   buildPrompt: (request: PhaseRequest) => string;
   systemPrompt: string;
+  /** Optional spend cap. Updated as attempts report their cost. */
+  budget?: Budget;
 }
+
+export interface Budget {
+  maxUsd: number;
+  spentUsd: number;
+  /** Largest single-call cost seen so far; used to predict the next call. */
+  maxCallUsd: number;
+}
+
+/** Thrown before a model call when the next call could pass the cost cap. */
+export class CostCapReached extends Error {
+  constructor() {
+    super('cost cap reached');
+  }
+}
+
+/** Float sums like 0.1 + 0.1 + 0.1 land a hair over 0.3; ignore differences below a billionth of a dollar. */
+const CAP_EPSILON = 1e-9;
+
+/**
+ * The next call "would pass" the cap if spend so far plus the dearest call yet exceeds it.
+ * It is a prediction, not a hard ceiling: the first call, or a call dearer than any before it, can overshoot.
+ */
+export function wouldPassCap(b: Budget): boolean {
+  return b.spentUsd + b.maxCallUsd > b.maxUsd + CAP_EPSILON;
+}
+
+export const roundUsd = (n: number): number => Math.round(n * 1e9) / 1e9;
 
 const MAX_ERROR_LENGTH = 200;
 
@@ -26,7 +56,8 @@ function retryNote(raw: string | null, error: string): string {
 /**
  * Ask one player for one turn. An invalid reply (or a thrown player error) gets
  * exactly one retry with the error included; after that a deterministic fallback
- * is used and logged with fallback: true. Never throws.
+ * is used and logged with fallback: true. Never throws for a bad reply or a player error; the only
+ * exception is CostCapReached, which stops the whole game.
  */
 export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promise<Turn> {
   const player = request.view.player;
@@ -38,17 +69,25 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
   let accepted: { speech: string; private_notes: string; action: Action } | null = null;
 
   for (let i = 0; i < 2 && !accepted; i++) {
+    if (ctx.budget && wouldPassCap(ctx.budget)) {
+      // Before the first attempt, stop the game. Before the retry, settle this turn with its fallback;
+      // the next turn then stops the game.
+      if (i === 0) throw new CostCapReached();
+      break;
+    }
     let raw: string | null = null;
     let error: string | null = null;
     let extracted = false;
+    let usage: Usage | undefined;
     try {
       const impl = ctx.players[player];
       if (!impl) throw new Error(`no player implementation for ${player}`);
-      raw = await impl.respond({ system: ctx.systemPrompt, user, phase, player, options });
-      if (typeof raw !== 'string') {
-        raw = null;
-        throw new Error('player returned a non-string reply');
-      }
+      const reply = await impl.respond({ system: ctx.systemPrompt, user, phase, player, options });
+      if (typeof reply === 'string') raw = reply;
+      else if (reply && typeof reply.text === 'string') {
+        raw = reply.text;
+        usage = reply.usage;
+      } else throw new Error('player returned a non-string reply');
       const parsed = parseReply(phase, raw, options);
       if (parsed.ok) {
         accepted = parsed.reply;
@@ -58,7 +97,18 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
     } catch (e) {
       error = errorMessage(e);
     }
-    attempts.push({ prompt: user, raw, error, ...(extracted ? { extracted: true as const } : {}) });
+    attempts.push({
+      prompt: user,
+      raw,
+      error,
+      ...(extracted ? { extracted: true as const } : {}),
+      ...(usage ? { usage } : {}),
+    });
+    // A cost that is not a finite, non-negative number would corrupt the total (NaN never caps, negative refunds).
+    if (ctx.budget && isUsableCost(usage?.costUsd)) {
+      ctx.budget.spentUsd += usage.costUsd;
+      ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, usage.costUsd);
+    }
     if (error !== null) user = baseUser + retryNote(raw, error);
   }
 
