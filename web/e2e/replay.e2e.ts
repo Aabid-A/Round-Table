@@ -42,7 +42,7 @@ test('shows who speaks and what the round table says', async ({ page }) => {
   await expect(page.getByTestId('section')).toContainText('Round table');
   await expect(page.getByTestId('bubble')).toBeVisible();
   await expect(page.locator('.seat[data-speaking=true]')).toHaveCount(1);
-  await expect(page.getByText('Suspects')).toBeVisible();
+  await expect(page.getByText('Suspects', { exact: true })).toBeVisible();
 });
 
 test('space plays and pauses, and playing advances the steps', async ({ page }) => {

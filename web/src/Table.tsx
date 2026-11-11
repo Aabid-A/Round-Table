@@ -3,7 +3,7 @@ import type { StepView } from './replay/describe.js';
 import type { Seat } from './replay/timeline.js';
 
 const RADIUS = 38; // seats sit on a circle this many percent of the table from its center
-const BUBBLE_OFFSET = 0.24; // how far from the center the bubble moves toward its speaker
+const BUBBLE_OFFSET = 0.08; // how far from the center the bubble leans toward its speaker; small, so it clears every seat
 
 function angleFor(i: number, n: number): number {
   return (i / n) * Math.PI * 2 - Math.PI / 2;
@@ -80,7 +80,7 @@ export function Table({ seats, view }: Props) {
             {view.speaker}
             {view.bubble.kind === 'whisper' ? ' whispers' : ''}
           </span>
-          {view.bubble.text}
+          <span className="bubble-text">{view.bubble.text}</span>
           <span className="bubble-tail" style={tailStyle} aria-hidden="true" />
         </div>
       )}

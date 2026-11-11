@@ -22,7 +22,8 @@ describe('describeStep', () => {
     const v = describeStep(step, log);
     expect(v.speaker).toBe(t.player);
     expect(v.bubble).toEqual({ text: t.speech, kind: 'speech' });
-    expect(v.rows[0]).toEqual({ label: 'Suspects', value: (t.action as { suspect: string }).suspect });
+    expect(v.rows[0]).toEqual({ label: 'Said', value: t.speech });
+    expect(v.rows[1]).toEqual({ label: 'Suspects', value: (t.action as { suspect: string }).suspect });
     expect(v.notes).toBe(t.private_notes);
   });
 

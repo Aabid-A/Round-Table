@@ -59,7 +59,7 @@ export function Player({ log, onReload }: Props) {
         ) : (
           <Table seats={seats} view={view} />
         )}
-        <Details view={view} showNotes={showNotes} />
+        {step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
       <Controls
         index={index}

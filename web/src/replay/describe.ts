@@ -60,6 +60,7 @@ function describeTurn(t: Turn): StepView {
     case 'round_table':
       v.target = a.suspect as string;
       v.bubble = { text: said === '' ? '(no statement)' : said, kind: 'speech' };
+      if (said !== '') v.rows.push({ label: 'Said', value: said }); // the bubble clips long speech; this is the full text
       v.rows.push({ label: 'Suspects', value: a.suspect as string });
       if (String(a.reason) !== '') v.rows.push({ label: 'Because', value: String(a.reason) });
       break;

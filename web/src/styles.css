@@ -292,16 +292,23 @@ h3 {
 /* Bubble and card, in the middle of the table */
 .bubble {
   position: absolute;
-  width: 54%;
-  max-height: 40%;
-  overflow: auto;
-  padding: var(--space-3);
+  width: 46%;
+  padding: var(--space-2) var(--space-3);
   transform: translate(-50%, -50%);
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
   background: var(--bg);
   font-size: var(--fs-s);
+  line-height: 1.4;
   animation: fade var(--motion) ease-out;
+}
+.bubble-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .bubble[data-kind='whisper'] {
   font-style: italic;
