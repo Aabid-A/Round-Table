@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { GameLog } from '../../src/engine/types.js';
 import { Controls } from './Controls.js';
 import { Details } from './Details.js';
+import { actionForKey } from './keys.js';
 import { describeStep, stepDurationMs } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
@@ -13,9 +14,6 @@ interface Props {
   onReload: () => void;
 }
 
-const isTyping = (t: EventTarget | null): boolean =>
-  t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-
 /** Plays one game log like an episode. */
 export function Player({ log, onReload }: Props) {
   const steps = useMemo(() => buildSteps(log), [log]);
@@ -26,17 +24,14 @@ export function Player({ log, onReload }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        next();
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        prev();
-      } else if (e.key === ' ' && !(e.target instanceof HTMLButtonElement)) {
-        e.preventDefault();
-        toggle();
-      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target instanceof HTMLElement ? e.target : null;
+      const action = actionForKey(e.key, t && { tagName: t.tagName, type: (t as HTMLInputElement).type, isContentEditable: t.isContentEditable });
+      if (!action) return;
+      e.preventDefault();
+      if (action === 'next') next();
+      else if (action === 'prev') prev();
+      else toggle();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

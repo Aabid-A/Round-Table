@@ -71,6 +71,17 @@ test('private notes are hidden until switched on, and labelled hidden from playe
   await expect(notes).toHaveCount(0);
 });
 
+test('arrow keys still step after the notes switch was used', async ({ page }) => {
+  await openFixture(page);
+  await page.getByLabel('Show private notes').check();
+  const before = (await counter(page))[0]!;
+  await page.keyboard.press('ArrowRight');
+  expect((await counter(page))[0]).toBe(before + 1);
+  await page.keyboard.press('ArrowLeft');
+  expect((await counter(page))[0]).toBe(before);
+  await expect(page.getByLabel('Show private notes')).toBeChecked();
+});
+
 test('rejects a log with another schemaVersion with a clear message', async ({ page }) => {
   await page.goto('/');
   await page.locator('input[type=file]').setInputFiles({
