@@ -11,10 +11,14 @@ export interface Runtime {
   seatPlayers: Map<string, SeatPlayer>;
   abort: AbortController;
   log: GameLog | null;
+  /** Set while every person is disconnected during a game; when it fires the room closes. */
+  abandonTimer: ReturnType<typeof setTimeout> | null;
 }
 
 export interface SessionOptions {
   turnMs: number;
+  /** How long a running game may have nobody connected before the room closes and the AIs stop. */
+  abandonMs: number;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   aiTimeoutMs?: number;
@@ -52,7 +56,15 @@ export class Session {
 
   /** The connection closed. The seat stays, so the person can come back. */
   disconnect(): void {
-    this.room?.detach(this.conn);
+    const { room } = this;
+    if (!room) return;
+    room.detach(this.conn);
+    // A game with nobody watching still spends the host's money on the AIs, so it does not run on forever.
+    const rt = this.deps.runtimes.get(room.code);
+    if (rt && room.phase === 'playing' && room.seats.every((s) => s.conn === null) && !rt.abandonTimer) {
+      rt.abandonTimer = setTimeout(() => room.close('Everyone left the game.'), this.deps.options.abandonMs);
+      rt.abandonTimer.unref();
+    }
   }
 
   private tell(message: ServerMessage): void {
@@ -77,11 +89,12 @@ export class Session {
   private runtime(room: Room): Runtime {
     let rt = this.deps.runtimes.get(room.code);
     if (!rt) {
-      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null };
+      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, abandonTimer: null };
       const made = rt;
       this.deps.runtimes.set(room.code, made);
       room.onClose(() => {
         made.abort.abort();
+        if (made.abandonTimer) clearTimeout(made.abandonTimer);
         for (const p of made.seatPlayers.values()) p.cancel();
         this.deps.runtimes.delete(room.code);
       });
@@ -165,6 +178,10 @@ export class Session {
     this.seat = seat;
     this.tell({ t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host });
     const rt = this.deps.runtimes.get(room.code);
+    if (rt?.abandonTimer) {
+      clearTimeout(rt.abandonTimer);
+      rt.abandonTimer = null;
+    }
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
     else if (room.phase === 'finished' && rt?.log) this.tell({ t: 'finished', log: rt.log, you: seat.name });
     else {

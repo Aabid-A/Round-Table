@@ -1,16 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Registry } from '../../server/registry.js';
 import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
 import { FakeConn, waitFor } from './helpers.js';
 
-function server() {
+function server(turnMs = 1000) {
   const registry = new Registry();
   const runtimes = new Map<string, Runtime>();
   const logged: string[] = [];
   const open = () => {
     const conn = new FakeConn();
-    const session = new Session(conn, { registry, runtimes, options: { turnMs: 1000, log: (l) => logged.push(l) } });
+    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, log: (l) => logged.push(l) } });
     const send = (m: unknown) => session.handle(JSON.stringify(m));
     /** Answer every turn at once, as a patient person would. */
     const autoplay = () => {
@@ -131,5 +131,40 @@ describe('Session: creating, joining and rejoining', () => {
     const back = s.open();
     back.send({ t: 'rejoin', code, token });
     expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'finished']);
+  });
+
+  describe('a game nobody is watching', () => {
+    afterEach(() => vi.useRealTimers());
+
+    const startedRoom = () => {
+      vi.useFakeTimers();
+      const s = server(1_000_000); // longer than the test, so only the abandon timer matters
+      const host = s.open();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+      const { code, token } = joinedOf(host.conn);
+      host.send({ t: 'start' }); // Quinn's first turn waits for an answer that never comes
+      return { s, host, code, token };
+    };
+
+    it('closes the room and stops the game after the grace period', async () => {
+      const { s, host, code } = startedRoom();
+      host.session.disconnect();
+      await vi.advanceTimersByTimeAsync(4999);
+      expect(s.registry.get(code)!.phase).toBe('playing');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(s.registry.get(code)!.phase).toBe('closed');
+      expect(s.runtimes.has(code)).toBe(false);
+    });
+
+    it('keeps the game when someone comes back in time', async () => {
+      const { s, host, code, token } = startedRoom();
+      host.session.disconnect();
+      await vi.advanceTimersByTimeAsync(4000);
+      const back = s.open();
+      back.send({ t: 'rejoin', code, token });
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(s.registry.get(code)!.phase).toBe('playing');
+      expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'status', 'turn']);
+    });
   });
 });
