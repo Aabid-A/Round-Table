@@ -4,6 +4,10 @@ import { joinByInvite, makeRoom, playTurns } from './rooms-helpers.js';
 
 test.setTimeout(180_000);
 
+// Seed 5 with two people: Quinn (a traitor) speaks at the first round table and Rae has eleven turns after it. With a random
+// seed, a person murdered on the first night has no turns, and a test that needs their notes in the log fails about 1 time in 8.
+const TWO_PEOPLE_SEED = '&seed=5';
+
 /** Errors the page reports to its console, or throws. A healthy page reports none (the dev server has no favicon, so that 404 is ignored). */
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -14,7 +18,7 @@ function watchErrors(page: Page): string[] {
 
 test('two people play a whole game together, and both see the same end screen', async ({ page, browser }) => {
   const errors = watchErrors(page);
-  const code = await makeRoom(page, 'Quinn');
+  const code = await makeRoom(page, 'Quinn', TWO_PEOPLE_SEED);
   const friend = await (await browser.newContext()).newPage();
   const friendErrors = watchErrors(friend);
   await joinByInvite(friend, code, 'Rae');
@@ -57,9 +61,6 @@ test('two people play a whole game together, and both see the same end screen', 
   expect(notes).toContain('NOTE-FROM-QUINN');
   expect(notes).toContain('NOTE-FROM-RAE');
 });
-
-// Seed 5 with two people: Quinn speaks at the first round table and Rae has eleven turns after it.
-const TWO_PEOPLE_SEED = '&seed=5';
 
 // Seed 2 gives a lone faithful host eleven turns. A random seed could murder them on the first night, with no turn to wait for.
 const LONE_HOST_SEED = '&seed=2';
