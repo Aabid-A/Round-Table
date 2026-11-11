@@ -22,8 +22,11 @@ function stripFences(raw: string): string {
   return m ? (m[1] as string) : t;
 }
 
-/** Balanced top-level {...} spans in text, ignoring braces inside JSON strings. */
-function objectSpans(text: string, from = 0): string[] {
+const MAX_SCAN_CHARS = 200_000;
+const MAX_RESTARTS = 100;
+
+/** One pass from `from`: closed top-level {...} spans, plus the start of an unclosed one (or -1). */
+function scanSpans(text: string, from: number): { spans: string[]; unclosedStart: number } {
   const spans: string[] = [];
   let depth = 0;
   let start = from;
@@ -47,8 +50,24 @@ function objectSpans(text: string, from = 0): string[] {
       inString = true;
     }
   }
-  // A '{' that never closed (prose like "Note { I will vote") must not hide a later object.
-  if (depth > 0) spans.push(...objectSpans(text, start + 1));
+  return { spans, unclosedStart: depth > 0 ? start : -1 };
+}
+
+/**
+ * Balanced top-level {...} spans in text, ignoring braces inside JSON strings.
+ * A '{' that never closes (prose like "Note { I will vote") must not hide a later
+ * object, so scanning restarts after it. Bounded so hostile replies cannot cost much.
+ */
+function objectSpans(raw: string): string[] {
+  const text = raw.length > MAX_SCAN_CHARS ? raw.slice(0, MAX_SCAN_CHARS) : raw;
+  const spans: string[] = [];
+  let from = 0;
+  for (let restarts = 0; restarts <= MAX_RESTARTS; restarts++) {
+    const pass = scanSpans(text, from);
+    spans.push(...pass.spans);
+    if (pass.unclosedStart < 0) break;
+    from = pass.unclosedStart + 1;
+  }
   return spans;
 }
 

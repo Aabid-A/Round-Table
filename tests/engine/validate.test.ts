@@ -75,6 +75,17 @@ describe('parseReply with text around the JSON', () => {
     expect(parseReply('vote', `${json}\nNote { that was it`, opts)).toMatchObject({ ok: true, extracted: true });
   });
 
+  it('does not blow up on many unmatched braces', () => {
+    for (const braces of [10_000, 60_000]) {
+      const before = '{'.repeat(braces) + json;
+      const after = json + '{'.repeat(braces);
+      expect(() => parseReply('vote', before, opts)).not.toThrow();
+      expect(() => parseReply('vote', after, opts)).not.toThrow();
+      expect(parseReply('vote', after, opts)).toMatchObject({ ok: true, extracted: true });
+    }
+    expect(parseReply('vote', `${'{'.repeat(50)}${json}`, opts)).toMatchObject({ ok: true, extracted: true });
+  });
+
   it('stays strict when prose holds another complete object', () => {
     expect(parseReply('vote', `Format is {"speech":"..."} and here: ${json}`, opts)).toEqual({
       ok: false,
