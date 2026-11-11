@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isHumanSeat, scoreGuesses, trustedTraitor, trustHeadline, whoFooledWhom } from '../src/roomResult.js';
+import { isHumanSeat, outcomeFor, scoreGuesses, trustedTraitor, trustHeadline, whoFooledWhom } from '../src/roomResult.js';
 import { logFrom } from './helpers/logs.js';
 
 // Four seats: Aria and Bram are AIs, Cleo and Dax are people.
@@ -86,5 +86,23 @@ describe('trustedTraitor', () => {
 
   it('is null when no person voted', () => {
     expect(trustedTraitor(logFrom({ ...roles }, [], {}, models))).toBeNull();
+  });
+});
+
+describe('outcomeFor', () => {
+  it('names the people behind the aliases and carries the scores, the fooling and the trust figure', () => {
+    const guesses = [{ seat: 'Cleo', ai: ['Aria', 'Bram'] }, { seat: 'Dax', ai: ['Aria'] }];
+    const o = outcomeFor(log, { Cleo: 'Quinn', Dax: 'Rae' }, guesses);
+    expect(o.people).toEqual([{ seat: 'Cleo', person: 'Quinn' }, { seat: 'Dax', person: 'Rae' }]);
+    expect(o.scores).toEqual([
+      { seat: 'Cleo', person: 'Quinn', correct: 3, of: 3, wrong: [] },
+      { seat: 'Dax', person: 'Rae', correct: 2, of: 3, wrong: ['Bram'] },
+    ]);
+    expect(o.fooling?.[0]).toEqual({ seat: 'Bram', isAi: true, fooled: ['Dax'] });
+    expect(o.trust).toBeNull(); // this hand-made log has no votes
+  });
+
+  it('has no scores or fooling when there was no guessing, and no people without aliases', () => {
+    expect(outcomeFor(log, {}, null)).toEqual({ people: [], scores: null, fooling: null, trust: null });
   });
 });

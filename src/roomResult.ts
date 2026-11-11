@@ -86,3 +86,29 @@ export function trustedTraitor(log: GameLog): TrustedTraitor | null {
 export function trustHeadline(t: TrustedTraitor): string {
   return `${t.trusted} of ${t.of} human${t.of === 1 ? '' : 's'} trusted the ${t.isAi ? 'AI' : 'human'} traitor`;
 }
+
+/** What a room tells everyone once the game and the guessing are over. */
+export interface RoomOutcome {
+  /** Real names behind the aliases (empty when the room used no aliases: the seat names are the people). */
+  people: { seat: string; person: string }[];
+  /** Each person's score, or null when there was no guessing. `person` is the real name. */
+  scores: (GuessScore & { person: string })[] | null;
+  /** Who fooled whom, or null when there was no guessing. */
+  fooling: Fooling[] | null;
+  /** The headline for the group card, or null when it has nothing to say. */
+  trust: TrustedTraitor | null;
+}
+
+/**
+ * Everything the end screen needs, from the finished log, the aliases (empty without aliases) and the guesses (null when there
+ * was no guessing). A person's guess is keyed by their seat, as the log names it.
+ */
+export function outcomeFor(log: GameLog, people: Record<string, string>, guesses: Guess[] | null): RoomOutcome {
+  const scores = guesses === null ? null : scoreGuesses(log, guesses).map((s) => ({ ...s, person: people[s.seat] ?? s.seat }));
+  return {
+    people: Object.entries(people).map(([seat, person]) => ({ seat, person })),
+    scores,
+    fooling: scores === null ? null : whoFooledWhom(log, scores),
+    trust: trustedTraitor(log),
+  };
+}
