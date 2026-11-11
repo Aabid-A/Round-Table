@@ -1,5 +1,6 @@
 import type { GameLog } from '../src/engine/types.js';
-import { outcomeFor, type RoomOutcome } from '../src/roomResult.js';
+import { outcomeFor, type Guess, type RoomOutcome } from '../src/roomResult.js';
+import { Guessing } from './guessing.js';
 import { runRoomGame } from './game.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import { RateLimiter } from './rateLimit.js';
@@ -14,6 +15,8 @@ export interface Runtime {
   abort: AbortController;
   log: GameLog | null;
   outcome: RoomOutcome | null;
+  /** The guessing step, while it runs (alias games only). */
+  guessing: Guessing | null;
   /** Set while every person is disconnected during a game; when it fires the room closes. */
   abandonTimer: ReturnType<typeof setTimeout> | null;
 }
@@ -77,6 +80,7 @@ export class Session {
     if (!room) return;
     room.detach(this.conn);
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage()); // so friends see who is offline
+    this.deps.runtimes.get(room.code)?.guessing?.check(); // nobody is held up by someone who has gone
     // A game with nobody watching still spends the host's money on the AIs, so it does not run on forever.
     const rt = this.deps.runtimes.get(room.code);
     if (rt && room.phase === 'playing' && room.seats.every((s) => s.conn === null) && !rt.abandonTimer) {
@@ -101,6 +105,8 @@ export class Session {
         return this.start();
       case 'leave':
         return this.leave();
+      case 'guess':
+        return this.guess(msg.ai);
       case 'answer':
         return this.answer(msg.turn, msg.answer);
     }
@@ -109,12 +115,13 @@ export class Session {
   private runtime(room: Room): Runtime {
     let rt = this.deps.runtimes.get(room.code);
     if (!rt) {
-      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, outcome: null, abandonTimer: null };
+      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, outcome: null, guessing: null, abandonTimer: null };
       const made = rt;
       this.deps.runtimes.set(room.code, made);
       room.onClose(() => {
         made.abort.abort();
         if (made.abandonTimer) clearTimeout(made.abandonTimer);
+        made.guessing?.cancel();
         for (const p of made.seatPlayers.values()) p.cancel();
         this.deps.runtimes.delete(room.code);
       });
@@ -169,16 +176,26 @@ export class Session {
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
-        rt.outcome = outcomeFor(log, room.people, null);
-        room.phase = 'finished';
-        room.finishedAt = (options.now ?? Date.now)();
-        for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });
+        if (!room.aliases) return this.finish(room, rt, log, null);
+        // Before anyone learns who was who, each person guesses which seats were AIs.
+        room.phase = 'guessing';
+        rt.guessing = new Guessing(room, log, LIMITS.guessMs, (guesses) => this.finish(room, rt, log, guesses), options.now);
+        rt.guessing.start();
       },
       (e: unknown) => {
         options.log(`game error: ${e instanceof Error ? e.name : 'unknown'}`);
         room.close('The game stopped because of an error.');
       },
     );
+  }
+
+  /** The game, and the guessing if there was any, are over: tell everyone how it went. */
+  private finish(room: Room, rt: Runtime, log: GameLog, guesses: Guess[] | null): void {
+    if (room.phase === 'closed') return;
+    rt.outcome = outcomeFor(log, room.people, guesses);
+    room.phase = 'finished';
+    room.finishedAt = (this.deps.options.now ?? Date.now)();
+    for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });
   }
 
   /** Leave on purpose. In the lobby the seat goes (and the room, if it is the host's); in a game the seat stays and plays on with fallbacks. */
@@ -191,6 +208,13 @@ export class Session {
     this.room = null;
     this.seat = null;
     room.broadcast(room.lobbyMessage());
+  }
+
+  private guess(ai: string[]): void {
+    const { room, seat } = this;
+    if (!room || !seat) return this.tell({ t: 'error', message: 'Create or join a room first.' });
+    if (room.phase !== 'guessing') return this.tell({ t: 'error', message: 'There is nothing to guess right now.' });
+    this.deps.runtimes.get(room.code)?.guessing?.submit(seat.name, ai);
   }
 
   private answer(turn: number, answer: HumanAnswer): void {
@@ -217,7 +241,11 @@ export class Session {
       rt.abandonTimer = null;
     }
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
-    else if (room.phase === 'finished' && rt?.log && rt.outcome) this.tell({ t: 'finished', log: rt.log, you: seat.name, outcome: rt.outcome });
+    else if (room.phase === 'guessing') {
+      const alias = room.aliasOf(seat.name);
+      if (alias !== null) this.tell({ t: 'alias', alias });
+      rt?.guessing?.resend(seat.name);
+    } else if (room.phase === 'finished' && rt?.log && rt.outcome) this.tell({ t: 'finished', log: rt.log, you: seat.name, outcome: rt.outcome });
     else {
       const alias = room.aliasOf(seat.name);
       if (alias !== null) this.tell({ t: 'alias', alias });
