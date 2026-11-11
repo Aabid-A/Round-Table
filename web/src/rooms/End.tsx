@@ -44,7 +44,7 @@ export function End({ me, log, onLeave }: Props) {
         ))}
       </ul>
 
-      <div className="controls-row">
+      <div className="controls-row room-actions">
         <button
           type="button"
           className="btn"

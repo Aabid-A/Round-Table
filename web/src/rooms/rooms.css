@@ -63,10 +63,14 @@
   border-color: var(--danger);
 }
 .clock {
-  margin: 0;
+  margin: 0 0 var(--space-2);
   color: var(--muted);
 }
 .clock[data-low='true'] {
   color: var(--danger);
   font-weight: 600;
+}
+/* Buttons under a form or a list get room to breathe. */
+.room-actions {
+  margin-top: var(--space-5);
 }

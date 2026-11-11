@@ -105,7 +105,7 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
         <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? turn.phase : phase} />
       )}
 
-      <div className="controls-row">
+      <div className="controls-row room-actions">
         {confirmLeave ? (
           <>
             <span>Leave the game? Fallback moves are made for your seat.</span>
