@@ -28,10 +28,22 @@ describe('parseStats', () => {
     expect(parseStats(JSON.stringify({ statsVersion: 1, games: 1 }))).toMatchObject({ ok: false, message: expect.stringContaining('missing parts') });
   });
 
+  it('rejects negative numbers, a fallback rate above 1, and a model listed twice', () => {
+    const neg = stats();
+    neg.models[0].caughtAsTraitor = -1;
+    expect(parseStats(JSON.stringify(neg))).toMatchObject({ ok: false, message: expect.stringContaining('negative one') });
+    const rate = stats();
+    rate.models[0].fallbackRate = 7;
+    expect(parseStats(JSON.stringify(rate))).toMatchObject({ ok: false, message: expect.stringContaining('fallback rate above 1') });
+    const twice = stats();
+    twice.models[1].model = twice.models[0].model;
+    expect(parseStats(JSON.stringify(twice))).toMatchObject({ ok: false, message: expect.stringContaining('appears twice') });
+  });
+
   it('rejects a damaged model entry by name', () => {
     const s = stats();
     delete s.models[1].asTraitor;
-    expect(parseStats(JSON.stringify(s))).toMatchObject({ ok: false, message: `These stats look damaged: ${s.models[1].model} is missing a number.` });
+    expect(parseStats(JSON.stringify(s))).toMatchObject({ ok: false, message: `These stats look damaged: ${s.models[1].model} is missing a number, or has a negative one.` });
     const t = stats();
     t.models[0].betrayalIndex = 'high';
     expect(parseStats(JSON.stringify(t))).toMatchObject({ ok: false, message: expect.stringContaining('look damaged') });
