@@ -24,6 +24,10 @@ describe('loadFromName', () => {
     const r = await loadFromName('nope', './', respond(new Response('', { status: 404 })));
     expect(r).toMatchObject({ ok: false, message: expect.stringContaining('No log named "nope"') });
   });
+  it('treats an HTML page with a 200 as a missing log (single-page-app hosting)', async () => {
+    const page = new Response('<!doctype html><title>app</title>', { status: 200, headers: { 'content-type': 'text/html' } });
+    expect(await loadFromName('nope', './', respond(page))).toMatchObject({ ok: false, message: expect.stringContaining('No log named "nope"') });
+  });
   it('reports other HTTP errors, network failures and wrong schema versions', async () => {
     expect(await loadFromName('x', './', respond(new Response('', { status: 500 })))).toMatchObject({ ok: false, message: expect.stringContaining('HTTP 500') });
     expect(await loadFromName('x', './', respond(new Error('offline')))).toMatchObject({ ok: false, message: expect.stringContaining('Could not reach') });
