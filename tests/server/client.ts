@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import type { ServerMessage } from '../../server/protocol.js';
+import { emptyAnswer, formFor } from '../../web/src/play/human.js';
 import { waitFor } from './helpers.js';
 
 /** A real WebSocket client that records what the server sends. */
@@ -18,6 +19,20 @@ export class TestClient {
       ws.once('error', reject);
     });
     return new TestClient(ws);
+  }
+
+  /** Answer every turn at once, the first choice each time, with a note naming the turn. */
+  autoplay(label: string): void {
+    this.ws.on('message', (data) => {
+      const m = JSON.parse(data.toString()) as ServerMessage;
+      if (m.t !== 'turn') return;
+      const spec = formFor(m.phase, m.options);
+      this.send({
+        t: 'answer',
+        turn: m.turn,
+        answer: { ...emptyAnswer(), speech: spec.speechLabel ? `${label} speaks` : '', message: spec.messageLabel ? 'because' : '', note: `HUMANNOTE-${label}-${m.turn}`, choice: spec.choices[0]!.value },
+      });
+    });
   }
 
   send(message: unknown): void {
