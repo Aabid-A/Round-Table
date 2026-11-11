@@ -35,6 +35,14 @@ test('has no controls or chrome', async ({ page }) => {
   await expect(page.getByText('Show private notes')).toHaveCount(0);
 });
 
+test('has a page title and a labelled region', async ({ page }) => {
+  await open(page, '&speed=20');
+  await expect(page).toHaveTitle('Round Table clip');
+  await expect(page.getByRole('region', { name: 'Round Table clip' })).toBeVisible();
+  await open(page, '&faces=0');
+  await expect(page.getByRole('region', { name: 'Round Table clip' })).toBeVisible();
+});
+
 test('16x9 and 9x16 give a stage of that shape', async ({ page }) => {
   for (const [aspect, viewport, ratio] of [
     ['16x9', { width: 1280, height: 720 }, 16 / 9],

@@ -32,7 +32,7 @@ export function RecordView({ log, params }: Props) {
   if (params.faces !== null) {
     return (
       <div className="rec" data-aspect={params.aspect} data-done="true">
-        <div className="rec-stage" data-testid="stage" data-mode="faces">
+        <div className="rec-stage" data-testid="stage" data-mode="faces" role="region" aria-label="Round Table clip">
           <Faces log={log} turnId={params.faces} />
         </div>
       </div>
@@ -54,7 +54,7 @@ export function RecordView({ log, params }: Props) {
 
   return (
     <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId}>
-      <div className="rec-stage" data-testid="stage">
+      <div className="rec-stage" data-testid="stage" role="region" aria-label="Round Table clip">
         <div className="rec-table">
           <Table seats={seats} view={{ ...view, bubble: null, card: null }} />
         </div>
@@ -72,7 +72,9 @@ export function RecordView({ log, params }: Props) {
           {view.card && (
             <>
               <p className="rec-who">{view.card.title}</p>
-              <p className="rec-text">{view.card.body}</p>
+              <p className="rec-text" style={{ fontSize: `calc(var(--rec-text) * ${textScale(view.card.body.length)})` }}>
+                {view.card.body}
+              </p>
             </>
           )}
           {view.bubble && view.rows.filter((r) => r.label === 'Suspects').map((r) => (

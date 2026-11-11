@@ -57,6 +57,9 @@ export function App() {
 
 /** ?mode=record: no file picker, no chrome. Needs ?log=<name>. Problems are shown as plain text. */
 function RecordPage({ state }: { state: State }) {
+  useEffect(() => {
+    document.title = 'Round Table clip';
+  }, []);
   const parsed = parseRecordParams(window.location.search);
   if (!parsed.ok) return <p className="rec-error" role="alert">{parsed.message}</p>;
   if (state.kind === 'ready') return <RecordView log={state.log} params={parsed.params} />;
