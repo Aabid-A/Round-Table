@@ -134,9 +134,11 @@ export type ServerMessage =
   | { t: 'joined'; code: string; token: string; you: string; host: boolean }
   | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
   /** Shown to everyone while the game runs. Only the phase, never who is acting. */
-  | { t: 'status'; phase: Phase | null; round: number }
+  | { t: 'status'; phase: Phase | null }
   /** Private to one seat. */
   | { t: 'turn'; turn: number; phase: Phase; options: string[]; user: string; timeoutMs: number; error: string | null }
+  /** Private to one seat: that turn is no longer waiting for an answer (time ran out). */
+  | { t: 'turn_over'; turn: number }
   | { t: 'finished'; log: GameLog; you: string }
   | { t: 'error'; message: string }
   | { t: 'closed'; reason: string };

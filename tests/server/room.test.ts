@@ -50,9 +50,9 @@ describe('Room seats', () => {
     const b = new FakeConn();
     room.join('Quinn', a);
     room.join('Rae', b);
-    room.broadcast({ t: 'status', phase: 'night', round: 1 });
+    room.broadcast({ t: 'status', phase: 'night' });
     room.sendTo('rae', { t: 'error', message: 'just you' });
-    expect(a.sent).toEqual([{ t: 'status', phase: 'night', round: 1 }]);
+    expect(a.sent).toEqual([{ t: 'status', phase: 'night' }]);
     expect(b.sent.map((m) => m.t)).toEqual(['status', 'error']);
   });
 
