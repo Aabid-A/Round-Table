@@ -1,0 +1,163 @@
+/* Recording mode. Sizes scale with the stage (container units), so a clip looks the same at any resolution. */
+.rec {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.rec-stage {
+  container-type: size;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+.rec[data-aspect='16x9'] .rec-stage {
+  aspect-ratio: 16 / 9;
+  width: min(100vw, calc(100vh * 16 / 9));
+}
+.rec[data-aspect='9x16'] .rec-stage {
+  aspect-ratio: 9 / 16;
+  width: min(100vw, calc(100vh * 9 / 16));
+}
+
+/* Type and spacing for each shape, as tokens. */
+.rec[data-aspect='16x9'] {
+  --rec-gap: 3cqw;
+  --rec-kicker: 1.6cqw;
+  --rec-who: 3cqw;
+  --rec-text: 3.6cqw;
+  --rec-sub: 2.2cqw;
+  --rec-seat-w: 10cqw;
+  --rec-seat-name: 1.7cqw;
+  --rec-seat-meta: 1.2cqw;
+}
+.rec[data-aspect='9x16'] {
+  --rec-gap: 5cqw;
+  --rec-kicker: 3.4cqw;
+  --rec-who: 6cqw;
+  --rec-text: 6.4cqw;
+  --rec-sub: 4cqw;
+  --rec-seat-w: 17cqw;
+  --rec-seat-name: 3.4cqw;
+  --rec-seat-meta: 2.4cqw;
+}
+
+.rec-stage {
+  display: grid;
+  gap: var(--rec-gap);
+  padding: var(--rec-gap);
+}
+.rec[data-aspect='16x9'] .rec-stage {
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+}
+.rec[data-aspect='9x16'] .rec-stage {
+  grid-template-rows: auto 1fr;
+  align-content: start;
+}
+
+.rec-table {
+  --seat-w: var(--rec-seat-w);
+  min-width: 0;
+}
+.rec-table .table {
+  width: 100%;
+}
+.rec-table .seat {
+  font-size: var(--rec-seat-meta);
+}
+.rec-table .seat-name {
+  font-size: var(--rec-seat-name);
+}
+
+.rec-caption {
+  display: grid;
+  gap: var(--space-2);
+  align-content: center;
+  min-width: 0;
+}
+.rec-kicker {
+  margin: 0;
+  font-size: var(--rec-kicker);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rec-who {
+  margin: 0;
+  font-size: var(--rec-who);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.rec-text {
+  margin: 0;
+  font-size: var(--rec-text);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.rec-sub {
+  margin: 0;
+  font-size: var(--rec-sub);
+  color: var(--muted);
+}
+.rec-error {
+  max-width: var(--w-narrow);
+  margin: var(--space-7) auto;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-s);
+  color: var(--danger);
+}
+
+/* Two faces: said, beside privately wrote */
+.faces {
+  display: grid;
+  gap: var(--rec-gap);
+  align-content: center;
+  height: 100%;
+}
+.faces-head h1 {
+  margin: 0;
+  font-size: var(--rec-who);
+  line-height: 1.1;
+}
+.faces-head p {
+  margin: 0;
+  font-size: var(--rec-kicker);
+}
+.faces-grid {
+  display: grid;
+  gap: var(--rec-gap);
+}
+.rec[data-aspect='16x9'] .faces-grid {
+  grid-template-columns: 1fr 1fr;
+}
+.face {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  margin: 0;
+  padding: var(--rec-gap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+.face figcaption {
+  font-size: var(--rec-kicker);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.face blockquote {
+  margin: 0;
+  font-size: var(--rec-sub);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.face-wrote {
+  border: 2px dashed var(--hidden-border);
+  background: var(--hidden-bg);
+}
