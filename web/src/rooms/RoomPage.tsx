@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef } from 'react';
 import './rooms.css';
 import { RoomConnection, sessionStore } from './connection.js';
+import { End } from './End.js';
 import { Game } from './Game.js';
 import { Home } from './Home.js';
 import { Lobby } from './Lobby.js';
@@ -51,11 +52,21 @@ export function RoomPage() {
       />
     );
   }
-  return (
-    <main className="loader rooms">
-      <p className="notice" role="status">
-        Connected to room {state.me?.code}.
-      </p>
-    </main>
-  );
+  if (state.view.kind === 'finished' && state.me) return <End me={state.me} log={state.view.log} onLeave={() => connection.leave()} />;
+  if (state.view.kind === 'closed') {
+    return (
+      <main className="loader rooms" data-testid="room-closed">
+        <h1>This room has closed</h1>
+        <p className="notice" role="status">
+          {state.view.reason}
+        </p>
+        <p>
+          <button type="button" className="btn btn-primary" onClick={() => connection.leave()}>
+            Back to the start
+          </button>
+        </p>
+      </main>
+    );
+  }
+  return null;
 }
