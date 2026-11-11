@@ -30,10 +30,19 @@ replayable; everything with I/O sits at the edges. The spec is `docs/GAME.md`.
 - `src/cli/` entry points only (run a game, print a transcript). They
   orchestrate: load config, build players, call the engine, call the log. No
   game logic.
+- `server/` the room server (a Node WebSocket server, dependency `ws`). It
+  runs the same engine for a room of friends: `protocol.ts` (messages and
+  every limit), `room.ts` and `registry.ts` (seats, codes, expiry),
+  `seatPlayer.ts` (a person as a `Player`, with a turn timer), `game.ts`
+  (runs one room's game), `session.ts` (one connection's messages),
+  `server.ts` (the sockets). No game rules here: it calls the engine.
 - `config/` cast (`cast.json`, OpenRouter model IDs) and game settings.
 - `tests/` mirrors `src/` (`src/engine/x.ts` -> `tests/engine/x.test.ts`).
 
 Dependency direction: `cli` -> `engine`, `players`, `prompts`, `log`.
+`server` -> `engine`, `players`, `prompts`, `cast`; the web app talks to it
+only through the messages in `server/protocol.ts` (it imports those types and
+nothing else from `server/`), and `server/` never imports from `web/`.
 `engine` may import shared *types* (such as `Player`) from the others, but
 never an implementation (no mock, OpenRouter or replay player, no prompt
 builder: the CLI injects those). `players` and
@@ -51,7 +60,12 @@ builder: the CLI injects those). `players` and
 - **Log everything.** The log records every prompt and every raw reply (and
   retries and fallbacks), so a game can be audited and replayed.
 - **Secrets.** The API key comes from `OPENROUTER_API_KEY` at runtime. Never
-  write it to a file, a log or a prompt.
+  write it to a file, a log or a prompt. In a room, the host's key lives in
+  the room's private field only, is scrubbed from every error text and from
+  the finished log, and is dropped when the game ends or the room closes.
+- **Rooms never send hidden information.** A client gets its own seat's
+  prompt, the phase, and (after the game ends) the log. Never the roles,
+  other people's notes or whispers, or who is acting.
 - **Randomness is injected.** Engine code takes a seeded RNG; it never makes
   its own.
 
