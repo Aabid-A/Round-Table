@@ -1,0 +1,95 @@
+/* Share cards: fixed pixel sizes (the image is the card), so sizes here are real pixels per card shape. */
+.share-card[data-size='1200x675'] {
+  --card-w: 1200px;
+  --card-h: 675px;
+  --card-pad: 56px;
+  --card-name: 64px;
+  --card-model: 24px;
+  --card-small: 20px;
+  --card-quote: 34px;
+}
+.share-card[data-size='1080x1350'] {
+  --card-w: 1080px;
+  --card-h: 1350px;
+  --card-pad: 64px;
+  --card-name: 76px;
+  --card-model: 28px;
+  --card-small: 24px;
+  --card-quote: 40px;
+}
+
+.card-page {
+  display: block;
+}
+.share-card {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: var(--card-pad);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+.share-card[data-size='1200x675'] .share-quotes {
+  grid-template-columns: 1fr 1fr;
+}
+.share-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--card-small);
+  color: var(--muted);
+}
+.share-brand {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.share-who h1 {
+  margin: 0;
+  font-size: var(--card-name);
+  line-height: 1.05;
+}
+.share-who p {
+  margin: var(--space-1) 0 0;
+  font-size: var(--card-model);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.share-quotes {
+  display: grid;
+  gap: var(--space-4);
+  align-content: stretch;
+  min-height: 0;
+}
+.share-quote {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-5);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+.share-quote figcaption {
+  font-size: var(--card-small);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.share-quote blockquote {
+  margin: 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.share-thought {
+  border: 2px dashed var(--hidden-border);
+  background: var(--hidden-bg);
+}
