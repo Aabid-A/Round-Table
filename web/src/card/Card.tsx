@@ -1,6 +1,6 @@
 import type { GameLog } from '../../../src/engine/types.js';
-import { textScale } from '../record/fit.js';
 import { describeStep } from '../replay/describe.js';
+import { cardTextScale, clipQuote, MAX_QUOTE_CHARS } from './fit.js';
 import type { CardSize } from './params.js';
 
 interface Props {
@@ -32,10 +32,11 @@ export function Card({ log, logName, turnId, size }: Props) {
     );
   }
   const view = describeStep({ kind: 'turn', turn, section: { round: turn.round, title: '' } }, log);
-  const said = view.bubble?.text ?? '';
-  const thought = view.notes ?? 'No private notes for this turn.';
+  const max = MAX_QUOTE_CHARS[size];
+  const said = clipQuote(view.bubble?.text ?? '', max);
+  const thought = clipQuote(view.notes ?? 'No private notes for this turn.', max);
   const model = log.cast.find((c) => c.name === turn.player)?.model ?? '';
-  const quoteSize = { fontSize: `calc(var(--card-quote) * ${textScale(Math.max(said.length, thought.length))})` };
+  const quoteSize = { fontSize: `calc(var(--card-quote) * ${cardTextScale(Math.max(said.length, thought.length), size)})` };
   return (
     <article className="share-card" data-testid="card" data-size={size} aria-label={`${turn.player}: said and thought`}>
       <header className="share-head">

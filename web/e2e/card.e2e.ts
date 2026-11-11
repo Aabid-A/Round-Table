@@ -64,6 +64,8 @@ test('a very long quote and a long name still fit inside the card', async ({ pag
       // Nothing is cut off: the text block is not taller than the panel that holds it.
       const fits = await el.evaluate((n) => n.scrollHeight <= n.clientHeight + 1);
       expect(fits, `${size} ${id} text fits`).toBe(true);
+      // A quote that is too long for a card is cut at a word and says so.
+      await expect(el.locator('blockquote')).toHaveText(/…$/);
     }
   }
 });
