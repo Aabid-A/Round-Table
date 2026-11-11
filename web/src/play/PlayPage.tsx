@@ -110,9 +110,7 @@ export function PlayPage() {
       {pending ? (
         <HumanForm key={pending.turn} request={pending.request} turn={pending.turn} onSubmit={pending.resolve} />
       ) : (
-        <p className="notice" role="status" data-testid="thinking">
-          The AIs are thinking…
-        </p>
+        <Thinking />
       )}
       <p>
         <button type="button" className="btn" onClick={quit}>
@@ -120,6 +118,17 @@ export function PlayPage() {
         </button>
       </p>
     </main>
+  );
+}
+
+/** Shown while the AIs play. It takes focus when it appears, so focus is not lost when your form goes away. */
+function Thinking() {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useEffect(() => ref.current?.focus(), []);
+  return (
+    <p ref={ref} tabIndex={-1} className="notice" role="status" data-testid="thinking">
+      The AIs are thinking…
+    </p>
   );
 }
 
@@ -186,7 +195,7 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
           <>
             <label className="field">
               Your OpenRouter key
-              <input type="password" value={key} onChange={(e) => (setKey(e.target.value), setProblem(null))} autoComplete="off" spellCheck={false} />
+              <input type="password" value={key} onChange={(e) => (setKey(e.target.value), setProblem(null))} autoComplete="new-password" spellCheck={false} />
             </label>
             <p className="hint" data-testid="key-note">
               The key stays in this tab&rsquo;s memory. It is sent only to OpenRouter, never saved, and not put in the game log. Closing or

@@ -64,6 +64,7 @@ test('the setup checks the name, and real models need a key, seven models and a 
   await page.getByLabel('Your name at the table').fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await expect(page.getByLabel('Your OpenRouter key')).toHaveAttribute('type', 'password');
+  await expect(page.getByLabel('Your OpenRouter key')).toHaveAttribute('autocomplete', 'new-password'); // so a password manager does not offer to save it
   await expect(page.getByTestId('key-note')).toContainText('only to OpenRouter, never saved');
   await page.getByRole('button', { name: 'Take a seat' }).click();
   await expect(page.getByRole('alert')).toContainText('Enter 7 model IDs');
@@ -104,27 +105,28 @@ test('what you know is shown as text, the task has no JSON-format lines, and the
   expect(text).not.toContain('"speech"');
   const phase = await form.getAttribute('data-phase');
   const send = form.getByRole('button', { name: 'Send' });
-  // Phases that allow "none" (no whisper, no offer) start complete; every other phase needs a choice first.
-  if (phase === 'whispers' || phase === 'recruit_choose') await expect(send).toBeEnabled();
-  else await expect(send).toBeDisabled();
+  // Nothing is chosen at first, even where "none" is allowed, so Send cannot be hit by accident.
+  await expect(send).toBeDisabled();
   await form.locator('input[type=radio]').first().check();
-  if (phase === 'round_table') await expect(send).toBeDisabled(); // still needs speech and a reason
+  // Round table needs speech and a reason; a whisper to someone needs its message.
+  if (phase === 'round_table' || phase === 'whispers') await expect(send).toBeDisabled();
+  else await expect(send).toBeEnabled();
 });
 
-test('the setup error goes away when you change a field, and each turn names its choices', async ({ page }) => {
-  await page.goto('/?mode=play&seed=5');
-  await page.getByLabel('Your name at the table').fill('Aria');
-  await page.getByRole('button', { name: 'Take a seat' }).click();
-  await expect(page.getByRole('alert')).toBeVisible();
-  await page.getByLabel('Your name at the table').fill('Sam');
-  await expect(page.getByRole('alert')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Take a seat' }).click();
-  const form = page.locator('[data-testid=turn-form][data-turn="1"]');
-  await expect(form).toBeVisible();
-  const legend = form.locator('fieldset.choices > legend');
-  await expect(legend).toBeVisible(); // the choices have a visible heading
-  expect((await legend.innerText()).trim()).not.toBe('');
-  await expect(form.getByRole('group', { name: (await legend.innerText()).trim() })).toBeVisible();
+test('keyboard focus lands on the next thing after you send a turn, not on the page', async ({ page }) => {
+  await startPractice(page);
+  const first = page.locator('[data-testid=turn-form][data-turn="1"]');
+  await expect(first.getByTestId('turn-title')).toBeFocused(); // a new form takes focus
+  const phase = await first.getAttribute('data-phase');
+  if (phase === 'whispers') await first.getByLabel('Send no whisper').check();
+  else if (phase === 'recruit_choose') await first.getByLabel('Make no offer').check();
+  else await first.locator('input[type=radio]').first().check();
+  if (phase === 'round_table') {
+    await first.locator('textarea').fill('I speak.');
+    await first.getByLabel(/Why you suspect them/).fill('because');
+  }
+  await first.getByRole('button', { name: 'Send' }).click();
+  await expect.poll(async () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? ''), { timeout: 10_000 }).toMatch(/^(thinking|turn-title|end)$/);
 });
 
 test('quit goes back to the setup, and the game stops', async ({ page }) => {

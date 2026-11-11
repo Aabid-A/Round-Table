@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { PromptRequest } from '../../../src/players/player.js';
 import { emptyAnswer, formFor, isComplete, splitPrompt, type HumanAnswer } from './human.js';
 
@@ -15,7 +15,16 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
   const spec = formFor(request.phase, request.options);
   const { context, task } = splitPrompt(request.user);
   const [a, setA] = useState<HumanAnswer>(emptyAnswer());
-  const set = (patch: Partial<HumanAnswer>): void => setA((x) => ({ ...x, ...patch }));
+  // Even where "none" is allowed (no whisper, no offer), the person has to choose it, so Send is never an accident.
+  const [chosen, setChosen] = useState(false);
+  const set = (patch: Partial<HumanAnswer>): void => {
+    setA((x) => ({ ...x, ...patch }));
+    if ('choice' in patch) setChosen(true);
+  };
+  const title = useRef<HTMLHeadingElement>(null);
+  // Sending replaces this form, so move keyboard focus to the new one instead of dropping it on the page.
+  useEffect(() => title.current?.focus(), []);
+  const ready = chosen && isComplete(spec, a);
   const NONE = '__none__';
 
   return (
@@ -27,7 +36,7 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
       aria-labelledby={`${id}-title`}
       onSubmit={(e) => {
         e.preventDefault();
-        if (isComplete(spec, a)) onSubmit(a);
+        if (ready) onSubmit(a);
       }}
     >
       <details className="know" open>
@@ -37,7 +46,9 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
         </pre>
       </details>
 
-      <h2 id={`${id}-title`}>{spec.title}</h2>
+      <h2 id={`${id}-title`} ref={title} tabIndex={-1} data-testid="turn-title">
+        {spec.title}
+      </h2>
       {task && <p className="task">{task}</p>}
 
       {spec.speechLabel && (
@@ -56,8 +67,8 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
           </label>
         ))}
         {spec.noneLabel && (
-          <label className="choice" data-on={a.choice === null}>
-            <input type="radio" name={`${id}-choice`} value={NONE} checked={a.choice === null} onChange={() => set({ choice: null })} />
+          <label className="choice" data-on={chosen && a.choice === null}>
+            <input type="radio" name={`${id}-choice`} value={NONE} checked={chosen && a.choice === null} onChange={() => set({ choice: null })} />
             {spec.noneLabel}
           </label>
         )}
@@ -75,7 +86,7 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
         <input type="text" maxLength={300} value={a.note} onChange={(e) => set({ note: e.target.value })} />
       </label>
 
-      <button type="submit" className="btn btn-primary" disabled={!isComplete(spec, a)}>
+      <button type="submit" className="btn btn-primary" disabled={!ready}>
         Send
       </button>
     </form>
