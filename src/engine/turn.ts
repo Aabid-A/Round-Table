@@ -29,9 +29,14 @@ export class CostCapReached extends Error {
 }
 
 /** The next call "would pass" the cap if spend so far plus the dearest call yet exceeds it. */
+/** Float sums like 0.1 + 0.1 + 0.1 land a hair over 0.3; ignore differences below a billionth of a dollar. */
+const CAP_EPSILON = 1e-9;
+
 export function wouldPassCap(b: Budget): boolean {
-  return b.spentUsd + b.maxCallUsd > b.maxUsd;
+  return b.spentUsd + b.maxCallUsd > b.maxUsd + CAP_EPSILON;
 }
+
+export const roundUsd = (n: number): number => Math.round(n * 1e9) / 1e9;
 
 const MAX_ERROR_LENGTH = 200;
 

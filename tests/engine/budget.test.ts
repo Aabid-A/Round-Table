@@ -74,6 +74,13 @@ describe('cost cap', () => {
     expect(log.result).toMatchObject({ reason: 'cost_cap', winner: null });
   });
 
+  it('is not thrown off by float noise in the totals', async () => {
+    // 0.1 + 0.1 + 0.1 is 0.30000000000000004 in floats, but three calls fit under a 0.3 cap.
+    const log = await run(costed(1, () => 0.1), 0.3);
+    expect(log.turns.flatMap((t) => t.attempts)).toHaveLength(3);
+    expect(log.result.costCap).toEqual({ maxUsd: 0.3, spentUsd: 0.3 });
+  });
+
   it('replays a capped game identically', async () => {
     const original = await run(costed(2, () => 0.25), 2, 2);
     const replayed = await run(createReplayPlayers(original), 2, 2);

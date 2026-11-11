@@ -2,7 +2,7 @@ import type { Player } from '../players/player.js';
 import type { CastMember } from '../types.js';
 import { createRng } from './rng.js';
 import { assignRoles, aliveNames, checkEnd, createState, getPlayer, winnerOf } from './state.js';
-import { CostCapReached, type EngineContext } from './turn.js';
+import { CostCapReached, roundUsd, type EngineContext } from './turn.js';
 import {
   runBanishment,
   runBreakfast,
@@ -88,7 +88,7 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
       reason,
       rounds: state.round,
       survivors: aliveNames(state).map((name) => ({ name, role: getPlayer(state, name).role })),
-      ...(reason === 'cost_cap' && ctx.budget ? { costCap: { maxUsd: ctx.budget.maxUsd, spentUsd: ctx.budget.spentUsd } } : {}),
+      ...(reason === 'cost_cap' && ctx.budget ? { costCap: { maxUsd: ctx.budget.maxUsd, spentUsd: roundUsd(ctx.budget.spentUsd) } } : {}),
     },
   };
 }
