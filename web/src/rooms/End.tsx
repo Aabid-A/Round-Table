@@ -29,7 +29,7 @@ export function End({ me, log, outcome, onLeave }: Props) {
   const reason = r.reason === 'cost_cap' ? "The host's spend cap stopped the game." : (END_REASONS[r.reason] ?? r.reason);
 
   return (
-    <main className="app play" data-testid="room-end">
+    <main className="app play room-end" data-testid="room-end">
       <header className="topbar">
         <h1>{r.winner === null ? 'Game stopped' : WINNER[r.winner]}</h1>
         <span className="muted">
@@ -88,9 +88,9 @@ export function End({ me, log, outcome, onLeave }: Props) {
       <h2>Share it, without spoilers</h2>
       <label className="field">
         This says nothing about who won or who was an AI.
-        <textarea readOnly rows={4} value={post} data-testid="share-text" onFocus={(e) => e.currentTarget.select()} />
+        <textarea readOnly rows={6} value={post} data-testid="share-text" onFocus={(e) => e.currentTarget.select()} />
       </label>
-      <div>
+      <div className="copy-row">
         <button
           type="button"
           className="btn"
