@@ -214,7 +214,21 @@ describe('Session: creating, joining and rejoining', () => {
       expect(saved[0]!.log.seed).toBe(4);
     });
 
-    it('saves an alias game before the guessing, and a failed save is noted by name only and does not stop the game', async () => {
+    it('saves an alias game only once the guessing is over, never before it', async () => {
+      const saved: string[] = [];
+      const s = server(1000, true, async (name) => void saved.push(name));
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4, aliases: true });
+      const code = joinedOf(host.conn).code;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'guess'));
+      expect(saved).toEqual([]); // the log names who was an AI: not written while people are still guessing
+      host.send({ t: 'guess', ai: [] });
+      expect(saved).toEqual([`room-${code}-seed-4`]);
+    });
+
+    it('a failed save is noted by name only and does not stop the game', async () => {
       const s = server(1000, true, async () => {
         throw new Error('disk full: sk-never-in-logs');
       });
@@ -226,6 +240,7 @@ describe('Session: creating, joining and rejoining', () => {
       await waitFor(() => host.conn.sent.some((m) => m.t === 'guess'));
       host.send({ t: 'guess', ai: [] });
       expect(room.phase).toBe('finished');
+      await waitFor(() => s.logged.length > 0); // the failure is reported when the rejected save settles
       expect(s.logged).toEqual(['log save error: Error']);
       expect(s.logged.join()).not.toContain('sk-never');
     });

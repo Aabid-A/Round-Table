@@ -179,7 +179,6 @@ export class Session {
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
-        this.save(room, log);
         if (!room.aliases) return this.finish(room, rt, log, null);
         // Before anyone learns who was who, each person guesses which seats were AIs.
         room.phase = 'guessing';
@@ -203,6 +202,8 @@ export class Session {
   private finish(room: Room, rt: Runtime, log: GameLog, guesses: Guess[] | null): void {
     if (room.phase === 'closed') return;
     rt.outcome = outcomeFor(log, room.people, guesses);
+    // Saved only now: the log names who was an AI and holds every note, so it is not written before the guessing is over.
+    this.save(room, log);
     room.phase = 'finished';
     room.finishedAt = (this.deps.options.now ?? Date.now)();
     for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });

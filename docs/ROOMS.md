@@ -70,8 +70,10 @@ watched the replay.
 
 When a game ends the server saves its log as `<LOG_DIR>/room-<code>-seed-<seed>.json`: the same format the command line saves
 ([LOG.md](LOG.md)), so replay, highlights, cards and stats work on it. In an alias room the seat names are the aliases and the
-people's real names are not in the file. The log is written (through a temporary file and a rename) as soon as the game ends,
-before any guessing, and it has the host's key scrubbed out like everything else.
+people's real names are not in the file. The log is written (through a temporary file and a rename, removed if the write fails) once the game and any
+guessing are over, never before, since it names who was an AI. It has the host's key scrubbed out like everything else.
+Saving is on by default (`games/`); `LOG_DIR=none` turns it off. There is no limit on how many logs pile up: clear the
+folder when you like.
 
 The replay link in the share text is `?log=room-<code>-seed-<seed>` on the page's address. It works where that file is in
 `web/public/games/` (point `LOG_DIR` there, or copy the file). A log holds every private note, so treat the folder as private

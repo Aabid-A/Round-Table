@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -31,6 +31,13 @@ describe('saveLog', () => {
     await saveLog(dir, 'a', log);
     await saveLog(dir, 'a', { ...log, seed: 99 });
     expect(JSON.parse(await readFile(join(dir, 'a.json'), 'utf8')).seed).toBe(99);
+  });
+
+  it('leaves no temporary file behind when the write fails', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'rt-logs-'));
+    await mkdir(join(dir, 'a.json')); // a folder where the file should go, so the final rename fails
+    await expect(saveLog(dir, 'a', log)).rejects.toThrow();
+    expect(await readdir(dir)).toEqual(['a.json']); // only that folder: no .a.json.tmp
   });
 
   it('refuses a name that could leave the folder', async () => {

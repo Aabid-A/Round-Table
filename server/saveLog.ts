@@ -1,4 +1,4 @@
-import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { GameLog } from '../src/engine/types.js';
 
@@ -12,7 +12,12 @@ export async function saveLog(dir: string, name: string, log: GameLog): Promise<
   await mkdir(dir, { recursive: true });
   const path = join(dir, `${name}.json`);
   const temp = join(dir, `.${name}.json.tmp`);
-  await writeFile(temp, `${JSON.stringify(log, null, 2)}\n`);
-  await rename(temp, path);
+  try {
+    await writeFile(temp, `${JSON.stringify(log, null, 2)}\n`);
+    await rename(temp, path);
+  } catch (e) {
+    await rm(temp, { force: true }); // do not leave a half-written file behind
+    throw e;
+  }
   return path;
 }
