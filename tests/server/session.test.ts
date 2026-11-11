@@ -206,6 +206,10 @@ describe('Session: creating, joining and rejoining', () => {
       await vi.advanceTimersByTimeAsync(10_000);
       expect(s.registry.get(code)!.phase).toBe('playing');
       expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'status', 'turn']);
+      // Told the phase the table is in now, not "starting", though no phase change happened since they left.
+      const status = back.conn.sent[1] as { phase: string | null };
+      expect(status.phase).not.toBeNull();
+      expect(status.phase).toBe(s.registry.get(code)!.status);
     });
   });
 });

@@ -202,7 +202,7 @@ export class Session {
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
     else if (room.phase === 'finished' && rt?.log) this.tell({ t: 'finished', log: rt.log, you: seat.name });
     else {
-      this.tell({ t: 'status', phase: null });
+      this.tell({ t: 'status', phase: room.status });
       rt?.seatPlayers.get(seat.name)?.resend();
     }
   }

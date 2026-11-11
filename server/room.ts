@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { AI_NAMES } from '../src/cast.js';
+import type { PublicPhase } from '../src/publicPhase.js';
 import { MAX_HUMANS, type AiSetup, type SeatInfo, type ServerMessage } from './protocol.js';
 
 /** One open connection, as the room sees it. Tests use fakes; the server wraps a WebSocket. */
@@ -24,6 +25,8 @@ const refuse = (error: string): { ok: false; error: string } => ({ ok: false, er
 export class Room {
   readonly seats: Seat[] = [];
   phase: RoomPhase = 'lobby';
+  /** The phase everyone was last told, so a person who comes back mid-phase can be told too. */
+  status: PublicPhase | null = null;
   /** Who made the room (a network address), for the per-address room limit. */
   owner: string | null = null;
   /** When the game ended, for expiry. */
@@ -110,6 +113,12 @@ export class Room {
 
   broadcast(message: ServerMessage): void {
     for (const s of this.seats) s.conn?.send(message);
+  }
+
+  /** Tell everyone the phase has changed (and remember it for anyone who rejoins). */
+  announce(phase: PublicPhase): void {
+    this.status = phase;
+    this.broadcast({ t: 'status', phase });
   }
 
   /** Private to one seat. */
