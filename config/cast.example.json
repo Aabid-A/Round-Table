@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Aria",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-1"
+  },
+  {
+    "name": "Bram",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-2"
+  },
+  {
+    "name": "Cleo",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-3"
+  },
+  {
+    "name": "Dax",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-4"
+  },
+  {
+    "name": "Esme",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-5"
+  },
+  {
+    "name": "Finn",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-6"
+  },
+  {
+    "name": "Gwen",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-7"
+  },
+  {
+    "name": "Hugo",
+    "model": "REPLACE-WITH-OPENROUTER-MODEL-ID-8"
+  }
+]
