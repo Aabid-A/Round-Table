@@ -25,3 +25,8 @@ export function totalCostUsd(log: GameLog): number | null {
   }
   return seen ? total : null;
 }
+
+/** Attempts that reported no usable cost. A cost cap counts these as free. */
+export function countUncostedAttempts(log: GameLog): number {
+  return log.turns.flatMap((t) => t.attempts).filter((a) => a.usage?.costUsd === undefined).length;
+}

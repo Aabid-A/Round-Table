@@ -25,9 +25,12 @@ async function main(): Promise<void> {
     timeoutMs: values['timeout-ms'],
     maxCostUsd: values['max-cost-usd'],
   });
-  const { failed, sawCost } = await runBatch(setup, seeds, values.out as string, console.log);
-  if (setup.maxCostUsd !== undefined && !sawCost) {
-    console.error('warning: no cost was reported, so --max-cost-usd could not apply.');
+  const { failed, sawCost, uncostedAttempts } = await runBatch(setup, seeds, values.out as string, console.log);
+  if (setup.maxCostUsd !== undefined) {
+    if (!sawCost) console.error('warning: no cost was reported, so --max-cost-usd could not apply.');
+    else if (uncostedAttempts > 0) {
+      console.error(`warning: ${uncostedAttempts} attempts reported no cost; --max-cost-usd counted them as free.`);
+    }
   }
   if (failed > 0) process.exit(1);
 }

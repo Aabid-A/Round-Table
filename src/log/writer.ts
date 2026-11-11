@@ -1,6 +1,12 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { GameLog } from '../engine/types.js';
+
+/** Create the folder and check it is writable, so a long run does not discover a bad path at the end. */
+export function ensureWritableDir(dir: string): void {
+  mkdirSync(dir, { recursive: true });
+  accessSync(dir, constants.W_OK);
+}
 
 export function serializeLog(log: GameLog): string {
   return `${JSON.stringify(log, null, 2)}\n`;

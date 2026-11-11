@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -23,6 +23,17 @@ describe('runBatch', () => {
       expect(line).toMatch(new RegExp(`^seed ${seeds[i]} \\| (traitor|faithful) wins \\| \\w+ \\| rounds \\d+ \\| fallbacks \\d+ \\| .*mock-seed-${seeds[i]}\\.json$`));
       expect(readGameLog(line.split(' | ').pop() as string).seed).toBe(seeds[i]);
     }
+  });
+
+  it('fails before the first game when the output folder is unusable', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rt-batch-'));
+    const file = join(dir, 'not-a-folder');
+    writeFileSync(file, 'x');
+    let played = 0;
+    const setup = mockSetup();
+    const counting: Setup = { ...setup, makePlayers: (seed) => { played++; return setup.makePlayers(seed); } };
+    await expect(runBatch(counting, [1, 2], join(file, 'games'), () => {})).rejects.toThrow();
+    expect(played).toBe(0);
   });
 
   it('reports a game that throws and keeps going', async () => {

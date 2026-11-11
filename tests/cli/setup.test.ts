@@ -52,6 +52,13 @@ describe('--max-cost-usd', () => {
     expect(lines.every((l) => l.includes('no winner | cost_cap'))).toBe(true);
   });
 
+  it('counts attempts that reported no cost', async () => {
+    const result = await runBatch(costlySetup('1000'), [1], mkdtempSync(join(tmpdir(), 'rt-cap-')), () => {});
+    expect(result.uncostedAttempts).toBe(0);
+    const none = await runBatch(prepareSetup({ ...opts, maxCostUsd: '1' }), [1], mkdtempSync(join(tmpdir(), 'rt-cap-')), () => {});
+    expect(none.uncostedAttempts).toBeGreaterThan(20);
+  });
+
   it('reports sawCost false when players report no cost', async () => {
     const result = await runBatch(prepareSetup({ ...opts, maxCostUsd: '1' }), [1], mkdtempSync(join(tmpdir(), 'rt-cap-')), () => {});
     expect(result.sawCost).toBe(false);
