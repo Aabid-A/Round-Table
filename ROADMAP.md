@@ -57,7 +57,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     they privately wrote. This is the shot the show is built on.
   - Playwright tests for both aspect ratios and a range. Run `/design-review`.
 
-- [ ] **M5. Highlight finder.** `npm run highlights -- <log>` lists the best
+- [x] **M5. Highlight finder.** `npm run highlights -- <log>` lists the best
   moments, ranked, each with a recording-mode URL.
   - Deterministic rules, no model calls. At least: a traitor whispers to,
     defends or votes to save the player they targeted at night; a traitor
