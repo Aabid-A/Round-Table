@@ -13,7 +13,17 @@ not imply publishing.
 1. Confirm you're on your task branch, not `main` (`git branch --show-current`).
 2. Review your own diff (`git diff origin/main...`). Remove debug code and
    unrelated edits.
-3. Commit with a clear message. Plain words, imperative, explain why.
+3. **Commit in small steps** as you build, not once at the end. Each commit
+   is one logical change a reader can follow on its own: a type, a function
+   with its tests, a CLI flag, a docs update, a review fix. Rules:
+   - Typecheck and tests pass at every commit.
+   - Tests go in the same commit as the code they cover.
+   - Subject: imperative, under 70 characters, starting with the area, e.g.
+     `engine: break vote ties with a revote`. Body: why, in a line or two.
+   - Never mix a refactor, a feature and formatting in one commit.
+   - Review fixes are new commits that name the finding. Don't squash or
+     amend pushed commits; the history is how the owner follows the work.
+   - A milestone is usually 5 to 20 commits. One giant commit is a defect.
 4. `git fetch origin && git rebase origin/main`, then rerun the checks.
 5. `git push -u origin <branch>`. After a rebase of an already-pushed branch,
    `--force-with-lease` only.
