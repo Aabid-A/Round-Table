@@ -41,7 +41,8 @@ const SEAT_GONE = ['That room has closed.', 'That seat is not at this table.'];
 export class RoomConnection {
   private socket: SocketLike | null = null;
   private open = false;
-  private queue: string[] = [];
+  /** Messages waiting for the socket to open. `secret` marks the one that carries the host's key. */
+  private queue: { text: string; secret: boolean }[] = [];
   private attempts = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private done = false;
@@ -59,7 +60,7 @@ export class RoomConnection {
     const text = JSON.stringify(message);
     if (this.socket && this.open) this.socket.send(text);
     else {
-      this.queue.push(text);
+      this.queue.push({ text, secret: (message as { t?: unknown }).t === 'create' });
       this.connect();
     }
   }
@@ -112,7 +113,7 @@ export class RoomConnection {
       const wasRetrying = this.attempts > 0;
       this.attempts = 0;
       if (wasRetrying) this.opts.onEvent({ kind: 'online' });
-      for (const text of this.queue.splice(0)) socket.send(text);
+      for (const waiting of this.queue.splice(0)) socket.send(waiting.text);
     };
     socket.onmessage = (e) => this.onData(e.data);
     socket.onclose = () => {
@@ -120,11 +121,14 @@ export class RoomConnection {
       this.socket = null;
       this.open = false;
       if (this.done) return;
-      if (!opened && this.queue.length > 0) {
-        // Never connected, so what was waiting (a create message holds the host's key) was not sent. Drop it rather than keep
-        // the key in memory for a later send to flush, and say so: the person has to enter it again.
-        this.queue = [];
-        this.opts.onEvent({ kind: 'message', msg: { t: 'error', message: 'Your request was not sent because the room server could not be reached. Enter it again.' } });
+      if (!opened) {
+        // Never connected. A waiting create message holds the host's key: drop it rather than keep it in memory for a later send to
+        // flush, and say so, since the person has to enter it again. Rejoin and answer messages are kept for the next try.
+        const before = this.queue.length;
+        this.queue = this.queue.filter((waiting) => !waiting.secret);
+        if (this.queue.length < before) {
+          this.opts.onEvent({ kind: 'message', msg: { t: 'error', message: 'Your request was not sent because the room server could not be reached. Enter it again.' } });
+        }
       }
       this.opts.onEvent({ kind: 'offline' });
       this.retry();

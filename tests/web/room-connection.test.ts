@@ -63,6 +63,22 @@ describe('RoomConnection', () => {
     expect(sent).not.toContain('create');
   });
 
+  it('keeps a rejoin and an answer for the next try when a reconnect attempt fails, and shows no error for them', () => {
+    saved = { code: 'AB2CD', token: 'tok' };
+    conn.send({ t: 'start' });
+    sockets[0]!.open();
+    sockets[0]!.drop(); // offline: a retry is scheduled
+    conn.send({ t: 'answer', turn: 3, answer: { speech: '', note: '', choice: 'Aria', message: '' } }); // typed while offline
+    vi.advanceTimersByTime(100); // the retry sends a rejoin into a new socket...
+    sockets[1]!.drop(); // ...which fails to open
+    expect(events.filter((e) => e.kind === 'message' && e.msg.t === 'error')).toEqual([]); // nothing the person entered was lost
+    vi.advanceTimersByTime(200); // the next attempt
+    sockets[2]!.open();
+    const sent = sockets[2]!.sent.map((s) => JSON.parse(s).t);
+    expect(sent).toContain('rejoin');
+    expect(sent).toContain('answer');
+  });
+
   it('saves the seat when the server seats the person, and never the OpenRouter key', () => {
     conn.send({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-secret', models: ['a/b'], maxCostUsd: 1 });
     sockets[0]!.open();
