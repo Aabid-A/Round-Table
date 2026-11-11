@@ -67,6 +67,16 @@ describe('Session: creating, joining and rejoining', () => {
     expect(errors).toEqual(['No room has that code. Check it and try again.', 'quinn is taken at this table. Choose another name.', 'You already have a seat.', 'Messages must be JSON.', 'You already have a seat.']);
   });
 
+  it('shows the others when someone in the lobby goes offline', () => {
+    const s = server();
+    const host = s.open();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock' });
+    const friend = s.open();
+    friend.send({ t: 'join', code: joinedOf(host.conn).code, name: 'Rae' });
+    friend.session.disconnect();
+    expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', seats: [{ name: 'Quinn', connected: true }, { name: 'Rae', connected: false }] });
+  });
+
   it('keeps a seat when the connection drops, and returns it by token', () => {
     const s = server();
     const host = s.open();

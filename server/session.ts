@@ -67,6 +67,7 @@ export class Session {
     const { room } = this;
     if (!room) return;
     room.detach(this.conn);
+    if (room.phase === 'lobby') room.broadcast(room.lobbyMessage()); // so friends see who is offline
     // A game with nobody watching still spends the host's money on the AIs, so it does not run on forever.
     const rt = this.deps.runtimes.get(room.code);
     if (rt && room.phase === 'playing' && room.seats.every((s) => s.conn === null) && !rt.abandonTimer) {
