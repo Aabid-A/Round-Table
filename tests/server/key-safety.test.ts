@@ -107,16 +107,17 @@ describe('the host key never leaves the room', () => {
     const host = await connect();
     host.send(createRoom('Quinn'));
     const { code } = await host.next('joined');
+    const room = server.registry.get(code)!;
     host.send({ t: 'start' }); // Quinn's first turn waits; then Quinn leaves
     await host.next('turn');
     host.close();
-    await waitFor(() => server.registry.get(code)?.phase === 'closed', 5000);
+    await waitFor(() => room.phase === 'closed', 5000);
     const callsAtClose = calls.length;
     await new Promise((r) => setTimeout(r, 100));
     expect(calls.length).toBe(callsAtClose); // no AI call after the room closed
     expect(everything()).not.toContain(KEY);
     expect(everything()).not.toContain('FAKEKEY');
-    expect(server.registry.get(code)!.takeSetup()).toEqual({ mode: 'mock' });
+    expect(room.takeSetup()).toEqual({ mode: 'mock' }); // the key is gone from the closed room
   });
 
   it('is refused with an error that does not repeat it when it is malformed', async () => {

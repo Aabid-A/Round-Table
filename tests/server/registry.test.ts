@@ -62,4 +62,29 @@ describe('Registry', () => {
     registry.sweep();
     expect(r.value.takeSetup()).toEqual({ mode: 'mock' });
   });
+
+  it('forgets a room that closed, so its code is unknown and it stops counting against the limit', () => {
+    let n = 0;
+    const registry = new Registry({ makeCode: () => `R${String(n++).padStart(4, '2')}` });
+    const rooms = Array.from({ length: LIMITS.rooms }, () => registry.create(mock));
+    const first = rooms[0];
+    if (!first?.ok) throw new Error('create');
+    expect(registry.create(mock).ok).toBe(false);
+    first.value.close('everyone left');
+    expect(registry.get(first.value.code)).toBeUndefined();
+    expect(registry.create(mock).ok).toBe(true); // there is space again
+    expect(registry.size).toBe(LIMITS.rooms);
+  });
+
+  it('sweep removes closed rooms and does not announce a second close', () => {
+    const registry = new Registry();
+    const r = registry.create(mock);
+    if (!r.ok) throw new Error('create');
+    const conn = new FakeConn();
+    r.value.join('Quinn', conn);
+    r.value.close('everyone left');
+    expect(registry.sweep()).toBe(1);
+    expect(registry.size).toBe(0);
+    expect(conn.sent.filter((m) => m.t === 'closed')).toEqual([{ t: 'closed', reason: 'everyone left' }]);
+  });
 });

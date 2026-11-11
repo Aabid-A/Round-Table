@@ -173,11 +173,13 @@ describe('Session: creating, joining and rejoining', () => {
 
     it('closes the room and stops the game after the grace period', async () => {
       const { s, host, code } = startedRoom();
+      const room = s.registry.get(code)!;
       host.session.disconnect();
       await vi.advanceTimersByTimeAsync(4999);
-      expect(s.registry.get(code)!.phase).toBe('playing');
+      expect(room.phase).toBe('playing');
       await vi.advanceTimersByTimeAsync(1);
-      expect(s.registry.get(code)!.phase).toBe('closed');
+      expect(room.phase).toBe('closed');
+      expect(s.registry.get(code)).toBeUndefined(); // a closed room is forgotten
       expect(s.runtimes.has(code)).toBe(false);
     });
 

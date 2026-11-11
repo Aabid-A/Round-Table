@@ -38,19 +38,24 @@ export class Registry {
     return { ok: true, value: room };
   }
 
+  /** The live room with this code. A room that closed (everyone left, or the game failed) is forgotten here. */
   get(code: string): Room | undefined {
-    return this.rooms.get(code);
+    const room = this.rooms.get(code);
+    if (room?.phase === 'closed') {
+      this.rooms.delete(code);
+      return undefined;
+    }
+    return room;
   }
 
-  /** Close and remove rooms older than the room lifetime, whatever state they are in. Returns how many went. */
+  /** Remove rooms that closed, and close and remove rooms older than the room lifetime. Returns how many were removed. */
   sweep(): number {
     let removed = 0;
     for (const [code, room] of this.rooms) {
-      if (this.now() - room.createdAt >= LIMITS.roomTtlMs) {
-        room.close('This room expired.');
-        this.rooms.delete(code);
-        removed++;
-      }
+      if (room.phase !== 'closed' && this.now() - room.createdAt < LIMITS.roomTtlMs) continue;
+      room.close('This room expired.'); // does nothing for a room that already closed
+      this.rooms.delete(code);
+      removed++;
     }
     return removed;
   }
