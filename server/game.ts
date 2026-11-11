@@ -18,6 +18,8 @@ export interface RunRoomOptions {
   fetchImpl?: typeof fetch;
   /** How long one AI call may take. */
   aiTimeoutMs?: number;
+  /** Aborting cancels AI calls in flight and fails every later turn at once, so a closed room stops spending. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -35,6 +37,11 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   );
   const aiCast = cast.filter((c) => c.model !== HUMAN_MODEL);
 
+  const { signal } = opts;
+  const baseFetch = opts.fetchImpl ?? fetch;
+  const fetchImpl: typeof fetch = signal
+    ? ((url: string, init?: RequestInit) => baseFetch(url, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, signal]) : signal })) as typeof fetch
+    : baseFetch;
   const base: Record<string, Player> =
     setup.mode === 'mock'
       ? createMockPlayers(aiCast, room.seed)
@@ -44,7 +51,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
             createOpenRouterPlayer({
               model: c.model,
               apiKey: setup.key,
-              ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
+              fetchImpl,
               ...(opts.aiTimeoutMs !== undefined ? { timeoutMs: opts.aiTimeoutMs } : {}),
             }),
           ]),
@@ -60,6 +67,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   for (const [name, inner] of Object.entries(base)) {
     players[name] = {
       respond: async (req) => {
+        if (signal?.aborted) throw new Error('the room closed');
         room.broadcast({ t: 'status', phase: req.phase });
         try {
           return await inner.respond(req);

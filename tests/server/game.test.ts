@@ -35,4 +35,25 @@ describe('runRoomGame', () => {
     const { room } = autoRoom(['Quinn']);
     await expect(runRoomGame(room, { seatPlayers: new Map() })).rejects.toThrow('no connection handler for Quinn');
   });
+
+  it('stops AI calls in flight and fails later turns at once when the signal aborts', async () => {
+    const { room, seatPlayers } = autoRoom(['Quinn'], { mode: 'openrouter', key: 'sk-test-abort', models: ['a/b'], maxCostUsd: 5 });
+    const controller = new AbortController();
+    let calls = 0;
+    // Never answers; ends only when its request is aborted.
+    const fetchImpl = ((_url: string, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        calls++;
+        init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+      })) as unknown as typeof fetch;
+    const game = runRoomGame(room, { seatPlayers, fetchImpl, signal: controller.signal });
+    await new Promise((r) => setTimeout(r, 50));
+    controller.abort();
+    const log = await game;
+    const callsAtAbort = calls;
+    expect(callsAtAbort).toBeGreaterThan(0);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(calls).toBe(callsAtAbort);
+    expect(log.turns.some((t) => t.fallback)).toBe(true);
+  });
 });
