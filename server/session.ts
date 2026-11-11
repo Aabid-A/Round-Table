@@ -97,6 +97,8 @@ export class Session {
         return this.rejoin(msg.code, msg.token);
       case 'start':
         return this.start();
+      case 'leave':
+        return this.leave();
       case 'answer':
         return this.answer(msg.turn, msg.answer);
     }
@@ -174,6 +176,18 @@ export class Session {
         room.close('The game stopped because of an error.');
       },
     );
+  }
+
+  /** Leave on purpose. In the lobby the seat goes (and the room, if it is the host's); in a game the seat stays and plays on with fallbacks. */
+  private leave(): void {
+    const { room, seat } = this;
+    if (!room || !seat || room.phase !== 'lobby') return;
+    if (seat.host) return room.close('The host left the room.');
+    room.removeSeat(seat.name);
+    this.deps.runtimes.get(room.code)?.seatPlayers.delete(seat.name);
+    this.room = null;
+    this.seat = null;
+    room.broadcast(room.lobbyMessage());
   }
 
   private answer(turn: number, answer: HumanAnswer): void {

@@ -34,8 +34,8 @@ export const LIMITS = {
   roomTtlMs: 2 * 60 * 60 * 1000,
   /** A finished room is deleted this long after its game ended (long enough to reload and see the result). */
   finishedTtlMs: 15 * 60 * 1000,
-  /** A lobby with nobody connected is closed after this long, so abandoned rooms do not hold a person's room limit for hours. */
-  emptyLobbyMs: 2 * 60 * 1000,
+  /** A lobby with nobody connected is closed after this long (long enough to switch apps to share the code), so abandoned rooms do not hold a person's room limit for hours. */
+  emptyLobbyMs: 10 * 60 * 1000,
   /** How long a person has for one turn. */
   turnMs: 90_000,
 } as const;
@@ -53,6 +53,7 @@ export type ClientMessage =
   | { t: 'join'; code: string; name: string }
   | { t: 'rejoin'; code: string; token: string }
   | { t: 'start' }
+  | { t: 'leave' }
   | { t: 'answer'; turn: number; answer: HumanAnswer };
 
 export type Parsed = { ok: true; msg: ClientMessage } | { ok: false; error: string };
@@ -111,6 +112,8 @@ export function parseClientMessage(text: string): Parsed {
     }
     case 'start':
       return { ok: true, msg: { t: 'start' } };
+    case 'leave':
+      return { ok: true, msg: { t: 'leave' } };
     case 'answer': {
       const a = raw.answer;
       if (typeof raw.turn !== 'number' || !Number.isInteger(raw.turn) || !isObject(a)) return fail('That answer is incomplete.');

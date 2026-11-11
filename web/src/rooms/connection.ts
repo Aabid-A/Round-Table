@@ -75,6 +75,8 @@ export class RoomConnection {
 
   /** The person leaves: forget the seat and close the connection. */
   leave(): void {
+    // Tell the server, so a lobby seat (or the host's room) is freed at once rather than after the empty-lobby timeout.
+    if (this.socket && this.open) this.socket.send(JSON.stringify({ t: 'leave' }));
     this.done = true;
     this.opts.store.clear();
     this.queue = [];

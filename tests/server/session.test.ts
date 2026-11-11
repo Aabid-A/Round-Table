@@ -120,6 +120,35 @@ describe('Session: creating, joining and rejoining', () => {
     expect(new Set(picked).size).toBeGreaterThan(1); // the server chose its own, differently each time
   });
 
+  it('frees a seat when a guest leaves the lobby, and closes the room when the host does', () => {
+    const s = server();
+    const host = s.open();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock' });
+    const code = joinedOf(host.conn).code;
+    const guest = s.open();
+    guest.send({ t: 'join', code, name: 'Rae' });
+    guest.send({ t: 'leave' });
+    expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', seats: [{ name: 'Quinn' }], aiSeats: 7 });
+    const again = s.open();
+    again.send({ t: 'join', code, name: 'Rae' }); // the name is free again
+    expect(joinedOf(again.conn)).toMatchObject({ you: 'Rae' });
+    host.send({ t: 'leave' });
+    expect(again.conn.sent.at(-1)).toEqual({ t: 'closed', reason: 'The host left the room.' });
+    expect(s.registry.get(code)).toBeUndefined();
+  });
+
+  it('ignores leave once the game has started: the seat stays and plays on', () => {
+    const s = server(1_000_000);
+    const host = s.open();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+    const code = joinedOf(host.conn).code;
+    host.send({ t: 'start' });
+    host.send({ t: 'leave' });
+    const room = s.registry.get(code)!;
+    expect(room.phase).toBe('playing');
+    expect(room.seats.map((x) => x.name)).toEqual(['Quinn']);
+  });
+
   it('forgets a room when it closes', () => {
     const s = server();
     const host = s.open();

@@ -44,6 +44,16 @@ describe('Room seats', () => {
     expect(room.rejoin('00000000-0000-0000-0000-000000000000', new FakeConn())).toEqual({ ok: false, error: 'That seat is not at this table.' });
   });
 
+  it('removes a seat when someone leaves the lobby, freeing the name and the place', () => {
+    const room = newRoom();
+    room.join('Quinn', new FakeConn());
+    room.join('Rae', new FakeConn());
+    room.removeSeat('Rae');
+    expect(room.seats.map((s) => s.name)).toEqual(['Quinn']);
+    expect(room.aiSeats).toBe(7);
+    expect(room.join('Rae', new FakeConn()).ok).toBe(true);
+  });
+
   it('sends public messages to everyone and private ones to one seat', () => {
     const room = newRoom();
     const a = new FakeConn();

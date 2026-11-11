@@ -94,6 +94,12 @@ export class Room {
     return { ok: true, value: seat };
   }
 
+  /** A person leaves the lobby for good: their seat goes. */
+  removeSeat(name: string): void {
+    const i = this.seats.findIndex((s) => s.name === name);
+    if (i !== -1) this.seats.splice(i, 1);
+  }
+
   /** A connection went away. The seat stays, so the person can come back. */
   detach(conn: Conn): void {
     for (const s of this.seats) if (s.conn === conn) s.conn = null;

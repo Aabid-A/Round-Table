@@ -162,6 +162,7 @@ describe('RoomConnection', () => {
     conn.send({ t: 'start' });
     sockets[0]!.open();
     conn.leave();
+    expect(sockets[0]!.sent.map((s) => JSON.parse(s).t)).toContain('leave'); // so the server frees the seat at once
     expect(sockets[0]!.closed).toBe(true);
     expect(saved).toBeNull();
     expect(events.at(-1)).toEqual({ kind: 'leave' });

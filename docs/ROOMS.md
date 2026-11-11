@@ -87,7 +87,7 @@ could guess which seats are people.
 | Connections at once | 400, and 20 per network address |
 | Open rooms per network address | 3 (finished rooms do not count) |
 | Room lifetime | 2 hours from creation, or 15 minutes after the game ended |
-| Empty lobby | closed after 2 minutes with nobody connected |
+| Empty lobby | closed after 10 minutes with nobody connected (leaving on purpose frees it at once) |
 | People per room | 8 |
 | Text | names 20 characters; speech 600; a message or a note 300 |
 
@@ -105,6 +105,7 @@ JSON text over a WebSocket. The types are in [`server/protocol.ts`](../server/pr
 | `join` | Take a seat by room code and name |
 | `rejoin` | Take a seat back by room code and seat token |
 | `start` | Host only: start the game |
+| `leave` | Leave the lobby on purpose (the host leaving closes the room); in a game it does nothing and the seat plays on |
 | `answer` | Answer the turn with this number |
 
 | From the server | Meaning |

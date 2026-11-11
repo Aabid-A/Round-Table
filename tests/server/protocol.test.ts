@@ -13,6 +13,7 @@ describe('parseClientMessage', () => {
     expect(ok({ t: 'create', name: 'Quinn', mode: 'mock', seed: 7 })).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock', seed: 7 } });
     expect(ok({ t: 'join', code: 'ab2cd', name: 'Rae' })).toEqual({ ok: true, msg: { t: 'join', code: 'AB2CD', name: 'Rae' } });
     expect(ok({ t: 'start' })).toEqual({ ok: true, msg: { t: 'start' } });
+    expect(ok({ t: 'leave' })).toEqual({ ok: true, msg: { t: 'leave' } });
     const token = '123e4567-e89b-12d3-a456-426614174000';
     expect(ok({ t: 'rejoin', code: 'AB2CD', token })).toEqual({ ok: true, msg: { t: 'rejoin', code: 'AB2CD', token } });
     expect(ok({ t: 'answer', turn: 3, answer: { speech: 'hi', note: 'n', choice: 'Bram', message: 'm' } })).toEqual({
