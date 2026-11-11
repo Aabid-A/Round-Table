@@ -206,7 +206,23 @@ http://localhost:5173/?mode=play&seed=42     the same game again (same seats and
   You can also download the whole game log; your seat has `model: "human"` in it
   ([docs/LOG.md](docs/LOG.md)), so replay, highlights, cards and stats work on it.
 
-Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
+### Play with friends (rooms)
+
+`npm run rooms` starts a small WebSocket server (port 8787) that runs a game for up to eight people, with
+AIs in the empty seats. One person makes a room and shares the code or invite link; the others open it,
+pick a name and take a seat; the host starts. Open `http://localhost:5173/?mode=room` (after `npm run web`).
+
+```text
+http://localhost:5173/?mode=room                     make a room, or join with a code
+http://localhost:5173/?mode=room&room=AB2CD          the invite link: join room AB2CD
+```
+
+Turns have a clock (a missed turn gets the engine's fallback), reloading takes your seat back, and nobody
+is ever sent another person's role, notes or whispers before the game ends. For real models the host's
+OpenRouter key is held in memory for that room only and never logged or sent to anyone. Settings, limits
+and the key rules: [docs/ROOMS.md](docs/ROOMS.md).
+
+Browser tests: `npm run test:e2e` (Playwright, page on port 5183 and a room server on 8788). On your own machine run
 `npx playwright install chromium` once first.
 
 ## Work

@@ -1,0 +1,109 @@
+import { describe, expect, it } from 'vitest';
+import { Room } from '../../server/room.js';
+import { FakeConn } from './helpers.js';
+
+const newRoom = () => new Room('AB2CD', { mode: 'mock' }, 1, 0);
+
+describe('Room seats', () => {
+  it('makes the first person the host and gives each seat its own token', () => {
+    const room = newRoom();
+    const a = room.join('Quinn', new FakeConn());
+    const b = room.join('Rae', new FakeConn());
+    if (!a.ok || !b.ok) throw new Error('joins should work');
+    expect([a.value.host, b.value.host]).toEqual([true, false]);
+    expect(a.value.token).not.toBe(b.value.token);
+    expect(room.aiSeats).toBe(6);
+  });
+
+  it('refuses a taken name in any case, an AI name, a ninth person and a join after the start', () => {
+    const room = newRoom();
+    room.join('Quinn', new FakeConn());
+    expect(room.join('QUINN', new FakeConn())).toEqual({ ok: false, error: 'QUINN is taken at this table. Choose another name.' });
+    expect(room.join('aria', new FakeConn()).ok).toBe(false);
+    for (const n of ['P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8']) expect(room.join(n, new FakeConn()).ok).toBe(true);
+    expect(room.join('P9', new FakeConn())).toEqual({ ok: false, error: 'That room is full.' });
+    const other = newRoom();
+    other.join('Quinn', new FakeConn());
+    other.phase = 'playing';
+    expect(other.join('Late', new FakeConn())).toEqual({ ok: false, error: 'That game has already started.' });
+  });
+
+  it('gives a seat back by token and closes the connection it replaces', () => {
+    const room = newRoom();
+    const first = new FakeConn();
+    const joined = room.join('Quinn', first);
+    if (!joined.ok) throw new Error('join');
+    room.detach(first);
+    expect(room.seatInfo()).toEqual([{ name: 'Quinn', connected: false, host: true }]);
+    const second = new FakeConn();
+    expect(room.rejoin(joined.value.token, second).ok).toBe(true);
+    const third = new FakeConn();
+    room.rejoin(joined.value.token, third);
+    expect(second.closed).toBe(true);
+    expect(room.seatOf(third)?.name).toBe('Quinn');
+    expect(room.rejoin('00000000-0000-0000-0000-000000000000', new FakeConn())).toEqual({ ok: false, error: 'That seat is not at this table.' });
+  });
+
+  it('removes a seat when someone leaves the lobby, freeing the name and the place', () => {
+    const room = newRoom();
+    room.join('Quinn', new FakeConn());
+    room.join('Rae', new FakeConn());
+    room.removeSeat('Rae');
+    expect(room.seats.map((s) => s.name)).toEqual(['Quinn']);
+    expect(room.aiSeats).toBe(7);
+    expect(room.join('Rae', new FakeConn()).ok).toBe(true);
+  });
+
+  it('sends public messages to everyone and private ones to one seat', () => {
+    const room = newRoom();
+    const a = new FakeConn();
+    const b = new FakeConn();
+    room.join('Quinn', a);
+    room.join('Rae', b);
+    room.broadcast({ t: 'status', phase: 'night' });
+    room.sendTo('rae', { t: 'error', message: 'just you' });
+    expect(a.sent).toEqual([{ t: 'status', phase: 'night' }]);
+    expect(b.sent.map((m) => m.t)).toEqual(['status', 'error']);
+  });
+
+  it('lets only the host start, once', () => {
+    const room = newRoom();
+    const host = room.join('Quinn', new FakeConn());
+    const guest = room.join('Rae', new FakeConn());
+    if (!host.ok || !guest.ok) throw new Error('join');
+    expect(room.startProblem(guest.value)).toBe('Only the host can start the game.');
+    expect(room.startProblem(host.value)).toBeNull();
+    room.phase = 'playing';
+    expect(room.startProblem(host.value)).toBe('The game has already started.');
+  });
+
+  it('keeps the key out of JSON and console output, and forgets it on request', () => {
+    const room = new Room('AB2CD', { mode: 'openrouter', key: 'sk-secret-123', models: ['a/b'], maxCostUsd: 1 }, 1, 0);
+    expect(JSON.stringify(room)).not.toContain('sk-secret');
+    expect(JSON.stringify(Object.entries(room))).not.toContain('sk-secret');
+    expect(room.takeSetup()).toMatchObject({ mode: 'openrouter', key: 'sk-secret-123' });
+    room.dropKey();
+    expect(room.takeSetup()).toEqual({ mode: 'mock' });
+  });
+
+  it('closes everyone and drops the key when it closes', () => {
+    const room = new Room('AB2CD', { mode: 'openrouter', key: 'sk-secret-123', models: ['a/b'], maxCostUsd: 1 }, 1, 0);
+    const a = new FakeConn();
+    room.join('Quinn', a);
+    room.close('expired');
+    expect(a.sent.at(-1)).toEqual({ t: 'closed', reason: 'expired' });
+    expect(a.closed).toBe(true);
+    expect(room.takeSetup()).toEqual({ mode: 'mock' });
+    expect(room.rejoin('x', new FakeConn())).toEqual({ ok: false, error: 'That room has closed.' });
+  });
+
+  it('runs close hooks once, and at once when added to a closed room', () => {
+    const room = newRoom();
+    const calls: string[] = [];
+    room.onClose(() => calls.push('first'));
+    room.close('done');
+    room.close('again');
+    room.onClose(() => calls.push('late'));
+    expect(calls).toEqual(['first', 'late']);
+  });
+});

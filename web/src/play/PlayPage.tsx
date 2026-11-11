@@ -7,6 +7,8 @@ import { HumanForm } from './HumanForm.js';
 import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
 import { aiFallbacks, notesAbout, type NoteAboutYou } from './notes.js';
+import { saveBlob } from '../download.js';
+import { END_REASONS, WINNER } from '../result.js';
 import { seedFromSearch } from './params.js';
 import { nameProblem, parseModels, runSolo, type SoloSetup } from './solo.js';
 
@@ -24,15 +26,7 @@ interface Pending {
 
 const NOTES_SHOWN = 6;
 
-const WINNER = { traitor: 'The traitors win', faithful: 'The faithfuls win' } as const;
-const REASONS: Record<string, string> = {
-  no_traitors: 'No traitors are left.',
-  no_faithfuls: 'No faithfuls are left.',
-  two_remaining: 'Two players remain.',
-  endgame_vote: 'The survivors voted to end the game.',
-  max_rounds: 'The last round was played.',
-  cost_cap: 'The game was stopped by your spend cap.',
-};
+const REASONS: Record<string, string> = { ...END_REASONS, cost_cap: 'The game was stopped by your spend cap.' };
 
 /** ?mode=play: take a seat at the table against seven AIs, in this tab. */
 export function PlayPage() {
@@ -228,24 +222,16 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
   const fb = useMemo(() => aiFallbacks(log, human), [log, human]);
   const shown = showAll ? notes : notes.slice(0, NOTES_SHOWN);
 
-  const save = (blob: Blob, filename: string): void => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
   const card = async (n: NoteAboutYou): Promise<void> => {
     try {
-      save(await noteCardPng(n, human), `round-table-${n.player}-round-${n.round}.png`);
+      saveBlob(await noteCardPng(n, human), `round-table-${n.player}-round-${n.round}.png`);
       setNote('Card saved.');
     } catch (e) {
       setNote(e instanceof Error ? e.message : 'Could not make the card.');
     }
   };
   const download = (): void => {
-    save(new Blob([`${JSON.stringify(log, null, 2)}\n`], { type: 'application/json' }), `round-table-solo-seed-${log.seed}.json`);
+    saveBlob(new Blob([`${JSON.stringify(log, null, 2)}\n`], { type: 'application/json' }), `round-table-solo-seed-${log.seed}.json`);
     setNote('Log saved.');
   };
 

@@ -1,19 +1,7 @@
-import type { Player, PromptRequest } from '../../../src/players/player.js';
 import type { Phase } from '../../../src/types.js';
+import type { HumanAnswer } from '../../../src/players/human.js';
 
-/** What the person filled in for one turn. */
-export interface HumanAnswer {
-  /** Said out loud (the round table needs it; other phases ignore it). */
-  speech: string;
-  /** The person's private note for viewers. Never shown to the AIs. */
-  note: string;
-  /** The picked option, or null for "none" where a phase allows it. */
-  choice: string | null;
-  /** A whisper's message, or the reason for a suspect. */
-  message: string;
-}
-
-export const emptyAnswer = (): HumanAnswer => ({ speech: '', note: '', choice: null, message: '' });
+export { buildHumanReply, createHumanPlayer, emptyAnswer, type HumanAnswer } from '../../../src/players/human.js';
 
 /** What the form for a phase asks. */
 export interface FormSpec {
@@ -76,27 +64,6 @@ export function isComplete(spec: FormSpec, a: HumanAnswer): boolean {
   return true;
 }
 
-/** The reply the engine reads: the same JSON a model would send. */
-export function buildHumanReply(phase: Phase, a: HumanAnswer): string {
-  const act = (action: unknown): string => JSON.stringify({ speech: phase === 'round_table' ? a.speech : '', private_notes: a.note, action });
-  switch (phase) {
-    case 'night':
-    case 'vote':
-    case 'revote':
-      return act({ target: a.choice });
-    case 'round_table':
-      return act({ suspect: a.choice, reason: a.message });
-    case 'whispers':
-      return act(a.choice === null ? { to: null } : { to: a.choice, message: a.message });
-    case 'recruit_choose':
-      return act({ target: a.choice });
-    case 'recruit_respond':
-      return act({ accept: a.choice === 'accept' });
-    case 'endgame_vote':
-      return act({ choice: a.choice });
-  }
-}
-
 /**
  * Split a model prompt for a person: what you know so far, and the task, without the lines that explain the
  * JSON format to a model.
@@ -110,13 +77,4 @@ export function splitPrompt(user: string): { context: string; task: string } {
     .join('\n')
     .trim();
   return { context: parts.join('\n\n').trim(), task };
-}
-
-/** A Player whose answers come from a person, through `ask` (a form on the page). */
-export function createHumanPlayer(ask: (req: PromptRequest) => Promise<HumanAnswer>): Player {
-  return {
-    async respond(req: PromptRequest): Promise<string> {
-      return buildHumanReply(req.phase, await ask(req));
-    },
-  };
 }
