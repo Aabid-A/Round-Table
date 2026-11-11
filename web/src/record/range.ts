@@ -7,7 +7,7 @@ import type { Step } from '../replay/timeline.js';
  */
 export function stepsForRange(steps: Step[], from: number | null, to: number | null): Step[] {
   if (from === null && to === null) return steps;
-  const lo = from ?? 0;
+  const lo = from ?? -1; // -1 keeps events that happen before the first turn
   const hi = to ?? Number.POSITIVE_INFINITY;
   const lastTurn = steps.reduce((m, s) => (s.kind === 'turn' ? Math.max(m, s.turn.id) : m), -1);
   return steps.filter((s) => {

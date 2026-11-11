@@ -47,4 +47,12 @@ describe('stepsForRange', () => {
     expect(stepsForRange(steps, 500, 600)).toEqual([]);
     expect(stepsForRange(steps, 500, null)).toEqual([]);
   });
+
+  it('keeps events that happen before the first turn when the clip has an open start', () => {
+    const early = { kind: 'event', event: { type: 'breakfast', round: 1, afterTurn: -1, visibleTo: 'all', victim: null, role: null }, section: { round: 1, title: 'Breakfast' } } as const;
+    const withEarly = [early, ...steps];
+    expect(stepsForRange(withEarly, null, 3)[0]).toBe(early);
+    expect(stepsForRange(withEarly, null, null)[0]).toBe(early);
+    expect(stepsForRange(withEarly, 0, 3)[0]).not.toBe(early);
+  });
 });
