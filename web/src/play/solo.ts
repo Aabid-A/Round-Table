@@ -58,7 +58,12 @@ export function buildSoloCast(humanName: string, models: string[] | null, seed: 
  * Play one game in this tab: the engine, the prompts and the AI players are the same code the command line uses.
  * `ask` is how the human's turns reach a form. Returns the finished log.
  */
-export async function runSolo(setup: SoloSetup, ask: (req: PromptRequest) => Promise<HumanAnswer>): Promise<GameLog> {
+export async function runSolo(
+  setup: SoloSetup,
+  ask: (req: PromptRequest) => Promise<HumanAnswer>,
+  /** Aborting stops all network calls at once and lets the game wind down locally; the result is then not worth keeping. */
+  signal?: AbortSignal,
+): Promise<GameLog> {
   const problem = nameProblem(setup.humanName);
   if (problem) throw new Error(problem);
   if (setup.maxCostUsd !== undefined && !(Number.isFinite(setup.maxCostUsd) && setup.maxCostUsd > 0)) throw new Error('The spend cap must be a positive number.');
@@ -67,13 +72,30 @@ export async function runSolo(setup: SoloSetup, ask: (req: PromptRequest) => Pro
   const cast = buildSoloCast(setup.humanName, models, setup.seed);
 
   const aiCast = cast.filter((c) => c.model !== HUMAN_MODEL);
+  const baseFetch = setup.fetchImpl ?? fetch;
+  // A request in flight is cancelled by the same signal that stops new ones.
+  const fetchImpl: typeof fetch = signal
+    ? ((url: string, init?: RequestInit) =>
+        baseFetch(url, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, signal]) : signal })) as typeof fetch
+    : baseFetch;
   const players: Record<string, Player> =
     setup.ai.kind === 'mock'
       ? createMockPlayers(aiCast, setup.seed)
       : Object.fromEntries(
-          aiCast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey: (setup.ai as { apiKey: string }).apiKey.trim(), ...(setup.fetchImpl ? { fetchImpl: setup.fetchImpl } : {}) })]),
+          aiCast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey: (setup.ai as { apiKey: string }).apiKey.trim(), fetchImpl })]),
         );
   players[setup.humanName] = createHumanPlayer(ask);
+  if (signal) {
+    // Once aborted, every turn fails at once without touching the network, so the game ends in a moment.
+    for (const [name, inner] of Object.entries(players)) {
+      players[name] = {
+        respond: async (req) => {
+          if (signal.aborted) throw new Error('The game was ended.');
+          return inner.respond(req);
+        },
+      };
+    }
+  }
 
   const settings = DEFAULT_SETTINGS;
   return runGame({

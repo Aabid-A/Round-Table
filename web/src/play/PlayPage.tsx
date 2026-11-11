@@ -4,7 +4,7 @@ import type { GameLog } from '../../../src/engine/types.js';
 import type { PromptRequest } from '../../../src/players/player.js';
 import { finalRoles } from '../replay/timeline.js';
 import { HumanForm } from './HumanForm.js';
-import type { HumanAnswer } from './human.js';
+import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
 import { notesAbout, type NoteAboutYou } from './notes.js';
 import { seedFromSearch } from './params.js';
@@ -40,16 +40,22 @@ export function PlayPage() {
   const [pending, setPending] = useState<Pending | null>(null);
   const run = useRef(0);
   const asked = useRef(0);
+  const abort = useRef<AbortController | null>(null);
+  const pendingRef = useRef<Pending | null>(null);
+  pendingRef.current = pending;
 
   const start = (setup: SoloSetup): void => {
+    stopCurrent();
     const id = ++run.current;
     asked.current = 0;
+    const controller = new AbortController();
+    abort.current = controller;
     setScreen({ kind: 'playing', human: setup.humanName });
     const ask = (request: PromptRequest): Promise<HumanAnswer> =>
       new Promise((resolve) => {
         if (run.current === id) setPending({ turn: ++asked.current, request, resolve: (a) => (setPending(null), resolve(a)) });
       });
-    runSolo(setup, ask).then(
+    runSolo(setup, ask, controller.signal).then(
       (log) => {
         if (run.current === id) setScreen({ kind: 'done', human: setup.humanName, log });
       },
@@ -58,14 +64,25 @@ export function PlayPage() {
       },
     );
   };
-  const quit = (): void => {
-    run.current++; // a game that is still running is left behind
+  /** End any game in progress: cancel its network calls, let a waiting human turn go, and stop listening. */
+  const stopCurrent = (): void => {
+    run.current++;
+    abort.current?.abort();
+    abort.current = null;
+    pendingRef.current?.resolve(emptyAnswer());
     setPending(null);
+  };
+  const quit = (): void => {
+    stopCurrent();
     setScreen({ kind: 'setup', error: null });
   };
 
   useEffect(() => {
     document.title = 'Round Table: take a seat';
+    return () => {
+      run.current++;
+      abort.current?.abort(); // leaving the page ends the game too
+    };
   }, []);
 
   if (screen.kind === 'setup') return <Setup error={screen.error} onStart={start} />;

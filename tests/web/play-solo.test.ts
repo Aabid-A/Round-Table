@@ -115,6 +115,88 @@ describe('runSolo with real models (stubbed fetch)', () => {
   });
 });
 
+describe('runSolo can be ended', () => {
+  const KEY = 'sk-test-not-a-real-key';
+  const models = Array.from({ length: 7 }, (_, i) => `vendor/model-${i + 1}`);
+
+  /** A fake OpenRouter that always replies with something invalid, a little slowly, and counts every call. */
+  const slowStub = (counter: { n: number }): typeof fetch =>
+    ((_url: string, init: RequestInit) =>
+      new Promise<Response>((resolve, reject) => {
+        counter.n++;
+        const timer = setTimeout(
+          () => resolve(new Response(JSON.stringify({ choices: [{ message: { content: 'no json' } }] }), { status: 200 })),
+          15,
+        );
+        init.signal?.addEventListener('abort', () => (clearTimeout(timer), reject(new DOMException('aborted', 'AbortError'))));
+      })) as unknown as typeof fetch;
+
+  const setup = (counter: { n: number }) => ({
+    humanName: 'Sam',
+    seed: 5,
+    ai: { kind: 'openrouter' as const, apiKey: KEY, models },
+    fetchImpl: slowStub(counter),
+  });
+
+  it('stops all network calls when aborted, and the game then winds down by itself', async () => {
+    const counter = { n: 0 };
+    const controller = new AbortController();
+    let asked = 0;
+    let atAbort = -1;
+    const game = runSolo(
+      setup(counter),
+      async (r) => {
+        asked++;
+        if (asked === 2) {
+          atAbort = counter.n;
+          controller.abort();
+        }
+        return autoAnswer(r);
+      },
+      controller.signal,
+    );
+    const log = await game; // it settles: nothing hangs after an abort
+    expect(atAbort).toBeGreaterThan(0);
+    expect(counter.n).toBe(atAbort); // not one request after the abort
+    expect(log.turns.length).toBeGreaterThan(0);
+  });
+
+  it('stops even when the human is never asked again (a game the human is out of)', async () => {
+    const counter = { n: 0 };
+    const controller = new AbortController();
+    let after = -1;
+    const game = runSolo(
+      setup(counter),
+      async (r) => {
+        // Hold the human's turn until the abort, as the page does when you quit: the page then releases the turn.
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return autoAnswer(r);
+      },
+      controller.signal,
+    );
+    setTimeout(() => {
+      after = counter.n;
+      controller.abort();
+    }, 40);
+    await game;
+    expect(counter.n).toBe(after);
+  });
+
+  it('does not call out at all if it is aborted before it starts', async () => {
+    const counter = { n: 0 };
+    const controller = new AbortController();
+    controller.abort();
+    await runSolo(setup(counter), autoAnswer, controller.signal);
+    expect(counter.n).toBe(0);
+  });
+
+  it('plays normally with a signal that is never aborted', async () => {
+    const log = await runSolo({ humanName: 'Sam', seed: 5, ai: { kind: 'mock' } }, autoAnswer, new AbortController().signal);
+    expect(log.turns.length).toBeGreaterThan(20);
+    expect(log.turns.every((t) => !t.fallback)).toBe(true);
+  });
+});
+
 describe('notesAbout', () => {
   const log = logFrom(
     { Sam: 'faithful', A1: 'traitor', A2: 'faithful' },

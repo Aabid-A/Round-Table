@@ -135,6 +135,29 @@ test('quit goes back to the setup, and the game stops', async ({ page }) => {
   await expect(page.locator('[data-testid=turn-form]')).toHaveCount(0);
 });
 
+test('quit really stops the game: no further calls to OpenRouter after it', async ({ page }) => {
+  let calls = 0;
+  await page.route(OPENROUTER, async (route) => {
+    calls++;
+    await new Promise((r) => setTimeout(r, 20));
+    await route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.0001 } }), contentType: 'application/json' }).catch(() => undefined);
+  });
+  await page.goto('/?mode=play&seed=5');
+  await page.getByLabel('Your name at the table').fill('Sam');
+  await page.getByLabel(/Real models through OpenRouter/).check();
+  await page.getByLabel('Your OpenRouter key').fill('k');
+  await page.getByLabel(/Seven model IDs/).fill(MODELS);
+  await page.getByLabel(/Spend cap/).fill('100');
+  await page.getByRole('button', { name: 'Take a seat' }).click();
+  await expect.poll(() => calls, { timeout: 10_000 }).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Quit this game' }).click();
+  await expect(page.getByRole('button', { name: 'Take a seat' })).toBeVisible();
+  await page.waitForTimeout(300); // let anything already on the wire land
+  const atQuit = calls;
+  await page.waitForTimeout(1500);
+  expect(calls).toBe(atQuit);
+});
+
 test('real models: the key goes only to OpenRouter, is not stored or shown, and the spend cap stops the game', async ({ page, context }) => {
   const KEY = 'sk-e2e-not-a-real-key';
   const requests: { url: string; headers: Record<string, string>; body: string }[] = [];
