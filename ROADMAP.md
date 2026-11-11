@@ -127,7 +127,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
   - Room games save a normal log, so replay, highlights, cards and stats
     work on them.
 
-- [ ] **M12. Launch readiness.**
+- [x] **M12. Launch readiness.**
   - `docs/EPISODE.md`: the owner's runbook, from real game to Twitter post:
     fill in `config/cast.json`, run games, find highlights, record a clip,
     make a card, publish the episode for guessing, post.
