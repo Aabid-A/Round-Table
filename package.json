@@ -15,7 +15,8 @@
     "games": "tsx src/cli/games.ts",
     "web": "vite web",
     "build:web": "vite build web",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "highlights": "tsx src/cli/highlights.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
