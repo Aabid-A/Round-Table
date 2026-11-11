@@ -31,7 +31,7 @@ export class Registry {
     return this.rooms.size;
   }
 
-  create(setup: AiSetup, seed?: number, owner: string | null = null): Result<Room> {
+  create(setup: AiSetup, seed?: number, owner: string | null = null, aliases = false): Result<Room> {
     this.sweep();
     if (this.rooms.size >= LIMITS.rooms) return { ok: false, error: 'This server is full. Try again in a while.' };
     if (owner !== null) {
@@ -45,6 +45,7 @@ export class Registry {
     }
     const room = new Room(code, setup, seed ?? randomInt(2 ** 31), this.now());
     room.owner = owner;
+    room.aliases = aliases;
     this.rooms.set(code, room);
     return { ok: true, value: room };
   }

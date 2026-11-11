@@ -40,6 +40,18 @@ describe('Session: creating, joining and rejoining', () => {
     expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', code: joined.code, mode: 'mock', aiSeats: 7, seats: [{ name: 'Quinn', connected: true, host: true }] });
   });
 
+  it('makes an alias room when asked, and shows that in the lobby', () => {
+    const s = server();
+    const host = s.open();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', aliases: true });
+    const room = s.registry.get(joinedOf(host.conn).code)!;
+    expect(room.aliases).toBe(true);
+    expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: true });
+    const plain = s.open();
+    plain.send({ t: 'create', name: 'Rae', mode: 'mock' });
+    expect(plain.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: false });
+  });
+
   it('lets friends join by code in any case and tells everyone', () => {
     const s = server();
     const host = s.open();

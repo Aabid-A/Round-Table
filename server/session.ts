@@ -1,4 +1,5 @@
 import type { GameLog } from '../src/engine/types.js';
+import { outcomeFor, type RoomOutcome } from '../src/roomResult.js';
 import { runRoomGame } from './game.js';
 import type { HumanAnswer } from '../src/players/human.js';
 import { RateLimiter } from './rateLimit.js';
@@ -12,6 +13,7 @@ export interface Runtime {
   seatPlayers: Map<string, SeatPlayer>;
   abort: AbortController;
   log: GameLog | null;
+  outcome: RoomOutcome | null;
   /** Set while every person is disconnected during a game; when it fires the room closes. */
   abandonTimer: ReturnType<typeof setTimeout> | null;
 }
@@ -107,7 +109,7 @@ export class Session {
   private runtime(room: Room): Runtime {
     let rt = this.deps.runtimes.get(room.code);
     if (!rt) {
-      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, abandonTimer: null };
+      rt = { seatPlayers: new Map(), abort: new AbortController(), log: null, outcome: null, abandonTimer: null };
       const made = rt;
       this.deps.runtimes.set(room.code, made);
       room.onClose(() => {
@@ -135,7 +137,7 @@ export class Session {
   private create(msg: Extract<ClientMessage, { t: 'create' }>): void {
     if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
-    const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner);
+    const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner, msg.aliases === true);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });
     const sat = this.sit(made.value, msg.name);
     if (!sat.ok) made.value.close(sat.error);
@@ -167,9 +169,10 @@ export class Session {
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
+        rt.outcome = outcomeFor(log, room.people, null);
         room.phase = 'finished';
         room.finishedAt = (options.now ?? Date.now)();
-        for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name });
+        for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });
       },
       (e: unknown) => {
         options.log(`game error: ${e instanceof Error ? e.name : 'unknown'}`);
@@ -214,7 +217,7 @@ export class Session {
       rt.abandonTimer = null;
     }
     if (room.phase === 'lobby') room.broadcast(room.lobbyMessage());
-    else if (room.phase === 'finished' && rt?.log) this.tell({ t: 'finished', log: rt.log, you: seat.name });
+    else if (room.phase === 'finished' && rt?.log && rt.outcome) this.tell({ t: 'finished', log: rt.log, you: seat.name, outcome: rt.outcome });
     else {
       this.tell({ t: 'status', phase: room.status });
       rt?.seatPlayers.get(seat.name)?.resend();

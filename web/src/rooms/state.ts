@@ -1,6 +1,7 @@
 import type { GameLog } from '../../../src/engine/types.js';
 import type { Phase } from '../../../src/types.js';
 import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
+import type { RoomOutcome } from '../../../src/roomResult.js';
 import type { ServerMessage } from '../../../server/protocol.js';
 
 type Msg<T extends ServerMessage['t']> = Extract<ServerMessage, { t: T }>;
@@ -19,13 +20,17 @@ export interface Identity {
   code: string;
   you: string;
   host: boolean;
+  /** The name this person plays under, in alias mode, once the game has started. */
+  alias: string | null;
 }
 
 export type RoomView =
   | { kind: 'home' }
   | { kind: 'lobby'; lobby: Msg<'lobby'> | null }
   | { kind: 'playing'; phase: PublicPhase | null; turn: TurnInfo | null; timedOut: boolean }
-  | { kind: 'finished'; log: GameLog }
+  /** After the game, in alias mode: guess which seats were AIs. `sent` once this person has answered. */
+  | { kind: 'guessing'; seats: string[]; you: string; timeoutMs: number; sent: boolean }
+  | { kind: 'finished'; log: GameLog; outcome: RoomOutcome }
   | { kind: 'closed'; reason: string };
 
 export interface RoomState {
@@ -38,7 +43,7 @@ export interface RoomState {
   error: string | null;
 }
 
-export type RoomEvent = { kind: 'message'; msg: ServerMessage } | { kind: 'answered' } | { kind: 'offline' } | { kind: 'online' } | { kind: 'leave' } | { kind: 'dismissError' };
+export type RoomEvent = { kind: 'message'; msg: ServerMessage } | { kind: 'answered' } | { kind: 'guessed' } | { kind: 'offline' } | { kind: 'online' } | { kind: 'leave' } | { kind: 'dismissError' };
 
 export const initialState = (): RoomState => ({ view: { kind: 'home' }, me: null, online: true, error: null });
 
@@ -52,6 +57,8 @@ export function roomReducer(state: RoomState, event: RoomEvent): RoomState {
       return initialState();
     case 'dismissError':
       return { ...state, error: null };
+    case 'guessed':
+      return state.view.kind === 'guessing' ? { ...state, view: { ...state.view, sent: true } } : state;
     case 'answered':
       // The person has caught up with the game again, so the note about a missed turn has done its job.
       return state.view.kind === 'playing' ? { ...state, view: { ...state.view, timedOut: false } } : state;
@@ -64,17 +71,21 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
   const { view } = state;
   switch (msg.t) {
     case 'joined':
-      return { ...state, error: null, me: { code: msg.code, you: msg.you, host: msg.host }, view: view.kind === 'home' ? { kind: 'lobby', lobby: null } : view };
+      return { ...state, error: null, me: { code: msg.code, you: msg.you, host: msg.host, alias: state.me?.code === msg.code ? state.me.alias : null }, view: view.kind === 'home' ? { kind: 'lobby', lobby: null } : view };
+    case 'alias':
+      return state.me ? { ...state, me: { ...state.me, alias: msg.alias } } : state;
+    case 'guess':
+      return view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'guessing', seats: msg.seats, you: msg.you, timeoutMs: msg.timeoutMs, sent: false } };
     case 'lobby':
-      return view.kind === 'playing' || view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'lobby', lobby: msg } };
+      return view.kind === 'playing' || view.kind === 'guessing' || view.kind === 'finished' || view.kind === 'closed' ? state : { ...state, view: { kind: 'lobby', lobby: msg } };
     case 'status': {
-      if (view.kind === 'finished' || view.kind === 'closed') return state;
+      if (view.kind === 'finished' || view.kind === 'closed' || view.kind === 'guessing') return state;
       const was = view.kind === 'playing' ? view : null;
       // Someone else is acting now, so this person's own turn (if it was open) is over.
       return { ...state, view: { kind: 'playing', phase: msg.phase ?? was?.phase ?? null, turn: null, timedOut: was?.timedOut ?? false } };
     }
     case 'turn': {
-      if (view.kind === 'finished' || view.kind === 'closed') return state;
+      if (view.kind === 'finished' || view.kind === 'closed' || view.kind === 'guessing') return state;
       const turn: TurnInfo = { id: msg.turn, phase: msg.phase, options: msg.options, user: msg.user, timeoutMs: msg.timeoutMs, error: msg.error };
       // A missed turn is reported until the person answers a later one: the next turn often arrives at once.
       return { ...state, view: { kind: 'playing', phase: publicPhase(msg.phase), turn, timedOut: view.kind === 'playing' ? view.timedOut : false } };
@@ -82,7 +93,7 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
     case 'turn_over':
       return view.kind === 'playing' && view.turn?.id === msg.turn ? { ...state, view: { ...view, turn: null, timedOut: true } } : state;
     case 'finished':
-      return { ...state, view: { kind: 'finished', log: msg.log } };
+      return { ...state, view: { kind: 'finished', log: msg.log, outcome: msg.outcome } };
     case 'closed':
       // A room that closes after its game ended (the server tidies up) must not take the result off the screen.
       return view.kind === 'finished' ? state : { ...state, view: { kind: 'closed', reason: msg.reason } };

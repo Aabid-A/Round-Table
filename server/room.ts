@@ -27,6 +27,10 @@ export class Room {
   phase: RoomPhase = 'lobby';
   /** The phase everyone was last told, so a person who comes back mid-phase can be told too. */
   status: PublicPhase | null = null;
+  /** Every seat plays under an alias, so nobody can tell friends from AIs until the end. */
+  aliases = false;
+  /** Alias to real name, kept private until the game is over. Empty without aliases. */
+  people: Record<string, string> = {};
   /** Who made the room (a network address), for the per-address room limit. */
   owner: string | null = null;
   /** When the game ended, for expiry. */
@@ -114,7 +118,7 @@ export class Room {
   }
 
   lobbyMessage(): ServerMessage {
-    return { t: 'lobby', code: this.code, mode: this.mode, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
+    return { t: 'lobby', code: this.code, mode: this.mode, aliases: this.aliases, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
   }
 
   broadcast(message: ServerMessage): void {
