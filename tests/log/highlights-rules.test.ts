@@ -52,6 +52,21 @@ describe('faithfulBannishedByMajority', () => {
     expect(h!.title).toBe('F1, a faithful, is banished by a majority (3 of 4 votes)');
   });
 
+  it('needs more than half of the votes: a top count of 2 of 5 is not a majority', () => {
+    const five = [
+      { voter: 'T1', target: 'F1' }, { voter: 'T2', target: 'F1' }, { voter: 'F2', target: 'F3' },
+      { voter: 'F3', target: 'F2' }, { voter: 'F4', target: 'T1' },
+    ];
+    const plurality: Spec[] = [
+      ...five.map((v) => ({ r: 1, phase: 'vote' as const, p: v.voter, action: { target: v.target } }) as Spec),
+      { r: 1, ev: { type: 'vote', stage: 'vote', votes: five, tally: { F1: 2, F3: 1, F2: 1, T1: 1 }, leaders: ['F1'] } },
+      { r: 1, ev: { type: 'banishment', player: 'F1', role: 'faithful', method: 'majority' } },
+    ];
+    expect(faithfulBannishedByMajority(buildContext(logFrom({ ...roles }, plurality)))).toEqual([]);
+    const half: Spec[] = plurality.map((s) => ('ev' in s && s.ev.type === 'vote' ? { ...s, ev: { ...s.ev, tally: { F1: 3 } } } : s));
+    expect(faithfulBannishedByMajority(buildContext(logFrom({ ...roles }, half)))).toHaveLength(1);
+  });
+
   it('ignores a traitor, and a faithful decided by a revote', () => {
     expect(faithfulBannishedByMajority(buildContext(logFrom({ ...roles }, specs('traitor', 'majority', 'T1'))))).toEqual([]);
     expect(faithfulBannishedByMajority(buildContext(logFrom({ ...roles }, specs('faithful', 'revote'))))).toEqual([]);

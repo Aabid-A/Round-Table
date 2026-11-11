@@ -25,7 +25,10 @@ export const recruitAccepted: Rule = (ctx) =>
     ];
   });
 
-/** A faithful is banished by a straight majority. The bigger the share, the better the moment. */
+/**
+ * A faithful is banished by more than half of the votes. (The engine's method "majority" also covers a
+ * plain top count with no revote, so the share is checked here.) The bigger the share, the better.
+ */
 export const faithfulBannishedByMajority: Rule = (ctx) =>
   ctx.events('banishment').flatMap((e) => {
     if (e.role !== 'faithful' || e.method !== 'majority') return [];
@@ -33,7 +36,8 @@ export const faithfulBannishedByMajority: Rule = (ctx) =>
     const first = ctx.stageTurns(e.round, 'vote')[0];
     if (!vote || !first) return [];
     const got = vote.tally[e.player] ?? 0;
-    const share = vote.votes.length === 0 ? 0 : got / vote.votes.length;
+    if (got * 2 <= vote.votes.length) return [];
+    const share = got / vote.votes.length;
     return [
       {
         rule: 'faithful_banished_by_majority',

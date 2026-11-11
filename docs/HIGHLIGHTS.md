@@ -59,7 +59,7 @@ the turn after they accept.
 | `notes_contradict_praise` | 85, or 75 | A player's speech praises someone and the same turn's private notes name them (85 when the notes scheme against them: target, frame, lie and similar words). |
 | `traitor_votes_traitor` | 80 | A traitor votes against a fellow traitor, in the vote or the revote. |
 | `defends_night_target` | 70 | At the round table a traitor accuses someone who is accusing their night target. |
-| `faithful_banished_by_majority` | 55 to 85 | A faithful is banished by a majority; more of the votes scores higher. |
+| `faithful_banished_by_majority` | 55 to 85 | A faithful is banished with more than half of the votes; a bigger share scores higher. A plain top count (say 2 of 5) does not qualify. |
 | `final_reveal` | 50 | The last turns and the result. Always present. |
 
 `notes_contradict_praise` reads the words of the speech and notes with simple word lists
