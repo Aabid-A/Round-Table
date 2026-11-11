@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { GameLog } from '../../src/engine/types.js';
 import { Loader } from './Loader.js';
+import { Player } from './Player.js';
 import { loadFromFile, loadFromName, logNameFromSearch, type LoadResult } from './load.js';
 
 type State =
@@ -24,11 +25,7 @@ export function App() {
   }, []);
 
   if (state.kind === 'ready') {
-    return (
-      <main className="app">
-        <p>Loaded a game with {state.log.turns.length} turns.</p>
-      </main>
-    );
+    return <Player log={state.log} onReload={() => setState({ kind: 'idle' })} />;
   }
   return (
     <Loader
