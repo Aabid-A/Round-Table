@@ -23,8 +23,8 @@
 }
 .share-card {
   display: grid;
+  grid-template-rows: auto auto 1fr auto;
   gap: var(--space-5);
-  align-content: start;
   width: var(--card-w);
   height: var(--card-h);
   padding: var(--card-pad);
@@ -47,6 +47,10 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text);
+}
+.share-foot {
+  font-size: var(--card-small);
+  color: var(--muted);
 }
 .share-who h1 {
   margin: 0;

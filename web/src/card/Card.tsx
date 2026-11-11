@@ -54,10 +54,13 @@ export function Card({ log, logName, turnId, size }: Props) {
           <blockquote style={quoteSize}>{said}</blockquote>
         </figure>
         <figure className="share-quote share-thought" data-testid="card-thought">
-          <figcaption>Thought · hidden from the other players</figcaption>
+          <figcaption>Thought</figcaption>
           <blockquote style={quoteSize}>{thought}</blockquote>
         </figure>
       </div>
+      <footer className="share-foot" data-testid="card-foot">
+        The thought was hidden from the other players.
+      </footer>
     </article>
   );
 }

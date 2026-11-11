@@ -25,6 +25,7 @@ test('draws the 1200x675 card at exactly that size, with the quote, the thought 
   await expect(page.getByTestId('card-thought')).toContainText(turn.private_notes);
   await expect(page.getByTestId('card-said')).toContainText('Said');
   await expect(page.getByTestId('card-thought')).toContainText('Thought');
+  await expect(page.getByTestId('card-foot')).toHaveText('The thought was hidden from the other players.');
   await expect(page.getByTestId('card-where')).toHaveText(`Game sample · Round ${turn.round} · Round table`);
   await expect(page.locator('.card-page')).toHaveAttribute('data-ready', 'true');
   await expect(page).toHaveTitle('Round Table card');
