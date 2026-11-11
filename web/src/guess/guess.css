@@ -1,0 +1,128 @@
+.episodes h1 {
+  font-size: var(--fs-xl);
+}
+.episode-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.episode-list a {
+  display: block;
+  min-height: var(--target);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.episode-list a:hover {
+  border-color: var(--accent);
+}
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.pick {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+.pick fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pick legend {
+  margin-bottom: var(--space-3);
+  padding: 0;
+  font-weight: 600;
+}
+.pick h2 {
+  font-size: var(--fs-m);
+}
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--w-chip), 1fr));
+  gap: var(--space-2);
+}
+.pick-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+.pick-option[data-on='true'] {
+  border: 2px solid var(--accent);
+}
+.pick-option input {
+  width: var(--space-5);
+  height: var(--space-5);
+  accent-color: var(--accent);
+}
+
+.score {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+.score h2 {
+  font-size: var(--fs-xl);
+}
+.score h3 {
+  margin-top: var(--space-3);
+  font-size: var(--fs-l);
+}
+.emoji-row {
+  margin: 0;
+  font-size: var(--fs-xl);
+  letter-spacing: var(--space-1);
+}
+.round-results {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.missed {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.missed li {
+  display: grid;
+  gap: var(--space-2);
+}
+.missed-said {
+  overflow-wrap: anywhere;
+}
+.share-text {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font: inherit;
+  font-size: var(--fs-m);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
