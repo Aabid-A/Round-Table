@@ -92,7 +92,8 @@ this file unchanged.
    `ROADMAP.md`, one PR per milestone, through the full workflow above. The
    PR ticks the milestone's box. After it merges, start the next one in the
    same session. Keep going until the roadmap is done or you are stopped.
-5. **Auto-merge on green.** Merge your own PR with a squash merge only when
+5. **Auto-merge on green.** Merge your own PR with a merge commit (never
+   squash: `main` keeps the granular commits) only when
    all of these hold: every check passes on the final commit, gate A passed
    with no open actionable findings, the PR targets `main` and has no
    conflicts, and the diff stays inside the milestone. Mark the draft ready
@@ -101,7 +102,7 @@ this file unchanged.
    and move to the next milestone only if it doesn't depend on this one.
    Cloud sessions can't use GitHub GraphQL, so if a `gh pr` command fails,
    use the REST API: `gh api -X PUT repos/{owner}/{repo}/pulls/<n>/merge -f
-   merge_method=squash`, `gh api repos/{owner}/{repo}/pulls -f title=... -f
+   merge_method=merge`, `gh api repos/{owner}/{repo}/pulls -f title=... -f
    head=... -f base=main -F draft=true`, and the
    `repos/{owner}/{repo}/pulls/<n>/ccr/ready_for_review` route.
 6. **Mocks only.** Never call a real model API or use `OPENROUTER_API_KEY`.
@@ -129,6 +130,8 @@ this file unchanged.
 
 - Language: TypeScript on Node 22, ESM.
 - Branch prefix: `agent/`
+- Commits: small and granular, one logical step each, checks passing at
+  each one. Details in `/ship`. PRs merge with a merge commit, never squash.
 - Review gate: A (independent review by a context that didn't write the code;
   see `.claude/skills/review-loop/SKILL.md`).
 - Game logs are JSON files in `games/` (gitignored).
