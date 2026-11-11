@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 const FIXTURE = 'tests/fixtures/sample-game.json';
@@ -92,6 +93,20 @@ test('announces each step to screen readers when stepping by hand, and stays qui
   await page.keyboard.press('Space');
   await expect(note).not.toHaveText('');
   await expect(page.getByRole('button', { name: /^(Play|Pause)$/ })).not.toHaveAttribute('aria-pressed', /.*/);
+});
+
+test('a log that parses but cannot be drawn shows a message instead of a blank page', async ({ page }) => {
+  // The murder event passes the shape check but has no proposals, so drawing it throws.
+  const broken = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+  delete broken.events.find((e: { type: string }) => e.type === 'murder').proposals;
+  await page.goto('/');
+  await page.locator('input[type=file]').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(broken)) });
+  // Every step is described up front, so the error shows as soon as the log is opened.
+  await expect(page.getByRole('alert')).toContainText('This log could not be shown');
+  await expect(page.getByText('Choose a game log')).toBeVisible();
+  // And a good log still loads afterwards.
+  await page.locator('input[type=file]').setInputFiles(FIXTURE);
+  await expect(page.getByTestId('section')).toContainText('Night');
 });
 
 test('rejects a log with another schemaVersion with a clear message', async ({ page }) => {
