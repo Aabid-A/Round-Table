@@ -4,6 +4,7 @@ import type { RoomOutcome } from '../../../src/roomResult.js';
 import { saveBlob } from '../download.js';
 import { finalRoles } from '../replay/timeline.js';
 import { END_REASONS, WINNER } from '../result.js';
+import { groupCardPng } from './groupCard.js';
 import { foolingLine, personOf, scoreLine } from './outcome.js';
 import type { Identity } from './state.js';
 
@@ -91,6 +92,21 @@ export function End({ me, log, outcome, onLeave }: Props) {
           }}
         >
           Download the game log
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            groupCardPng(log, outcome).then(
+              (png) => {
+                saveBlob(png, `round-table-room-${me.code}-result.png`);
+                setSaved('Card saved.');
+              },
+              (e: unknown) => setSaved(e instanceof Error ? e.message : 'Could not make the card.'),
+            );
+          }}
+        >
+          Download the result card
         </button>
         <button type="button" className="btn btn-primary" onClick={onLeave}>
           Back to the start
