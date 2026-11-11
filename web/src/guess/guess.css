@@ -88,6 +88,9 @@ a.btn {
   margin-top: var(--space-3);
   font-size: var(--fs-l);
 }
+.score p {
+  margin: 0;
+}
 .emoji-row {
   margin: 0;
   font-size: var(--fs-xl);
