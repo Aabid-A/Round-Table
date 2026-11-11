@@ -176,6 +176,8 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
   await expect(page.getByRole('heading', { level: 1, name: 'Game stopped' })).toBeVisible();
   await expect(page.getByText('The game was stopped by your spend cap.')).toBeVisible();
   await expect(page.getByText(/Spent \$/)).toBeVisible();
+  // Every AI reply was invalid, so the game says so and points at the key and model IDs.
+  await expect(page.getByTestId('fallback-notice')).toContainText('check your OpenRouter key and model IDs');
 
   const toOpenRouter = requests.filter((r) => r.url === OPENROUTER);
   expect(toOpenRouter.length).toBeGreaterThan(0);
@@ -233,6 +235,12 @@ test('a long list of notes about you shows the first six, and the rest on reques
   await expect(items).toHaveCount(total);
   await page.getByRole('button', { name: 'Show fewer' }).click();
   await expect(items).toHaveCount(6);
+});
+
+test('a game where every AI answers properly shows no fallback warning', async ({ page }) => {
+  await startPractice(page);
+  await playThrough(page);
+  await expect(page.getByTestId('fallback-notice')).toHaveCount(0);
 });
 
 test('a practice game with no AI naming you says so, and play again returns to the setup', async ({ page }) => {

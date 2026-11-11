@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PromptRequest } from '../../src/players/player.js';
 import { emptyAnswer, formFor, type HumanAnswer } from '../../web/src/play/human.js';
-import { notesAbout } from '../../web/src/play/notes.js';
+import { aiFallbacks, notesAbout } from '../../web/src/play/notes.js';
 import { buildSoloCast, HUMAN_MODEL, nameProblem, parseModels, runSolo } from '../../web/src/play/solo.js';
 import { logFrom } from '../helpers/logs.js';
 
@@ -194,6 +194,18 @@ describe('runSolo can be ended', () => {
     const log = await runSolo({ humanName: 'Sam', seed: 5, ai: { kind: 'mock' } }, autoAnswer, new AbortController().signal);
     expect(log.turns.length).toBeGreaterThan(20);
     expect(log.turns.every((t) => !t.fallback)).toBe(true);
+  });
+});
+
+describe('aiFallbacks', () => {
+  it('counts the AIs\' turns with no valid reply, and leaves the human\'s turns out', () => {
+    const log = logFrom({ Sam: 'faithful', A1: 'traitor', A2: 'faithful' }, [
+      { r: 1, phase: 'vote', p: 'A1', action: { target: 'Sam' }, fb: true },
+      { r: 1, phase: 'vote', p: 'A2', action: { target: 'Sam' } },
+      { r: 1, phase: 'vote', p: 'Sam', action: { target: 'A1' }, fb: true },
+    ]);
+    expect(aiFallbacks(log, 'Sam')).toEqual({ turns: 2, fallbacks: 1 });
+    expect(aiFallbacks(logFrom({ Sam: 'faithful' }, []), 'Sam')).toEqual({ turns: 0, fallbacks: 0 });
   });
 });
 

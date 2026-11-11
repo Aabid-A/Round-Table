@@ -28,3 +28,9 @@ export function notesAbout(log: GameLog, human: string): NoteAboutYou[] {
       thought: t.private_notes.trim(),
     }));
 }
+
+/** How many of the AIs' turns had no valid reply and used a fallback move. A wrong key or model ID looks like this. */
+export function aiFallbacks(log: GameLog, human: string): { turns: number; fallbacks: number } {
+  const ai = log.turns.filter((t) => t.player !== human);
+  return { turns: ai.length, fallbacks: ai.filter((t) => t.fallback).length };
+}

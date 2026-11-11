@@ -6,7 +6,7 @@ import { finalRoles } from '../replay/timeline.js';
 import { HumanForm } from './HumanForm.js';
 import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
-import { notesAbout, type NoteAboutYou } from './notes.js';
+import { aiFallbacks, notesAbout, type NoteAboutYou } from './notes.js';
 import { seedFromSearch } from './params.js';
 import { nameProblem, parseModels, runSolo, type SoloSetup } from './solo.js';
 
@@ -216,6 +216,7 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
   const r = log.result;
   const [note, setNote] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const fb = useMemo(() => aiFallbacks(log, human), [log, human]);
   const shown = showAll ? notes : notes.slice(0, NOTES_SHOWN);
 
   const save = (blob: Blob, filename: string): void => {
@@ -250,6 +251,13 @@ function EndScreen({ human, log, onAgain }: { human: string; log: GameLog; onAga
       {r.costCap && (
         <p className="notice" role="status">
           Spent ${r.costCap.spentUsd} of your ${r.costCap.maxUsd} cap.
+        </p>
+      )}
+
+      {fb.fallbacks > 0 && (
+        <p className="notice notice-error" role="alert" data-testid="fallback-notice">
+          {fb.fallbacks} of {fb.turns} AI turns got no valid reply from their model, so a fallback move was used.
+          {fb.fallbacks * 2 >= fb.turns ? ' If that is most of them, check your OpenRouter key and model IDs.' : ''}
         </p>
       )}
 
