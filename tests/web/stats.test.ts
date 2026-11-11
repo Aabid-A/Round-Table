@@ -65,6 +65,12 @@ describe('sortModels', () => {
     expect(names(tied).slice(0, 3)).toEqual(names(models).filter((n) => n !== 'model-c'));
   });
 
+  it('orders names by code, not by locale: capitals first', () => {
+    const base = models[0]!;
+    const mixed = ['b-model', 'B-model', 'a-model'].map((model) => ({ ...base, model }));
+    expect(sortModels(mixed, 'model', 'asc').map((m) => m.model)).toEqual(['B-model', 'a-model', 'b-model']);
+  });
+
   it('starts names A to Z and numbers biggest first', () => {
     expect(firstDirection('model')).toBe('asc');
     expect(firstDirection('betrayalIndex')).toBe('desc');

@@ -81,4 +81,53 @@ describe('computeStats', () => {
     expect(m.asTraitor.games + m.asFaithful.games).toBe(40);
     expect(m.turns).toBe(logs.reduce((n, l) => n + l.turns.length, 0));
   });
+
+  it('uses the revote as the deciding vote when there was one', () => {
+    // First vote: T1 votes for F2. Revote: T1 votes for F1, who is banished. Only the revote vote counts.
+    const first = [{ voter: 'T1', target: 'F2' }, { voter: 'F2', target: 'F1' }, { voter: 'F1', target: 'F2' }];
+    const second = [{ voter: 'T1', target: 'F1' }, { voter: 'F2', target: 'F1' }];
+    const log = logFrom(
+      { T1: 'traitor', F1: 'faithful', F2: 'faithful' },
+      [
+        ...first.map((v) => ({ r: 1, phase: 'vote' as const, p: v.voter, action: { target: v.target } })),
+        { r: 1, ev: { type: 'vote', stage: 'vote', votes: first, tally: { F2: 2, F1: 1 }, leaders: ['F2'] } },
+        ...second.map((v) => ({ r: 1, phase: 'revote' as const, p: v.voter, action: { target: v.target } })),
+        { r: 1, ev: { type: 'vote', stage: 'revote', votes: second, tally: { F1: 2 }, leaders: ['F1'] } },
+        { r: 1, ev: { type: 'banishment', player: 'F1', role: 'faithful', method: 'revote' } },
+      ],
+      { winner: 'traitor' },
+      { T1: 'model-a', F1: 'model-c', F2: 'model-d' },
+    );
+    const s = computeStats([log]);
+    expect(s.models.find((m) => m.model === 'model-a')!.faithfulsBanishedByTraitorVote).toBe(1);
+    // Had the first vote decided, T1's vote for F2 would not have counted for F1; here F2 was never banished.
+    expect(s.models.find((m) => m.model === 'model-d')!.faithfulsBanishedByTraitorVote).toBe(0);
+  });
+
+  it('counts a recruit who is later banished as caught, and not as a faithful banished', () => {
+    const log = logFrom(
+      { T1: 'traitor', F1: 'faithful', F2: 'faithful' },
+      [
+        { r: 1, phase: 'recruit_respond', p: 'F1', action: { accept: true } },
+        { r: 1, ev: { type: 'recruit', offeredBy: 'T1', offeredTo: 'F1', accepted: true } },
+        { r: 2, phase: 'vote', p: 'F2', action: { target: 'F1' } },
+        { r: 2, phase: 'vote', p: 'T1', action: { target: 'F1' } },
+        { r: 2, ev: { type: 'vote', stage: 'vote', votes: [{ voter: 'F2', target: 'F1' }, { voter: 'T1', target: 'F1' }], tally: { F1: 2 }, leaders: ['F1'] } },
+        // The engine records the role the player has when banished: a recruit is a traitor by then.
+        { r: 2, ev: { type: 'banishment', player: 'F1', role: 'traitor', method: 'majority' } },
+      ],
+      { winner: 'faithful', reason: 'no_traitors' },
+      { T1: 'model-a', F1: 'model-c', F2: 'model-d' },
+    );
+    const s = computeStats([log]);
+    const c = s.models.find((m) => m.model === 'model-c')!;
+    expect(c).toMatchObject({ caughtAsTraitor: 1, asTraitor: { games: 1, wins: 0 }, asFaithful: { games: 0, wins: 0 } });
+    expect(s.models.find((m) => m.model === 'model-a')!.faithfulsBanishedByTraitorVote).toBe(0);
+  });
+
+  it('sorts equal betrayal indexes by model name the same way on every machine (code order, not locale)', () => {
+    const l = (names: Record<string, string>) => logFrom({ T1: 'traitor', F1: 'faithful' }, [], { winner: 'faithful' }, names);
+    const s = computeStats([l({ T1: 'b-model', F1: 'B-model' }), l({ T1: 'a-model', F1: 'Z-model' })]);
+    expect(s.models.map((m) => m.model)).toEqual(['B-model', 'Z-model', 'a-model', 'b-model']);
+  });
 });

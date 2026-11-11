@@ -118,7 +118,7 @@ export function computeStats(logs: GameLog[]): SeasonStats {
     fallbackRate: s.turns === 0 ? 0 : round3(s.fallbackTurns / s.turns),
     betrayalIndex: s.games === 0 ? 0 : round2((s.asTraitor.wins + s.faithfulsBanishedByTraitorVote + s.recruitOffersAccepted) / s.games),
   }));
-  models.sort((a, b) => b.betrayalIndex - a.betrayalIndex || b.games - a.games || a.model.localeCompare(b.model));
+  models.sort((a, b) => b.betrayalIndex - a.betrayalIndex || b.games - a.games || (a.model < b.model ? -1 : a.model > b.model ? 1 : 0));
   return {
     statsVersion: 1,
     games: logs.length,

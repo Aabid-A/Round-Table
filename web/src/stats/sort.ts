@@ -33,7 +33,8 @@ export function sortModels(models: ModelStats[], key: SortKey, dir: Direction): 
     .sort((a, b) => {
       const x = valueFor(a.m, key);
       const y = valueFor(b.m, key);
-      const c = typeof x === 'string' ? x.localeCompare(y as string) : x - (y as number);
+      // Plain code-order comparison, so the order does not depend on the machine's locale.
+      const c = typeof x === 'string' ? (x < (y as string) ? -1 : x > (y as string) ? 1 : 0) : x - (y as number);
       return c * sign || a.i - b.i;
     })
     .map((e) => e.m);
