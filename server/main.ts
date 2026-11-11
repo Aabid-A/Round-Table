@@ -18,7 +18,10 @@ try {
   process.exit(1);
 }
 
-const server = await startServer({ port, turnMs, abandonMs, ...(host ? { host } : {}) });
+const allowSeed = process.env.ALLOW_SEED === '1';
+if (allowSeed) console.warn('ALLOW_SEED=1: pages can choose a room\'s seed, which decides every role. Use this for tests only.');
+
+const server = await startServer({ port, turnMs, abandonMs, ...(allowSeed ? { allowSeed } : {}), ...(host ? { host } : {}) });
 console.log(`Round Table rooms: listening on port ${server.port}${host ? ` (${host})` : ''}. Rooms live in memory and end when this stops.`);
 
 const stop = (): void => {

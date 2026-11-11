@@ -5,13 +5,13 @@ import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
 import { FakeConn, waitFor } from './helpers.js';
 
-function server(turnMs = 1000) {
+function server(turnMs = 1000, allowSeed = true) {
   const registry = new Registry();
   const runtimes = new Map<string, Runtime>();
   const logged: string[] = [];
   const open = () => {
     const conn = new FakeConn();
-    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, log: (l) => logged.push(l) } });
+    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, log: (l) => logged.push(l) } });
     const send = (m: unknown) => session.handle(JSON.stringify(m));
     /** Answer every turn at once, as a patient person would. */
     const autoplay = () => {
@@ -105,6 +105,19 @@ describe('Session: creating, joining and rejoining', () => {
     now = LIMITS.windowMs;
     session.handle(JSON.stringify({ t: 'create', name: 'Quinn', mode: 'mock' }));
     expect(conn.sent.some((m) => m.t === 'joined')).toBe(true);
+  });
+
+  it('ignores a seed sent by the page unless the server allows it, since the seed decides every role', () => {
+    const rooms = (allow: boolean) => {
+      const s = server(1000, allow);
+      const host = s.open();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 123 });
+      return s.registry.get(joinedOf(host.conn).code)!.seed;
+    };
+    expect(rooms(true)).toBe(123);
+    const picked = [rooms(false), rooms(false), rooms(false)];
+    expect(picked).not.toContain(123);
+    expect(new Set(picked).size).toBeGreaterThan(1); // the server chose its own, differently each time
   });
 
   it('forgets a room when it closes', () => {

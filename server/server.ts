@@ -12,6 +12,8 @@ export interface ServerOptions {
   turnMs?: number;
   abandonMs?: number;
   sweepMs?: number;
+  /** Let the page choose a room's seed (tests and replays only: the seed decides every role). */
+  allowSeed?: boolean;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   aiTimeoutMs?: number;
@@ -59,6 +61,7 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
         turnMs: opts.turnMs ?? LIMITS.turnMs,
         abandonMs: opts.abandonMs ?? 2 * 60_000,
         log,
+        ...(opts.allowSeed ? { allowSeed: true } : {}),
         ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
         ...(opts.aiTimeoutMs !== undefined ? { aiTimeoutMs: opts.aiTimeoutMs } : {}),
       },

@@ -18,6 +18,11 @@ export interface Runtime {
 
 export interface SessionOptions {
   turnMs: number;
+  /**
+   * Honour a seed sent by the page. Off by default: the seed decides every role, so anyone who picks it can work the roles out
+   * with the public engine code. Only for tests and replays on a machine you control.
+   */
+  allowSeed?: boolean;
   /** How long a running game may have nobody connected before the room closes and the AIs stop. */
   abandonMs: number;
   /** Injectable for tests. */
@@ -126,7 +131,7 @@ export class Session {
   private create(msg: Extract<ClientMessage, { t: 'create' }>): void {
     if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
-    const made = this.deps.registry.create(setup, msg.seed);
+    const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });
     const sat = this.sit(made.value, msg.name);
     if (!sat.ok) made.value.close(sat.error);

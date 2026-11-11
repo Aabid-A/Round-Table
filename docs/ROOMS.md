@@ -18,6 +18,7 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `HOST` | server | Address to bind. Default: all addresses. |
 | `TURN_MS` | server | How long a person has for one turn. Default 90000 (90 seconds). |
 | `ABANDON_MS` | server | How long a running game may have nobody connected before its room closes. Default 120000. |
+| `ALLOW_SEED` | server | Set to `1` to let a page choose a room's seed with `?seed=N`. For tests and replays only: the seed decides every role, so anyone who can pick it can work the roles out with the public engine code. Off by default; the server then picks a random seed and ignores the page's. |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
 Time values are whole milliseconds from 100 to 86400000. A bad value stops the server and names the
@@ -36,7 +37,7 @@ to another server.
    ([LOG.md](LOG.md)), with `model: "human"` on each person's seat.
 
 Reloading the page takes your seat back (the room code and a seat token are kept in the tab's session
-storage). A dropped connection reconnects on its own. Add `&seed=N` to the making page to fix the game.
+storage). A dropped connection reconnects on its own. `&seed=N` on the making page fixes the game, but only on a server started with `ALLOW_SEED=1`; otherwise it is ignored.
 
 ## AI seats
 

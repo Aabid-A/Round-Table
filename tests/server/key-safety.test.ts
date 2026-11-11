@@ -34,7 +34,7 @@ describe('the host key never leaves the room', () => {
   const begin = async (fetchImpl: typeof fetch, extra: Parameters<typeof startServer>[0] = {}) => {
     const w = watch();
     written = w.written;
-    server = await startServer({ port: 0, log: w.log, fetchImpl, ...extra });
+    server = await startServer({ port: 0, log: w.log, fetchImpl, allowSeed: true, ...extra });
   };
   /** Records the request, then answers with `reply`. */
   const stub = (reply: (init: RequestInit | undefined) => Promise<Response> | Response): typeof fetch =>

@@ -18,7 +18,7 @@ describe('no client learns hidden information before the end', () => {
   let server: RunningServer;
   const clients: TestClient[] = [];
   beforeEach(async () => {
-    server = await startServer({ port: 0, log: () => undefined });
+    server = await startServer({ port: 0, log: () => undefined, allowSeed: true });
   });
   afterEach(async () => {
     for (const c of clients.splice(0)) c.close();
