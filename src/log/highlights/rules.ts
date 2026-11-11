@@ -89,20 +89,28 @@ export const traitorVotesTraitor: Rule = (ctx) =>
     });
   });
 
-/** Does the traitor have this player on their private murder list, and is the player still in the game at `turnId`? */
-const stillMarked = (ctx: Context, traitor: string, target: string, round: number, turnId: number): boolean =>
-  traitor !== target && ctx.nightTargets(traitor, round).has(target) && !ctx.isOutAt(target, turnId);
+/**
+ * The round in which the traitor finally proposed to murder this player, if they did and the
+ * player is still in the game at `turnId`. Null otherwise.
+ */
+const markedInRound = (ctx: Context, traitor: string, target: string, round: number, turnId: number): number | null => {
+  if (traitor === target || ctx.isOutAt(target, turnId)) return null;
+  return ctx.nightTargets(traitor, round).get(target) ?? null;
+};
+
+const proposed = (round: number): string => `whom they proposed to murder in round ${round}`;
 
 /** A traitor whispers to a player they proposed to murder and who is still alive. */
 export const whispersToNightTarget: Rule = (ctx) =>
   ctx.events('whisper').flatMap((e) => {
     const turn = ctx.turnsOf(e.round, 'whispers').find((t) => t.player === e.from);
-    if (!turn || !ctx.isTraitorAt(e.from, turn.id) || !stillMarked(ctx, e.from, e.to, e.round, turn.id)) return [];
+    const marked = turn ? markedInRound(ctx, e.from, e.to, e.round, turn.id) : null;
+    if (!turn || marked === null || !ctx.isTraitorAt(e.from, turn.id)) return [];
     return [
       {
         rule: 'whispers_to_night_target' as const,
         score: 85,
-        title: `${e.from}, a traitor, whispers to ${e.to}, a player they proposed to murder`,
+        title: `${e.from}, a traitor, whispers to ${e.to}, ${proposed(marked)}`,
         from: turn.id,
         to: turn.id,
         facesTurn: turn.id,
@@ -123,11 +131,12 @@ export const defendsNightTarget: Rule = (ctx) => {
       if (!ctx.isTraitorAt(t.player, t.id)) continue;
       const protectedPlayer = suspectOf.get(accused);
       if (protectedPlayer === undefined || protectedPlayer === accused) continue;
-      if (!stillMarked(ctx, t.player, protectedPlayer, round, t.id)) continue;
+      const marked = markedInRound(ctx, t.player, protectedPlayer, round, t.id);
+      if (marked === null) continue;
       out.push({
         rule: 'defends_night_target',
         score: 70,
-        title: `${t.player}, a traitor, accuses ${accused} for suspecting ${protectedPlayer}, a player they proposed to murder`,
+        title: `${t.player}, a traitor, accuses ${accused} for suspecting ${protectedPlayer}, ${proposed(marked)}`,
         from: t.id,
         to: t.id,
         facesTurn: t.id,
@@ -149,17 +158,25 @@ export const savesNightTargetInRevote: Rule = (ctx) =>
     return e.votes.flatMap((v) => {
       const turn = stage.find((t) => t.player === v.voter);
       if (!turn || !ctx.isTraitorAt(v.voter, turn.id)) return [];
+      // Only a two-way tie has a clear "save": voting for the other tied player decides it against them.
+      if (first.leaders.length !== 2) return [];
       return first.leaders
-        .filter((p) => p !== v.target && stillMarked(ctx, v.voter, p, e.round, turn.id))
-        .map((p) => ({
-          rule: 'saves_night_target_in_revote' as const,
-          score: 88,
-          title: `${v.voter}, a traitor, votes against ${v.target} in the revote, saving ${p}, a player they proposed to murder`,
-          from: turn.id,
-          to: last.id,
-          facesTurn: turn.id,
-          round: e.round,
-        }));
+        .filter((p) => p !== v.target)
+        .flatMap((p) => {
+          const marked = markedInRound(ctx, v.voter, p, e.round, turn.id);
+          if (marked === null) return [];
+          return [
+            {
+              rule: 'saves_night_target_in_revote' as const,
+              score: 88,
+              title: `${v.voter}, a traitor, votes against ${v.target} in the revote, saving ${p}, ${proposed(marked)}`,
+              from: turn.id,
+              to: last.id,
+              facesTurn: turn.id,
+              round: e.round,
+            },
+          ];
+        });
     });
   });
 

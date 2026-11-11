@@ -133,7 +133,7 @@ describe('night-target rules', () => {
     it('finds a traitor whispering to a player they proposed to murder who is still alive', () => {
       const log = logFrom({ ...roles }, [...night, ...whisperSpecs('T1', 'F1')]);
       expect(whispersToNightTarget(buildContext(log))).toEqual([
-        { rule: 'whispers_to_night_target', score: 85, title: 'T1, a traitor, whispers to F1, a player they proposed to murder', from: 2, to: 2, facesTurn: 2, round: 1 },
+        { rule: 'whispers_to_night_target', score: 85, title: 'T1, a traitor, whispers to F1, whom they proposed to murder in round 1', from: 2, to: 2, facesTurn: 2, round: 1 },
       ]);
     });
     it('ignores a whisper to someone they never proposed, a faithful whispering, and a whisper to the victim', () => {
@@ -148,7 +148,7 @@ describe('night-target rules', () => {
       const log = logFrom({ ...roles }, [...night, ...table({ F3: 'F1', T1: 'F3' })]);
       const found = defendsNightTarget(buildContext(log));
       expect(found).toEqual([
-        { rule: 'defends_night_target', score: 70, title: 'T1, a traitor, accuses F3 for suspecting F1, a player they proposed to murder', from: 3, to: 3, facesTurn: 3, round: 1 },
+        { rule: 'defends_night_target', score: 70, title: 'T1, a traitor, accuses F3 for suspecting F1, whom they proposed to murder in round 1', from: 3, to: 3, facesTurn: 3, round: 1 },
       ]);
     });
     it('ignores a traitor who accuses someone unrelated, or whose target is dead', () => {
@@ -166,7 +166,7 @@ describe('night-target rules', () => {
     it('finds a traitor voting for the other tied player, saving their night target', () => {
       const log = logFrom({ ...roles }, [...night, ...revote([{ voter: 'T1', target: 'F3' }, { voter: 'F4', target: 'F1' }])]);
       expect(savesNightTargetInRevote(buildContext(log))).toEqual([
-        { rule: 'saves_night_target_in_revote', score: 88, title: 'T1, a traitor, votes against F3 in the revote, saving F1, a player they proposed to murder', from: 2, to: 3, facesTurn: 2, round: 1 },
+        { rule: 'saves_night_target_in_revote', score: 88, title: 'T1, a traitor, votes against F3 in the revote, saving F1, whom they proposed to murder in round 1', from: 2, to: 3, facesTurn: 2, round: 1 },
       ]);
     });
     it('ignores a traitor who votes for their own night target, and a tie that does not include it', () => {
@@ -215,5 +215,55 @@ describe('notesContradictPraise', () => {
     expect(notesContradictPraise(buildContext(odd))).toHaveLength(1);
     const aXb = logFrom({ AxB: 'faithful', T1: 'traitor' }, turnWith('I trust A.B fully.', 'AxB is my target.'));
     expect(notesContradictPraise(buildContext(aXb))).toEqual([]);
+  });
+});
+
+describe('night proposals that count', () => {
+  const base = (night: Spec[], extra: Spec[]) => buildContext(logFrom({ ...roles }, [...night, ...extra]));
+  const twoWay: Spec[] = [{ r: 1, ev: { type: 'vote', stage: 'vote', votes: [], tally: {}, leaders: ['F1', 'F3'] } }];
+  const threeWay: Spec[] = [{ r: 1, ev: { type: 'vote', stage: 'vote', votes: [], tally: {}, leaders: ['F1', 'F3', 'F4'] } }];
+  const revoteTurn = (leadersSpec: Spec[]): Spec[] => [
+    ...leadersSpec,
+    { r: 1, phase: 'revote', p: 'T1', action: { target: 'F3' } },
+    { r: 1, ev: { type: 'vote', stage: 'revote', votes: [{ voter: 'T1', target: 'F3' }], tally: {}, leaders: [] } },
+  ];
+
+  it('ignores a first-pass proposal that the traitor replaced in the second pass', () => {
+    const replaced: Spec[] = [
+      { r: 1, phase: 'night', p: 'T1', action: { target: 'F1' } },
+      { r: 1, phase: 'night', p: 'T2', action: { target: 'F2' } },
+      { r: 1, phase: 'night', p: 'T1', action: { target: 'F2' } }, // T1 switched to F2 in the second pass
+      { r: 1, phase: 'night', p: 'T2', action: { target: 'F2' } },
+      { r: 1, ev: { type: 'murder', victim: 'F2', proposals: [], method: 'agreed' } },
+      { r: 1, ev: { type: 'breakfast', victim: 'F2', role: 'faithful' } },
+    ];
+    const ctx = base(replaced, [
+      { r: 1, phase: 'whispers', p: 'T1', action: { to: 'F1', message: 'hi' } },
+      { r: 1, ev: { type: 'whisper', from: 'T1', to: 'F1', message: 'hi' } },
+    ]);
+    expect([...ctx.nightTargets('T1', 1)]).toEqual([['F2', 1]]);
+    expect(whispersToNightTarget(ctx)).toEqual([]);
+  });
+
+  it('says which round the proposal was in when it was an earlier night', () => {
+    const log = logFrom({ ...roles }, [
+      { r: 1, phase: 'night', p: 'T1', action: { target: 'F1' } },
+      { r: 1, ev: { type: 'murder', victim: 'F1', proposals: [], method: 'agreed' } },
+      { r: 2, phase: 'night', p: 'T1', action: { target: 'F4' } },
+      { r: 2, phase: 'whispers', p: 'T1', action: { to: 'F3', message: 'x' } },
+      { r: 2, ev: { type: 'whisper', from: 'T1', to: 'F3', message: 'x' } },
+      { r: 3, phase: 'night', p: 'T1', action: { target: 'F3' } },
+      { r: 4, phase: 'whispers', p: 'T1', action: { to: 'F3', message: 'y' } },
+      { r: 4, ev: { type: 'whisper', from: 'T1', to: 'F3', message: 'y' } },
+    ]);
+    expect(whispersToNightTarget(buildContext(log)).map((h) => h.title)).toEqual([
+      'T1, a traitor, whispers to F3, whom they proposed to murder in round 3',
+    ]);
+  });
+
+  it('counts a revote as a save only in a two-way tie', () => {
+    const night: Spec[] = [{ r: 1, phase: 'night', p: 'T1', action: { target: 'F1' } }];
+    expect(savesNightTargetInRevote(base(night, revoteTurn(twoWay)))).toHaveLength(1);
+    expect(savesNightTargetInRevote(base(night, revoteTurn(threeWay)))).toEqual([]);
   });
 });

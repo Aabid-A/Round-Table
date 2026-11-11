@@ -8,8 +8,12 @@ export interface Context {
   isTraitorAt(player: string, turnId: number): boolean;
   /** Has the player been murdered or banished before turn `turnId`? */
   isOutAt(player: string, turnId: number): boolean;
-  /** Who the traitor proposed to murder in any night up to and including `round`. */
-  nightTargets(traitor: string, round: number): Set<string>;
+  /**
+   * Who the traitor finally proposed to murder in each night up to and including `round`:
+   * player -> the latest round it happened. A first-pass proposal that the traitor
+   * replaced in the second pass does not count.
+   */
+  nightTargets(traitor: string, round: number): Map<string, number>;
   /** The turns of one voting stage in a round, in order. */
   stageTurns(round: number, phase: 'vote' | 'revote'): Turn[];
   turnsOf(round: number, phase: Turn['phase']): Turn[];
@@ -33,10 +37,12 @@ export function buildContext(log: GameLog): Context {
       log.roles[player] === 'traitor' || recruits.some((r) => r.offeredTo === player && r.afterTurn < turnId),
     isOutAt: (player, turnId) => exits.some((x) => x.player === player && x.after < turnId),
     nightTargets: (traitor, round) => {
-      const out = new Set<string>();
+      const lastPerRound = new Map<number, string>();
       for (const t of log.turns) {
-        if (t.phase === 'night' && t.player === traitor && t.round <= round) out.add((t.action as { target: string }).target);
+        if (t.phase === 'night' && t.player === traitor && t.round <= round) lastPerRound.set(t.round, (t.action as { target: string }).target);
       }
+      const out = new Map<string, number>();
+      for (const [r, target] of [...lastPerRound].sort((a, b) => a[0] - b[0])) out.set(target, r);
       return out;
     },
     stageTurns: (round, phase) => log.turns.filter((t) => t.round === round && t.phase === phase),

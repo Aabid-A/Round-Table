@@ -36,9 +36,9 @@ describe('buildContext', () => {
   });
 
   it('collects the night proposals of a traitor up to a round', () => {
-    expect([...c.nightTargets('T1', 1)]).toEqual(['F1']);
+    expect([...c.nightTargets('T1', 1)]).toEqual([['F1', 1]]);
     expect([...c.nightTargets('F3', 1)]).toEqual([]);
-    expect([...c.nightTargets('F3', 2)]).toEqual(['F2']);
+    expect([...c.nightTargets('F3', 2)]).toEqual([['F2', 2]]);
   });
 
   it('finds turns and events', () => {
