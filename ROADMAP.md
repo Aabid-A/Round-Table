@@ -101,7 +101,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
   - Human seats appear in the log with `model: "human"` (additive; update
     `docs/LOG.md`).
 
-- [ ] **M10. Rooms: play with friends.** A room link friends open to play
+- [x] **M10. Rooms: play with friends.** A room link friends open to play
   together, with AIs filling the empty seats.
   - `server/`: a Node WebSocket server. Allowed dependencies: ws, @types/ws.
     The engine runs on the server, so no client ever receives another
