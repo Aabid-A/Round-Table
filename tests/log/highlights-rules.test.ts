@@ -242,6 +242,19 @@ describe('notesContradictPraise', () => {
     expect(ctxFor('Émile', 'I vouch for Émile.', 'Émile is my target.')).toHaveLength(1);
   });
 
+  it('finds a player whose name has a comma or colon, or is a word like Yet or No', () => {
+    const praised = (name: string) =>
+      notesContradictPraise(buildContext(logFrom({ [name]: 'faithful', T1: 'traitor' }, turnWith(`I trust ${name} fully.`, `${name} is my target.`))));
+    for (const name of ['a:b', 'Smith, John', 'Yet', 'No', 'Nor', 'Though']) expect(praised(name), name).toHaveLength(1);
+  });
+
+  it('still skips a negated clause and a clause about someone else for such names', () => {
+    const neg = logFrom({ No: 'faithful', T1: 'traitor' }, turnWith('I do not trust No.', 'No is my target.'));
+    expect(notesContradictPraise(buildContext(neg))).toEqual([]);
+    const other = logFrom({ 'Smith, John': 'faithful', F2: 'faithful', T1: 'traitor' }, turnWith('I trust F2, but Smith, John is lying.', 'Smith, John is a traitor.'));
+    expect(notesContradictPraise(buildContext(other)).map((h) => h.title)).toEqual([]);
+  });
+
   it('finds several players praised in one turn, and handles names with punctuation safely', () => {
     expect(find('I trust F1. I also vouch for F2.', 'F1 is a target. F2 is a lie.').map((h) => h.title)).toHaveLength(2);
     const odd = logFrom({ 'A.B': 'faithful', T1: 'traitor' }, turnWith('I trust A.B fully.', 'A.B is my target.'));

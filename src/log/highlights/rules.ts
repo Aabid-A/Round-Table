@@ -195,13 +195,22 @@ const sentences = (text: string): string[] => text.split(/(?<=[.!?])\s+|\n/);
 /** Parts of a sentence that can praise different people: split at commas, colons and "but"-like words. */
 const clauses = (sentence: string): string[] => sentence.split(/[,;:]|\b(?:but|however|although|though|yet)\b/i);
 
-/** The name as a whole word, case-sensitive (so "Will" is not "will"), with letters from any alphabet. */
-const mentions = (text: string, name: string): boolean =>
-  new RegExp(`(?<![\\p{L}\\p{N}_])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'u').test(text);
+const nameRegex = (name: string, flags = 'u'): RegExp =>
+  new RegExp(`(?<![\\p{L}\\p{N}_])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, flags);
 
-/** A clause praises the player if it names them, has a praise word, and is not negated ("I do not trust Bo"). */
+/** The name as a whole word, case-sensitive (so "Will" is not "will"), with letters from any alphabet. */
+const mentions = (text: string, name: string): boolean => nameRegex(name).test(text);
+
+const MARK = '\u0001';
+
+/**
+ * A clause praises the player if it names them, has a praise word, and is not negated ("I do not trust Bo").
+ * The name is masked first, so a cast name like "Smith, John" or "Yet" is not split or read as a keyword.
+ */
 const praisesInClause = (speech: string, name: string): boolean =>
-  sentences(speech).some((s) => clauses(s).some((c) => mentions(c, name) && PRAISE.test(c) && !NEGATION.test(c)));
+  sentences(speech.replace(nameRegex(name, 'gu'), MARK)).some((s) =>
+    clauses(s).some((c) => c.includes(MARK) && PRAISE.test(c) && !NEGATION.test(c)),
+  );
 
 /**
  * The speech praises a player and the same turn's private notes name them, most of all when the notes scheme
