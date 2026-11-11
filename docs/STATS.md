@@ -37,4 +37,6 @@ Per model:
 | `betrayalIndex` | `(wins as a traitor + faithfuls banished by its traitor vote + recruit offers accepted) / games`, 2 decimals. Higher means it betrays more, and gets away with it. |
 
 The numbers are per seat, so a season with few games is noisy: read them after a few dozen
-games per model.
+games per model. The betrayal index divides by every seat played, including games stopped by a
+cost cap (which have no winner and so no traitor win), so those games pull the index down; check
+`decidedGames` against `games`.
