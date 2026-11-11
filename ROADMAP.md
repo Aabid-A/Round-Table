@@ -49,7 +49,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     steps through to the result.
   - Follow `/ui-design` and run `/design-review`.
 
-- [ ] **M4. Recording mode.** `?mode=record` is the clip camera.
+- [x] **M4. Recording mode.** `?mode=record` is the clip camera.
   - No controls or chrome. Layouts for 16:9 and 9:16 (`&aspect=9x16`).
   - Autoplay paced by reading speed. `&from=<turnId>&to=<turnId>` plays only
     that range, so one URL is one clip.

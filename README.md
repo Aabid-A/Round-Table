@@ -82,6 +82,28 @@ cp games/mock-seed-1.json web/public/games/
 Logs with a `schemaVersion` other than 1 are rejected with a message. `npm run build:web`
 writes a static site to `web/dist/`; nothing is deployed.
 
+### Recording mode (the clip camera)
+
+`?mode=record` shows the episode with no controls or chrome, in a fixed shape, and plays by
+itself at reading speed. One URL is one clip. It needs a log in `web/public/games/`:
+
+```text
+http://localhost:5173/?mode=record&log=mock-seed-1                       whole episode, 16:9
+http://localhost:5173/?mode=record&log=mock-seed-1&aspect=9x16           vertical, 9:16
+http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14         turns 10 to 14 only
+http://localhost:5173/?mode=record&log=mock-seed-1&faces=14              "two faces" for turn 14
+http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice as fast
+```
+
+- `aspect` is `16x9` (default) or `9x16`. The stage keeps that shape at any window size.
+- `from` and `to` are turn ids (inclusive). The result screen is included only if the clip
+  reaches the last turn. Turn ids are the `id` field in the log (see [docs/LOG.md](docs/LOG.md)).
+- `faces=<turn>` is the shot the show is built on: what the player said beside what they
+  privately wrote, marked hidden from players.
+- `speed` divides the pacing (0.05 to 100). A bad value is shown as plain text.
+- When a clip finishes it holds the last frame and sets `data-done="true"` on the `.rec`
+  element, so a screen recorder or script knows when to stop.
+
 Browser tests: `npm run test:e2e` (Playwright, port 5183). On your own machine run
 `npx playwright install chromium` once first.
 

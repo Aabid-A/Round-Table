@@ -3,6 +3,8 @@ import type { GameLog } from '../../src/engine/types.js';
 import { ErrorBoundary } from './ErrorBoundary.js';
 import { Loader } from './Loader.js';
 import { Player } from './Player.js';
+import { isRecordMode, parseRecordParams } from './record/params.js';
+import { RecordView } from './record/RecordView.js';
 import { loadFromFile, loadFromName, logNameFromSearch, type LoadResult } from './load.js';
 
 type State =
@@ -24,6 +26,10 @@ export function App() {
     setState({ kind: 'loading', what: name });
     void loadFromName(name, import.meta.env.BASE_URL).then(settle);
   }, []);
+
+  if (isRecordMode(window.location.search)) {
+    return <RecordPage state={state} />;
+  }
 
   const loader = (status: 'idle' | 'loading' | 'error', message: string | null) => (
     <Loader
@@ -47,4 +53,17 @@ export function App() {
     state.kind === 'error' ? 'error' : state.kind === 'loading' ? 'loading' : 'idle',
     state.kind === 'error' ? state.message : state.kind === 'loading' ? state.what : null,
   );
+}
+
+/** ?mode=record: no file picker, no chrome. Needs ?log=<name>. Problems are shown as plain text. */
+function RecordPage({ state }: { state: State }) {
+  useEffect(() => {
+    document.title = 'Round Table clip';
+  }, []);
+  const parsed = parseRecordParams(window.location.search);
+  if (!parsed.ok) return <p className="rec-error" role="alert">{parsed.message}</p>;
+  if (state.kind === 'ready') return <RecordView log={state.log} params={parsed.params} />;
+  if (state.kind === 'error') return <p className="rec-error" role="alert">{state.message}</p>;
+  if (state.kind === 'loading') return <p className="rec-error" role="status">Loading {state.what}…</p>;
+  return <p className="rec-error" role="alert">Recording mode needs ?log=&lt;name&gt; for a file in web/public/games/.</p>;
 }

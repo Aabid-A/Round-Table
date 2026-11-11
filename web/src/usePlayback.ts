@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 /** Step index and play/pause. `durations[i]` is how long step i stays up while playing. */
-export function usePlayback(durations: number[]) {
+export function usePlayback(durations: number[], options: { autoStart?: boolean } = {}) {
   const last = durations.length - 1;
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(options.autoStart ?? false);
 
   useEffect(() => {
     if (!playing) return;
