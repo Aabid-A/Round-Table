@@ -22,8 +22,9 @@ export async function joinByInvite(page: Page, code: string, name: string): Prom
 /**
  * Answer this person's turns until the end screen shows. Returns the turns answered.
  * Stops early (returning what it has) if the page shows the room-closed screen.
+ * `forbid` lists text that must never be on the page while playing, such as other people's notes.
  */
-export async function playTurns(page: Page, note: string): Promise<number> {
+export async function playTurns(page: Page, note: string, forbid: string[] = []): Promise<number> {
   let answered = 0;
   const seen = new Set<string>();
   for (let n = 0; n < 200; n++) {
@@ -40,6 +41,8 @@ export async function playTurns(page: Page, note: string): Promise<number> {
     }
     seen.add(turn);
     const phase = await form.getAttribute('data-phase');
+    const body = await page.locator('body').innerText();
+    for (const text of forbid) expect(body, `"${text}" must not be shown during play`).not.toContain(text);
     if (phase === 'whispers') await form.getByLabel('Send no whisper').check();
     else if (phase === 'recruit_choose') await form.getByLabel('Make no offer').check();
     else await form.locator('input[type=radio]').first().check();
