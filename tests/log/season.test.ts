@@ -60,7 +60,7 @@ describe('readSeason', () => {
 
   it('is empty for an empty folder and throws for a missing one', () => {
     expect(readSeason(mkdtempSync(join(tmpdir(), 'rt-season-')))).toEqual({ logs: [], names: [], skipped: [] });
-    expect(() => readSeason(join(tmpdir(), 'rt-no-such-folder'))).toThrow();
+    expect(() => readSeason(join(mkdtempSync(join(tmpdir(), 'rt-season-miss-')), 'nope'))).toThrow();
   });
 
   it('can ignore named files, such as the episode index', async () => {

@@ -56,7 +56,7 @@ describe('npm run stats', () => {
     expect(JSON.parse(empty.stdout)).toMatchObject({ games: 0, models: [] });
     expect(run().status).toBe(1);
     expect(run().stderr).toContain('usage:');
-    const missing = run(join(tmpdir(), 'rt-no-such-folder'));
+    const missing = run(join(mkdtempSync(join(tmpdir(), 'rt-stats-miss-')), 'nope'));
     expect(missing.status).toBe(1);
     expect(missing.stderr).toContain('ENOENT');
   }, SLOW);
