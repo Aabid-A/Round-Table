@@ -1,4 +1,6 @@
 import type { GameLog } from '../src/engine/types.js';
+import { runRoomGame } from './game.js';
+import type { HumanAnswer } from '../src/players/human.js';
 import { parseClientMessage, type AiSetup, type ClientMessage, type ServerMessage } from './protocol.js';
 import type { Registry } from './registry.js';
 import { Room, type Conn, type Seat } from './room.js';
@@ -66,8 +68,9 @@ export class Session {
       case 'rejoin':
         return this.rejoin(msg.code, msg.token);
       case 'start':
+        return this.start();
       case 'answer':
-        return this.tell({ t: 'error', message: 'There is no game to do that in yet.' });
+        return this.answer(msg.turn, msg.answer);
     }
   }
 
@@ -113,6 +116,42 @@ export class Session {
     if (!room) return this.tell({ t: 'error', message: 'No room has that code. Check it and try again.' });
     const sat = this.sit(room, name);
     if (!sat.ok) this.tell({ t: 'error', message: sat.error });
+  }
+
+  private start(): void {
+    const { room, seat } = this;
+    if (!room || !seat) return this.tell({ t: 'error', message: 'Create or join a room first.' });
+    const problem = room.startProblem(seat);
+    if (problem) return this.tell({ t: 'error', message: problem });
+    room.phase = 'playing';
+    room.broadcast({ t: 'status', phase: null });
+    const rt = this.runtime(room);
+    const { options } = this.deps;
+    runRoomGame(room, {
+      seatPlayers: rt.seatPlayers,
+      signal: rt.abort.signal,
+      ...(options.fetchImpl ? { fetchImpl: options.fetchImpl } : {}),
+      ...(options.aiTimeoutMs !== undefined ? { aiTimeoutMs: options.aiTimeoutMs } : {}),
+    }).then(
+      (log) => {
+        if (room.phase !== 'playing') return; // the room closed while the game ran
+        rt.log = log;
+        room.phase = 'finished';
+        for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name });
+      },
+      (e: unknown) => {
+        options.log(`game error: ${e instanceof Error ? e.name : 'unknown'}`);
+        room.close('The game stopped because of an error.');
+      },
+    );
+  }
+
+  private answer(turn: number, answer: HumanAnswer): void {
+    const { room, seat } = this;
+    if (!room || !seat) return this.tell({ t: 'error', message: 'Create or join a room first.' });
+    if (room.phase !== 'playing') return this.tell({ t: 'error', message: 'The game is not running.' });
+    // An answer for a turn that already timed out or was answered is ignored: it is not an error to be late.
+    this.deps.runtimes.get(room.code)?.seatPlayers.get(seat.name)?.answer(turn, answer);
   }
 
   private rejoin(code: string, token: string): void {

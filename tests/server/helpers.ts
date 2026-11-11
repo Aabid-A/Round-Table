@@ -43,3 +43,12 @@ export function autoRoom(names: string[], setup: ConstructorParameters<typeof Ro
   }
   return { room, conns, seatPlayers };
 }
+
+/** Resolves when `ready()` is true, checking every few milliseconds; fails after `ms`. */
+export async function waitFor(ready: () => boolean, ms = 20_000): Promise<void> {
+  const until = Date.now() + ms;
+  while (!ready()) {
+    if (Date.now() > until) throw new Error('timed out waiting');
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { Registry } from '../../server/registry.js';
 import { Session, type Runtime } from '../../server/session.js';
-import { FakeConn } from './helpers.js';
+import { formFor, emptyAnswer } from '../../web/src/play/human.js';
+import { FakeConn, waitFor } from './helpers.js';
 
 function server() {
   const registry = new Registry();
@@ -11,7 +12,17 @@ function server() {
     const conn = new FakeConn();
     const session = new Session(conn, { registry, runtimes, options: { turnMs: 1000, log: (l) => logged.push(l) } });
     const send = (m: unknown) => session.handle(JSON.stringify(m));
-    return { conn, session, send };
+    /** Answer every turn at once, as a patient person would. */
+    const autoplay = () => {
+      const original = conn.send.bind(conn);
+      conn.send = (m) => {
+        original(m);
+        if (m.t !== 'turn') return;
+        const spec = formFor(m.phase, m.options);
+        send({ t: 'answer', turn: m.turn, answer: { ...emptyAnswer(), speech: spec.speechLabel ? 'hello' : '', message: spec.messageLabel ? 'because' : '', choice: spec.choices[0]!.value } });
+      };
+    };
+    return { conn, session, send, autoplay };
   };
   return { registry, runtimes, logged, open };
 }
@@ -80,5 +91,45 @@ describe('Session: creating, joining and rejoining', () => {
     s.registry.get(code)!.close('done');
     expect(s.runtimes.has(code)).toBe(false);
     expect(s.runtimes.size).toBe(0);
+  });
+
+  it('runs the game when the host starts it, and sends the finished log to everyone', async () => {
+    const s = server();
+    const host = s.open();
+    host.autoplay();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+    const code = joinedOf(host.conn).code;
+    const friend = s.open();
+    friend.autoplay();
+    friend.send({ t: 'join', code, name: 'Rae' });
+    friend.send({ t: 'start' });
+    host.send({ t: 'start' });
+    await waitFor(() => host.conn.sent.some((m) => m.t === 'finished') && friend.conn.sent.some((m) => m.t === 'finished'));
+    const finished = friend.conn.sent.find((m) => m.t === 'finished') as { log: { cast: unknown[]; result: { winner: string } }; you: string };
+    expect(finished.you).toBe('Rae');
+    expect(finished.log.cast).toHaveLength(8);
+    expect(s.registry.get(code)!.phase).toBe('finished');
+    const messages = (c: FakeConn) => c.sent.map((m) => (m as { message?: string }).message).filter(Boolean);
+    expect(messages(friend.conn)).toEqual(['Only the host can start the game.']);
+    host.send({ t: 'start' });
+    host.send({ t: 'answer', turn: 1, answer: { speech: '', note: '', choice: null, message: '' } });
+    expect(messages(host.conn)).toEqual(['The game has already started.', 'The game is not running.']);
+    const late = s.open();
+    late.send({ t: 'join', code, name: 'Sam' });
+    expect(messages(late.conn)).toEqual(['That game has already started.']);
+  });
+
+  it('gives the finished log back to someone who rejoins after the end', async () => {
+    const s = server();
+    const host = s.open();
+    host.autoplay();
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+    const { code, token } = joinedOf(host.conn);
+    host.send({ t: 'start' });
+    await waitFor(() => host.conn.sent.some((m) => m.t === 'finished'));
+    host.session.disconnect();
+    const back = s.open();
+    back.send({ t: 'rejoin', code, token });
+    expect(back.conn.sent.map((m) => m.t)).toEqual(['joined', 'finished']);
   });
 });
