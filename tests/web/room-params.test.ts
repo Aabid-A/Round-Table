@@ -1,0 +1,38 @@
+import { describe, expect, it } from 'vitest';
+import { inviteLink, isRoomMode, roomCodeFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
+
+describe('isRoomMode and roomCodeFromSearch', () => {
+  it('opens the rooms page for ?mode=room or a valid invite code', () => {
+    expect(isRoomMode('?mode=room')).toBe(true);
+    expect(isRoomMode('?room=ab2cd')).toBe(true);
+    expect(isRoomMode('?room=nope')).toBe(false);
+    expect(isRoomMode('?mode=play')).toBe(false);
+    expect(isRoomMode('')).toBe(false);
+  });
+  it('reads the code in standard form, or nothing', () => {
+    expect(roomCodeFromSearch('?mode=room&room=ab2cd')).toBe('AB2CD');
+    expect(roomCodeFromSearch('?room=AB0CD')).toBeNull();
+    expect(roomCodeFromSearch('?mode=room')).toBeNull();
+  });
+});
+
+describe('roomServerUrl', () => {
+  const http = { protocol: 'http:', hostname: 'localhost' };
+  it('defaults to port 8787 on the page host, secure when the page is', () => {
+    expect(roomServerUrl(undefined, http)).toBe('ws://localhost:8787');
+    expect(roomServerUrl('', { protocol: 'https:', hostname: 'play.example.org' })).toBe('wss://play.example.org:8787');
+  });
+  it('uses a configured ws or wss address', () => {
+    expect(roomServerUrl('ws://127.0.0.1:8788', http)).toBe('ws://127.0.0.1:8788');
+    expect(roomServerUrl('wss://rooms.example.org/play', http)).toBe('wss://rooms.example.org/play');
+  });
+  it('ignores a configured address that is not a ws address', () => {
+    for (const bad of ['http://x.example', 'javascript:alert(1)', 'ws://', 'rooms.example.org', 'ws://a b']) expect(roomServerUrl(bad, http), bad).toBe('ws://localhost:8787');
+  });
+});
+
+describe('inviteLink', () => {
+  it('opens the rooms page on the join form with the code', () => {
+    expect(inviteLink({ origin: 'https://play.example.org', pathname: '/table/' }, 'AB2CD')).toBe('https://play.example.org/table/?mode=room&room=AB2CD');
+  });
+});
