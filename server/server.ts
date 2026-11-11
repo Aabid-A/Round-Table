@@ -1,5 +1,5 @@
-import type { IncomingMessage } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
+import { addressOf } from './address.js';
 import { LIMITS, type ServerMessage } from './protocol.js';
 import { Registry } from './registry.js';
 import type { Conn } from './room.js';
@@ -15,7 +15,7 @@ export interface ServerOptions {
   sweepMs?: number;
   /** Let the page choose a room's seed (tests and replays only: the seed decides every role). */
   allowSeed?: boolean;
-  /** Take a client's address from the first X-Forwarded-For entry (set this only behind a reverse proxy you run). */
+  /** Take a client's address from the last X-Forwarded-For entry (set this only behind a single reverse proxy you run). */
   trustProxy?: boolean;
   /** Connections one address may hold. */
   maxConnectionsPerAddress?: number;
@@ -35,13 +35,6 @@ export interface RunningServer {
 }
 
 const PING_MS = 30_000;
-
-/** Where a connection came from: the socket's address, or behind your own reverse proxy the first X-Forwarded-For entry. */
-function addressOf(req: IncomingMessage, trustProxy: boolean): string | null {
-  const forwarded = trustProxy ? req.headers['x-forwarded-for'] : undefined;
-  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim();
-  return first || req.socket.remoteAddress || null;
-}
 
 /** Wrap a socket as the room's Conn: JSON out, and nothing thrown at a socket that already closed. */
 function connOf(ws: WebSocket): Conn {
@@ -66,7 +59,7 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
   const maxPerAddress = opts.maxConnectionsPerAddress ?? LIMITS.connectionsPerAddress;
 
   wss.on('connection', (ws, req) => {
-    const address = addressOf(req, opts.trustProxy ?? false);
+    const address = addressOf(req.headers, req.socket.remoteAddress, opts.trustProxy ?? false);
     const held = address === null ? 0 : (perAddress.get(address) ?? 0);
     if (wss.clients.size > LIMITS.connections || held >= maxPerAddress) {
       ws.close(1013, 'busy');

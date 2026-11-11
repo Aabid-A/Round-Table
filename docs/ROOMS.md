@@ -21,7 +21,7 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `ALLOW_SEED` | server | Set to `1` to let a page choose a room's seed with `?seed=N`. For tests and replays only: the seed decides every role, so anyone who can pick it can work the roles out with the public engine code. Off by default; the server then picks a random seed and ignores the page's. |
 | `MAX_ROOMS_PER_ADDRESS` | server | Open rooms one network address may have. Default 3 (finished rooms do not count). |
 | `MAX_CONNECTIONS_PER_ADDRESS` | server | Connections one network address may hold. Default 20. |
-| `TRUST_PROXY` | server | Set to `1` only behind a reverse proxy you run: the address is then the first `X-Forwarded-For` entry. Without it, every client behind the proxy looks like one address and shares these limits. |
+| `TRUST_PROXY` | server | Set to `1` only behind exactly one reverse proxy that you run: the address is then the last `X-Forwarded-For` entry, the one your proxy added (earlier entries are whatever the client sent). Without it, every client behind the proxy looks like one address and shares these limits. |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
 Time values are whole milliseconds from 100 to 86400000. A bad value stops the server and names the
