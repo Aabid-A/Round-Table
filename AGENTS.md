@@ -144,4 +144,6 @@ this file unchanged.
 - `npm ci`
 - `npm run typecheck`
 - `npm test`
+- `npm run build:web`
+- `npm run test:e2e` (after `npx playwright install chromium`; the cloud sandbox already has it)
 - `git diff --check`
