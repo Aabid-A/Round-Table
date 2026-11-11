@@ -10,6 +10,8 @@ import { textScale } from './fit.js';
 import type { RecordParams } from './params.js';
 import { stepsForRange } from './range.js';
 
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+
 interface Props {
   log: GameLog;
   params: RecordParams;
@@ -21,7 +23,8 @@ export function RecordView({ log, params }: Props) {
   const clip = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
   const views = useMemo(() => clip.map((s) => describeStep(s, log)), [clip, log]);
   const durations = useMemo(
-    () => views.map((v) => Math.max(50, Math.round(stepDurationMs(v) / params.speed))),
+    // setTimeout overflows above 2^31-1 ms and then fires at once, so cap the hold.
+    () => views.map((v) => Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(stepDurationMs(v) / params.speed)))),
     [views, params.speed],
   );
   const { index, playing } = usePlayback(durations, { autoStart: params.faces === null && clip.length > 0 });

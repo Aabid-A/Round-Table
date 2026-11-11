@@ -100,7 +100,7 @@ http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice a
   reaches the last turn. Turn ids are the `id` field in the log (see [docs/LOG.md](docs/LOG.md)).
 - `faces=<turn>` is the shot the show is built on: what the player said beside what they
   privately wrote, marked hidden from players.
-- `speed` divides the pacing (0 to 100). A bad value is shown as plain text.
+- `speed` divides the pacing (0.05 to 100). A bad value is shown as plain text.
 - When a clip finishes it holds the last frame and sets `data-done="true"` on the `.rec`
   element, so a screen recorder or script knows when to stop.
 

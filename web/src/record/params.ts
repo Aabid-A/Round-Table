@@ -1,3 +1,6 @@
+export const MIN_SPEED = 0.05;
+export const MAX_SPEED = 100;
+
 export type Aspect = '16x9' | '9x16';
 
 export interface RecordParams {
@@ -7,7 +10,7 @@ export interface RecordParams {
   to: number | null;
   /** Show the "two faces" shot for this one turn instead of playing. */
   faces: number | null;
-  /** Pacing multiplier: 2 plays twice as fast. */
+  /** Pacing multiplier: 2 plays twice as fast. Between MIN_SPEED and MAX_SPEED. */
   speed: number;
 }
 
@@ -37,6 +40,8 @@ export function parseRecordParams(search: string): RecordParse {
   }
   const speedText = q.get('speed');
   const speed = speedText === null ? 1 : Number(speedText);
-  if (!Number.isFinite(speed) || speed <= 0 || speed > 100) return { ok: false, message: 'speed must be a number above 0 and up to 100.' };
+  if (!Number.isFinite(speed) || speed < MIN_SPEED || speed > MAX_SPEED) {
+    return { ok: false, message: `speed must be a number from ${MIN_SPEED} to ${MAX_SPEED}.` };
+  }
   return { ok: true, params: { aspect, from: from as number | null, to: to as number | null, faces: faces as number | null, speed } };
 }

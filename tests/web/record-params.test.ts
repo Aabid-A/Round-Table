@@ -26,6 +26,11 @@ describe('parseRecordParams', () => {
     expect(parseRecordParams('?from=0&to=0')).toMatchObject({ ok: true, params: { from: 0, to: 0 } });
   });
 
+  it('accepts the speed limits themselves', () => {
+    expect(parseRecordParams('?speed=0.05')).toMatchObject({ ok: true, params: { speed: 0.05 } });
+    expect(parseRecordParams('?speed=100')).toMatchObject({ ok: true, params: { speed: 100 } });
+  });
+
   it('says which parameter is wrong', () => {
     const bad: [string, string][] = [
       ['?aspect=4x3', 'aspect must be'],
@@ -36,6 +41,8 @@ describe('parseRecordParams', () => {
       ['?speed=0', 'speed must be'],
       ['?speed=abc', 'speed must be'],
       ['?speed=1000', 'speed must be'],
+      ['?speed=0.01', 'speed must be a number from 0.05 to 100'],
+      ['?speed=1e-9', 'speed must be'],
     ];
     for (const [q, why] of bad) {
       expect(parseRecordParams(q), q).toMatchObject({ ok: false, message: expect.stringContaining(why) });
