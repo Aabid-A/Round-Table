@@ -4,3 +4,6 @@ games/
 .artifacts/
 worktrees/
 config/cast.json
+web/dist
+playwright-report
+test-results
