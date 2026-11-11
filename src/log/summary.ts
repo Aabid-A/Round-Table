@@ -1,4 +1,5 @@
 import type { GameLog } from '../engine/types.js';
+import { isUsableCost } from '../types.js';
 
 export function countFallbacks(log: GameLog): number {
   return log.turns.filter((t) => t.fallback).length;
@@ -17,7 +18,7 @@ export function totalCostUsd(log: GameLog): number | null {
   let seen = false;
   for (const t of log.turns) {
     for (const a of t.attempts) {
-      if (a.usage?.costUsd !== undefined) {
+      if (isUsableCost(a.usage?.costUsd)) {
         total += a.usage.costUsd;
         seen = true;
       }
@@ -26,7 +27,7 @@ export function totalCostUsd(log: GameLog): number | null {
   return seen ? total : null;
 }
 
-/** Attempts that reported no usable cost. A cost cap counts these as free. */
+/** Attempts with no usable cost (none, NaN, negative or infinite). A cost cap counts these as free. */
 export function countUncostedAttempts(log: GameLog): number {
-  return log.turns.flatMap((t) => t.attempts).filter((a) => a.usage?.costUsd === undefined).length;
+  return log.turns.flatMap((t) => t.attempts).filter((a) => !isUsableCost(a.usage?.costUsd)).length;
 }

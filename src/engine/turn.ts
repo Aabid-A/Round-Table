@@ -1,6 +1,6 @@
 import type { Player } from '../players/player.js';
 import type { Rng } from './rng.js';
-import type { Usage } from '../types.js';
+import { isUsableCost, type Usage } from '../types.js';
 import type { Action, GameState, PhaseRequest, Turn, TurnAttempt } from './types.js';
 import { fallbackAction, parseReply } from './validate.js';
 
@@ -105,7 +105,7 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
       ...(usage ? { usage } : {}),
     });
     // A cost that is not a finite, non-negative number would corrupt the total (NaN never caps, negative refunds).
-    if (ctx.budget && usage?.costUsd !== undefined && Number.isFinite(usage.costUsd) && usage.costUsd >= 0) {
+    if (ctx.budget && isUsableCost(usage?.costUsd)) {
       ctx.budget.spentUsd += usage.costUsd;
       ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, usage.costUsd);
     }

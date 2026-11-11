@@ -24,3 +24,8 @@ export interface Usage {
   totalTokens?: number;
   costUsd?: number;
 }
+
+/** A reported cost counts only if it is a finite, non-negative number. */
+export function isUsableCost(cost: unknown): cost is number {
+  return typeof cost === 'number' && Number.isFinite(cost) && cost >= 0;
+}
