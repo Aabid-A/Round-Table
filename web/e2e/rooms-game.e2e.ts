@@ -58,8 +58,33 @@ test('two people play a whole game together, and both see the same end screen', 
   expect(notes).toContain('NOTE-FROM-RAE');
 });
 
+// Seed 5 with two people: Quinn speaks at the first round table and Rae has eleven turns after it.
+const TWO_PEOPLE_SEED = '&seed=5';
+
 // Seed 2 gives a lone faithful host eleven turns. A random seed could murder them on the first night, with no turn to wait for.
 const LONE_HOST_SEED = '&seed=2';
+
+test("what one person types is shown to the other as plain text, never as markup", async ({ page, browser }) => {
+  const markup = '<img src=x onerror="window.__xss=1"><b>bold</b>';
+  const code = await makeRoom(page, 'Quinn', TWO_PEOPLE_SEED);
+  const friend = await (await browser.newContext()).newPage();
+  await joinByInvite(friend, code, 'Rae');
+  await page.getByRole('button', { name: 'Start the game' }).click();
+
+  const seenByRae: string[] = [];
+  await Promise.all([playTurns(page, 'q', [], { speech: markup }), playTurns(friend, 'r', [], { seen: seenByRae })]);
+
+  // Rae was told what Quinn said, character for character.
+  expect(seenByRae.join('\n')).toContain('<img src=x onerror="window.__xss=1"><b>bold</b>');
+  for (const p of [page, friend]) {
+    expect(await p.evaluate(() => (window as unknown as { __xss?: number }).__xss), 'no script ran').toBeUndefined();
+    await expect(p.locator('img[src="x"]')).toHaveCount(0);
+    await expect(p.locator('b', { hasText: 'bold' })).toHaveCount(0);
+  }
+  // It is in the log as text too.
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download the game log' }).click()]);
+  expect(readFileSync((await download.path())!, 'utf8')).toContain('onerror=\\"window.__xss=1\\"');
+});
 
 test('a host alone with practice AIs can start at once and play through', async ({ page }) => {
   await makeRoom(page, 'Quinn', LONE_HOST_SEED);
