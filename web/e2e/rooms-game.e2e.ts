@@ -58,8 +58,11 @@ test('two people play a whole game together, and both see the same end screen', 
   expect(notes).toContain('NOTE-FROM-RAE');
 });
 
+// Seed 2 gives a lone faithful host eleven turns. A random seed could murder them on the first night, with no turn to wait for.
+const LONE_HOST_SEED = '&seed=2';
+
 test('a host alone with practice AIs can start at once and play through', async ({ page }) => {
-  await makeRoom(page, 'Quinn');
+  await makeRoom(page, 'Quinn', LONE_HOST_SEED);
   await page.getByRole('button', { name: 'Start the game' }).click();
   await expect(page.getByTestId('room-game')).toBeVisible();
   await playTurns(page, 'MY-NOTE', ['MOCKNOTE']);
@@ -70,7 +73,7 @@ test('a host alone with practice AIs can start at once and play through', async 
 });
 
 test('on your turn there is a clock and the form; between turns the status says nothing about who is acting', async ({ page }) => {
-  await makeRoom(page, 'Quinn');
+  await makeRoom(page, 'Quinn', LONE_HOST_SEED);
   await page.getByRole('button', { name: 'Start the game' }).click();
   const form = page.getByTestId('turn-form');
   const waiting = page.getByTestId('waiting');
