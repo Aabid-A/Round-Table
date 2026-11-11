@@ -19,14 +19,17 @@ function statsProblem(log: GameLog): string | null {
 
 export interface Season {
   logs: GameLog[];
+  /** The file name of each log, without .json, in the same order as `logs`. */
+  names: string[];
   /** Files that look like logs (.json) but could not be read, with the reason. */
   skipped: { file: string; reason: string }[];
 }
 
 /** Read every .json game log in a folder (not subfolders), in file name order. Bad files are skipped, not fatal. */
-export function readSeason(dir: string): Season {
-  const season: Season = { logs: [], skipped: [] };
-  for (const file of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
+export function readSeason(dir: string, opts: { ignore?: string[] } = {}): Season {
+  const season: Season = { logs: [], names: [], skipped: [] };
+  const ignore = new Set(opts.ignore ?? []);
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.json') && !ignore.has(f)).sort()) {
     try {
       const log = readGameLog(join(dir, file));
       const problem = statsProblem(log);
@@ -38,6 +41,7 @@ export function readSeason(dir: string): Season {
         throw new Error(`damaged log: ${e instanceof Error ? e.message : String(e)}`);
       }
       season.logs.push(log);
+      season.names.push(file.replace(/\.json$/, ''));
     } catch (e) {
       season.skipped.push({ file, reason: e instanceof Error ? e.message : String(e) });
     }

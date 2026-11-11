@@ -17,6 +17,7 @@ describe('readSeason', () => {
     mkdirSync(join(dir, 'sub.json')); // a folder named like a log
     const season = readSeason(dir);
     expect(season.logs.map((l) => l.seed)).toEqual([1, 2]);
+    expect(season.names).toEqual(['a-game', 'b-game']);
     expect(season.skipped.map((s) => s.file)).toEqual(['broken.json', 'old.json', 'sub.json']);
     expect(season.skipped[1]!.reason).toContain('schemaVersion 1');
   });
@@ -58,7 +59,15 @@ describe('readSeason', () => {
   });
 
   it('is empty for an empty folder and throws for a missing one', () => {
-    expect(readSeason(mkdtempSync(join(tmpdir(), 'rt-season-')))).toEqual({ logs: [], skipped: [] });
+    expect(readSeason(mkdtempSync(join(tmpdir(), 'rt-season-')))).toEqual({ logs: [], names: [], skipped: [] });
     expect(() => readSeason(join(tmpdir(), 'rt-no-such-folder'))).toThrow();
+  });
+
+  it('can ignore named files, such as the episode index', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rt-season-'));
+    writeGameLog(await playMock(1), dir, 'a-game');
+    writeFileSync(join(dir, 'index.json'), '{"episodes":[]}');
+    expect(readSeason(dir).skipped.map((s) => s.file)).toEqual(['index.json']);
+    expect(readSeason(dir, { ignore: ['index.json'] })).toMatchObject({ names: ['a-game'], skipped: [] });
   });
 });
