@@ -65,3 +65,26 @@ export const finalReveal: Rule = (ctx) => {
     },
   ];
 };
+
+/** A traitor votes against a fellow traitor, in the vote or the revote. */
+export const traitorVotesTraitor: Rule = (ctx) =>
+  ctx.events('vote').flatMap((e) => {
+    const stageTurns = ctx.stageTurns(e.round, e.stage);
+    const last = stageTurns.at(-1);
+    return e.votes.flatMap((v) => {
+      const turn = stageTurns.find((t) => t.player === v.voter);
+      if (!turn || !last || v.voter === v.target) return [];
+      if (!ctx.isTraitorAt(v.voter, turn.id) || !ctx.isTraitorAt(v.target, turn.id)) return [];
+      return [
+        {
+          rule: 'traitor_votes_traitor' as const,
+          score: 80,
+          title: `${v.voter}, a traitor, votes against fellow traitor ${v.target}${e.stage === 'revote' ? ' in the revote' : ''}`,
+          from: turn.id,
+          to: last.id,
+          facesTurn: turn.id,
+          round: e.round,
+        },
+      ];
+    });
+  });

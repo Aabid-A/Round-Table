@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildContext } from '../../src/log/highlights/context.js';
-import { faithfulBannishedByMajority, finalReveal, recruitAccepted } from '../../src/log/highlights/rules.js';
+import { faithfulBannishedByMajority, finalReveal, recruitAccepted, traitorVotesTraitor } from '../../src/log/highlights/rules.js';
 import { logFrom, type Spec } from '../helpers/logs.js';
 
 const roles = { T1: 'traitor', T2: 'traitor', F1: 'faithful', F2: 'faithful', F3: 'faithful', F4: 'faithful' } as const;
@@ -74,5 +74,42 @@ describe('finalReveal', () => {
     expect(finalReveal(buildContext(logFrom({ ...roles }, [])))).toEqual([]);
     const one = logFrom({ ...roles }, [{ r: 1, phase: 'vote', p: 'F1', action: { target: 'T1' } }], { winner: null, reason: 'cost_cap' });
     expect(finalReveal(buildContext(one))[0]).toMatchObject({ from: 0, to: 0, title: 'The final reveal: no winner (cost cap)' });
+  });
+});
+
+describe('traitorVotesTraitor', () => {
+  const voteSpecs = (stage: 'vote' | 'revote', votes: { voter: string; target: string }[], round = 1): Spec[] => [
+    ...votes.map((v) => ({ r: round, phase: stage, p: v.voter, action: { target: v.target }, notes: `note ${v.voter}` }) as Spec),
+    { r: round, ev: { type: 'vote', stage, votes, tally: {}, leaders: [] } },
+  ];
+
+  it('finds a traitor voting for a fellow traitor, from their vote to the end of the stage', () => {
+    const log = logFrom({ ...roles }, voteSpecs('vote', [
+      { voter: 'F1', target: 'T1' },
+      { voter: 'T1', target: 'T2' },
+      { voter: 'F2', target: 'T2' },
+    ]));
+    expect(traitorVotesTraitor(buildContext(log))).toEqual([
+      { rule: 'traitor_votes_traitor', score: 80, title: 'T1, a traitor, votes against fellow traitor T2', from: 1, to: 2, facesTurn: 1, round: 1 },
+    ]);
+  });
+
+  it('says so for a revote', () => {
+    const log = logFrom({ ...roles }, voteSpecs('revote', [{ voter: 'T2', target: 'T1' }, { voter: 'F1', target: 'T1' }]));
+    expect(traitorVotesTraitor(buildContext(log))[0]?.title).toBe('T2, a traitor, votes against fellow traitor T1 in the revote');
+  });
+
+  it('ignores a traitor voting for a faithful, and a faithful voting for a traitor', () => {
+    const log = logFrom({ ...roles }, voteSpecs('vote', [{ voter: 'T1', target: 'F1' }, { voter: 'F2', target: 'T1' }]));
+    expect(traitorVotesTraitor(buildContext(log))).toEqual([]);
+  });
+
+  it('counts a recruit as a traitor once they have accepted', () => {
+    const log = logFrom({ ...roles }, [
+      { r: 1, phase: 'recruit_respond', p: 'F3', action: { accept: true } },
+      { r: 1, ev: { type: 'recruit', offeredBy: 'T1', offeredTo: 'F3', accepted: true } },
+      ...voteSpecs('vote', [{ voter: 'F3', target: 'T1' }, { voter: 'F1', target: 'T1' }], 2),
+    ]);
+    expect(traitorVotesTraitor(buildContext(log)).map((h) => h.title)).toEqual(['F3, a traitor, votes against fellow traitor T1']);
   });
 });
