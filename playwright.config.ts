@@ -4,6 +4,8 @@ import { defineConfig } from '@playwright/test';
 const PORT = 5183;
 // The room server the browser tests talk to. Short timers, so timeouts and walk-aways can be tested in seconds.
 const ROOM_PORT = 8788;
+// Where that server saves the logs of finished games (test-results is not committed).
+const ROOM_LOG_DIR = 'test-results/room-logs';
 // The cloud sandbox ships Chromium here. On your own machine run `npx playwright install chromium` once.
 const SANDBOX_CHROMIUM = '/opt/pw-browsers/chromium';
 
@@ -30,7 +32,7 @@ export default defineConfig({
       port: ROOM_PORT,
       reuseExistingServer: false,
       timeout: 30_000,
-      env: { PORT: String(ROOM_PORT), TURN_MS: '6000', ABANDON_MS: '3000', ALLOW_SEED: '1', MAX_ROOMS_PER_ADDRESS: '1000', MAX_CONNECTIONS_PER_ADDRESS: '1000' },
+      env: { PORT: String(ROOM_PORT), TURN_MS: '6000', ABANDON_MS: '3000', ALLOW_SEED: '1', MAX_ROOMS_PER_ADDRESS: '1000', MAX_CONNECTIONS_PER_ADDRESS: '1000', LOG_DIR: ROOM_LOG_DIR },
     },
   ],
 });

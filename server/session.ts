@@ -1,5 +1,6 @@
 import type { GameLog } from '../src/engine/types.js';
 import { outcomeFor, type Guess, type RoomOutcome } from '../src/roomResult.js';
+import { roomLogName } from '../src/roomCode.js';
 import { Guessing } from './guessing.js';
 import { runRoomGame } from './game.js';
 import type { HumanAnswer } from '../src/players/human.js';
@@ -30,6 +31,8 @@ export interface SessionOptions {
   allowSeed?: boolean;
   /** How long a running game may have nobody connected before the room closes and the AIs stop. */
   abandonMs: number;
+  /** Saves a finished game's log under a plain name. Absent means nothing is saved. */
+  saveLog?: (name: string, log: GameLog) => Promise<unknown>;
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   now?: () => number;
@@ -176,6 +179,7 @@ export class Session {
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran
         rt.log = log;
+        this.save(room, log);
         if (!room.aliases) return this.finish(room, rt, log, null);
         // Before anyone learns who was who, each person guesses which seats were AIs.
         room.phase = 'guessing';
@@ -187,6 +191,12 @@ export class Session {
         room.close('The game stopped because of an error.');
       },
     );
+  }
+
+  /** Keep a normal log of the game. A failure is noted by error name only and never stops the game's ending. */
+  private save(room: Room, log: GameLog): void {
+    const { saveLog, log: note } = this.deps.options;
+    saveLog?.(roomLogName(room.code, room.seed), log).catch((e: unknown) => note(`log save error: ${e instanceof Error ? e.name : 'unknown'}`));
   }
 
   /** The game, and the guessing if there was any, are over: tell everyone how it went. */

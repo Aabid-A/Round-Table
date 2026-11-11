@@ -26,9 +26,12 @@ const allowSeed = process.env.ALLOW_SEED === '1';
 if (allowSeed) console.warn('ALLOW_SEED=1: pages can choose a room\'s seed, which decides every role. Use this for tests only.');
 
 const trustProxy = process.env.TRUST_PROXY === '1';
+// Finished games are saved here as normal logs (replay, highlights, cards and stats read them). LOG_DIR=none turns saving off.
+const logDir = process.env.LOG_DIR === 'none' ? undefined : (process.env.LOG_DIR ?? 'games');
 
-const server = await startServer({ port, turnMs, abandonMs, maxRoomsPerAddress: maxRooms, maxConnectionsPerAddress: maxConnections, ...(allowSeed ? { allowSeed } : {}), ...(trustProxy ? { trustProxy } : {}), ...(host ? { host } : {}) });
+const server = await startServer({ port, turnMs, abandonMs, maxRoomsPerAddress: maxRooms, maxConnectionsPerAddress: maxConnections, ...(allowSeed ? { allowSeed } : {}), ...(trustProxy ? { trustProxy } : {}), ...(logDir !== undefined ? { logDir } : {}), ...(host ? { host } : {}) });
 console.log(`Round Table rooms: listening on port ${server.port}${host ? ` (${host})` : ''}. Rooms live in memory and end when this stops.`);
+console.log(logDir === undefined ? 'Game logs are not saved (LOG_DIR=none).' : `Finished games are saved as logs in ${logDir}/.`);
 
 const stop = (): void => {
   void server.close().then(() => process.exit(0));

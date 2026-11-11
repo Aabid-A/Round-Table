@@ -1,3 +1,6 @@
+import { mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startServer, type RunningServer } from '../../server/server.js';
 import { TestClient } from './client.js';
@@ -31,10 +34,12 @@ describe('the host key never leaves the room', () => {
     clients.push(c);
     return c;
   };
+  let logDir = '';
   const begin = async (fetchImpl: typeof fetch, extra: Parameters<typeof startServer>[0] = {}) => {
+    logDir = await mkdtemp(join(tmpdir(), 'rt-key-logs-'));
     const w = watch();
     written = w.written;
-    server = await startServer({ port: 0, log: w.log, fetchImpl, allowSeed: true, ...extra });
+    server = await startServer({ port: 0, log: w.log, fetchImpl, allowSeed: true, logDir, ...extra });
   };
   /** Records the request, then answers with `reply`. */
   const stub = (reply: (init: RequestInit | undefined) => Promise<Response> | Response): typeof fetch =>
@@ -64,6 +69,17 @@ describe('the host key never leaves the room', () => {
     expect(calls.length).toBeGreaterThan(20);
     expect(calls.every((c) => c.auth === `Bearer ${KEY}`)).toBe(true); // it did reach OpenRouter's request
     expect(JSON.stringify(done.log)).toContain('[redacted]'); // the echo was masked in the log
+    // The log saved to disk is a place the key could leak too: read what was written.
+    let files: string[] = [];
+    for (let i = 0; i < 100 && files.length === 0; i++) {
+      files = (await readdir(logDir)).filter((f) => f.endsWith('.json'));
+      if (files.length === 0) await new Promise((r) => setTimeout(r, 20));
+    }
+    expect(files).toHaveLength(1);
+    const onDisk = await readFile(join(logDir, files[0]!), 'utf8');
+    expect(onDisk).toContain('[redacted]');
+    expect(onDisk).not.toContain(KEY);
+    expect(onDisk).not.toContain('FAKEKEY');
     // A model that repeats the key must not get it into later prompts, which go to other providers.
     expect(calls.filter((c) => c.body.includes('FAKEKEY'))).toEqual([]);
     expect(everything()).not.toContain(KEY);

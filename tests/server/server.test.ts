@@ -1,4 +1,8 @@
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { parseGameLog } from '../../web/src/replay/parse.js';
 import { LIMITS } from '../../server/protocol.js';
 import { startServer, type RunningServer } from '../../server/server.js';
 import { waitFor } from './helpers.js';
@@ -99,5 +103,27 @@ describe('the WebSocket server', () => {
     await hosts[3]!.next('error');
     expect(hosts[3]!.messages.find((m) => m.t === 'error')).toMatchObject({ message: expect.stringContaining('rooms open') });
     await hosts[0]!.next('joined');
+  });
+
+  it('saves a finished game as a log the replay page can open', async () => {
+    await server.close();
+    const dir = await mkdtemp(join(tmpdir(), 'rt-room-logs-'));
+    server = await startServer({ port: 0, log: () => undefined, allowSeed: true, logDir: dir });
+    const host = await connect();
+    host.autoplay('Quinn');
+    host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+    const { code } = await host.next('joined');
+    host.send({ t: 'start' });
+    const done = await host.next('finished');
+    const file = join(dir, `room-${code}-seed-4.json`);
+    let text = '';
+    for (let i = 0; i < 100 && text === ''; i++) {
+      text = await readFile(file, 'utf8').catch(() => '');
+      if (text === '') await new Promise((r) => setTimeout(r, 20));
+    }
+    const parsed = parseGameLog(text);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.ok && parsed.log).toEqual(done.log);
+    expect(parsed.ok && parsed.log.cast.filter((c) => c.model === 'human').map((c) => c.name)).toEqual(['Quinn']);
   });
 });

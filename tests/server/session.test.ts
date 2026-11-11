@@ -5,13 +5,13 @@ import { Session, type Runtime } from '../../server/session.js';
 import { formFor, emptyAnswer } from '../../web/src/play/human.js';
 import { FakeConn, waitFor } from './helpers.js';
 
-function server(turnMs = 1000, allowSeed = true) {
+function server(turnMs = 1000, allowSeed = true, saveLog?: (name: string, log: unknown) => Promise<unknown>) {
   const registry = new Registry();
   const runtimes = new Map<string, Runtime>();
   const logged: string[] = [];
   const open = () => {
     const conn = new FakeConn();
-    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, log: (l) => logged.push(l) } });
+    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, ...(saveLog ? { saveLog } : {}), log: (l) => logged.push(l) } });
     const send = (m: unknown) => session.handle(JSON.stringify(m));
     /** Answer every turn at once, as a patient person would. */
     const autoplay = () => {
@@ -197,6 +197,37 @@ describe('Session: creating, joining and rejoining', () => {
     const late = s.open();
     late.send({ t: 'join', code, name: 'Sam' });
     expect(messages(late.conn)).toEqual(['That game has already started.']);
+  });
+
+  describe('saving the log', () => {
+    it('saves the log once, under the room code and seed, as soon as the game ends', async () => {
+      const saved: { name: string; log: { seed: number } }[] = [];
+      const s = server(1000, true, async (name, log) => void saved.push({ name, log: log as { seed: number } }));
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4 });
+      const code = joinedOf(host.conn).code;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'finished'));
+      expect(saved.map((x) => x.name)).toEqual([`room-${code}-seed-4`]);
+      expect(saved[0]!.log.seed).toBe(4);
+    });
+
+    it('saves an alias game before the guessing, and a failed save is noted by name only and does not stop the game', async () => {
+      const s = server(1000, true, async () => {
+        throw new Error('disk full: sk-never-in-logs');
+      });
+      const host = s.open();
+      host.autoplay();
+      host.send({ t: 'create', name: 'Quinn', mode: 'mock', seed: 4, aliases: true });
+      const room = s.registry.get(joinedOf(host.conn).code)!;
+      host.send({ t: 'start' });
+      await waitFor(() => host.conn.sent.some((m) => m.t === 'guess'));
+      host.send({ t: 'guess', ai: [] });
+      expect(room.phase).toBe('finished');
+      expect(s.logged).toEqual(['log save error: Error']);
+      expect(s.logged.join()).not.toContain('sk-never');
+    });
   });
 
   describe('an alias game', () => {
