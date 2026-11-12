@@ -1,7 +1,9 @@
 # Episode runbook
 
-From a real game to a post. Every step below has been run end to end on a mock game, so you can
-rehearse the whole thing first with no key and no cost (see [Rehearse](#rehearse-on-a-mock-game)).
+From a real game to a post. The steps from "run games" onward were run end to end on a mock game, so you can rehearse them
+first with no key and no cost (see [Rehearse](#rehearse-on-a-mock-game)). What a mock game cannot rehearse is your real
+cast, your key and the spend cap: expect a typo in `config/cast.json` or a wrong model ID to show up on your first real run,
+as a high `fallbacks` number (step 3).
 The post formats are in [POSTING.md](POSTING.md); hosting is in [DEPLOY.md](DEPLOY.md).
 
 ## 1. One-time setup
@@ -106,6 +108,9 @@ Saves a quote card of one turn as two PNGs, 1200x675 and 1080x1350, in `.artifac
 beside what they privately thought). Use a `facesTurn` from step 5 for the best ones. `--size`, `--out` and `--name`
 change the shape, folder and file name.
 
+The card is drawn in a headless Chromium. If `npx playwright install chromium` is not an option, set `CHROMIUM_PATH` to a
+Chromium binary you already have.
+
 ## 8. Publish the episode for guessing
 
 The guess page (`?mode=guess`) turns an episode into a game for the viewer. This is what a post links to.
@@ -140,7 +145,12 @@ Betrayal Index.
 npm run stats -- games --out web/public/stats.json
 ```
 
-Totals every log in `games/` per model (games, wins by role, times caught, betrayals, fallback rate, and the index).
+**Keep room games out of this total.** The room server saves finished room games in `games/` too (`LOG_DIR`), and a game
+with a person in it adds a `human` row to the table, which is not a model ([STATS.md](STATS.md)). Run real model games into
+their own folder (`--out games/real`, then `npm run stats -- games/real ...`), or point the room server's `LOG_DIR`
+somewhere else.
+
+Totals every log in the folder per model (games, wins by role, times caught, betrayals, fallback rate, and the index).
 Open `?page=stats` for the table. Definitions: [STATS.md](STATS.md). The numbers are noisy until each model has played a
 few dozen games.
 
@@ -178,10 +188,12 @@ site, adds mock episodes and stats, hosts it from a folder on a plain static ser
 - [ ] You read the transcript and are happy with every private note that a published log will show.
 - [ ] `web/public/games/` holds only logs you mean to publish (and no mock logs).
 - [ ] The links in the post open on the published site, not `localhost`.
-- [ ] No key in anything you publish. This prints nothing when it is clean (it loads `.env` the way the commands do):
+- [ ] No key in anything you publish. This prints nothing when it is clean (it loads `.env` the way the commands do, matches the
+  key as plain text, and looks in the logs, `web/public` and the built site):
 
   ```bash
-  set -a; . ./.env; set +a; grep -l "$OPENROUTER_API_KEY" games/*.json web/public/games/*.json
+  set -a; . ./.env; set +a
+  if [ -z "$OPENROUTER_API_KEY" ]; then echo "OPENROUTER_API_KEY is not set: nothing to check"; else grep -rlF -- "$OPENROUTER_API_KEY" games web/public web/dist 2>/dev/null; fi
   ```
 
   `git status` should also show no `.env`.

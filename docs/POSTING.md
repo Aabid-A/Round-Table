@@ -7,7 +7,7 @@ What the tools can make for a post, and the command that makes each. The steps f
 |---|---|---|
 | [Clip](#clip) | A short video of one moment, 16:9 or vertical | The moment's speech and, in "two faces", a private note |
 | [Quote card](#quote-card) | One turn as a picture: what they said, beside what they thought | That turn only |
-| [Guess-the-traitor link](#guess-the-traitor-link) | A game the viewer plays | Nothing until the viewer finishes |
+| [Guess-the-traitor link](#guess-the-traitor-link) | A game the viewer plays | Hidden in the page until the viewer finishes (not secret: the log is downloaded to play it) |
 | [Room invite](#room-invite) | A link friends open to play together | Nothing (the game has not been played) |
 | [Human or AI? result](#human-or-ai-result) | A result card and a share text from a room game | The card does; the text does not |
 | [Weekly Betrayal Index](#weekly-betrayal-index) | A table of how each model played | Per-model totals |
@@ -74,7 +74,10 @@ invite link from the lobby:
 
 ```bash
 npm run rooms
+npm run web
 ```
+
+(`npm run web` serves the page locally; on your site it is the built `web/dist/`, see [DEPLOY.md](DEPLOY.md).)
 
 ```text
 https://your-site/?mode=room&room=AB2CD
@@ -107,6 +110,10 @@ Totals every log in the folder per model: games, wins as a traitor and as a fait
 its traitor vote, recruit offers accepted, the fallback rate, and the betrayal index. Open `?page=stats` for the sortable
 table. There is no image export: post a screenshot of the table (or the JSON). The numbers are noisy until each model has
 played a few dozen games. Definitions: [STATS.md](STATS.md).
+
+Total only real model games. Finished room games are saved in `games/` too, and a game with a person in it adds a `human` row
+that is not a model: keep model games in their own folder (see step 10 of [EPISODE.md](EPISODE.md)) or leave that row out
+of what you post.
 
 ## Also from the solo page
 
