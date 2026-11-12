@@ -85,3 +85,68 @@ describe('a traitor’s view', () => {
     for (const s of view.seats) if (s.status === 'alive' && s.mark === null) expect(s.role).toBeNull();
   });
 });
+
+describe('what a seat is told, and when', () => {
+  const whisperTurns = (log: GameLog) => log.turns.filter((t) => t.phase === 'whispers' && typeof (t.action as { to?: unknown }).to === 'string' && ((t.action as { message?: string }).message ?? '').length > 8);
+
+  it('a whisper reaches its recipient when the whisper phase ends, not when it was typed', async () => {
+    const log = await playMock(2);
+    const steps = buildSteps(log);
+    let checked = 0;
+    for (const w of whisperTurns(log)) {
+      const to = (w.action as { to: string }).to;
+      const message = JSON.stringify((w.action as { message: string }).message).slice(1, -1);
+      const stepIndex = steps.findIndex((s) => s.kind === 'turn' && s.turn.id === w.id);
+      const lastOfRound = steps.filter((s) => s.kind === 'turn' && s.turn.phase === 'whispers' && s.turn.round === w.round).at(-1)!;
+      const deliveredAt = steps.indexOf(lastOfRound);
+      for (let i = 0; i < steps.length; i++) {
+        const shown = JSON.stringify(seatView(log, steps, i, to).moment).includes(message);
+        if (i < deliveredAt && i !== steps.findIndex((s) => s.kind === 'turn' && s.turn.id === w.id && w.player === to)) expect(shown, `whisper to ${to} shown at step ${i}, before ${deliveredAt}`).toBe(false);
+      }
+      expect(JSON.stringify(seatView(log, steps, deliveredAt, to).moment)).toContain(message);
+      expect(stepIndex).toBeLessThanOrEqual(deliveredAt);
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(3);
+  });
+
+  it('a recruitment offer is not even named to a seat that is not part of it', async () => {
+    let found = 0;
+    for (let seed = 1; seed <= 40 && found < 3; seed++) {
+      const log = await playMock(seed);
+      const steps = buildSteps(log);
+      const offers = log.events.filter((e) => e.type === 'recruit');
+      if (offers.length === 0) continue;
+      found++;
+      for (const o of offers as { offeredBy: string; offeredTo: string }[]) {
+        const outsider = log.cast.find((c) => c.name !== o.offeredBy && c.name !== o.offeredTo)!.name;
+        steps.forEach((s, i) => {
+          if (!(s.kind === 'turn' && (s.turn.phase === 'recruit_choose' || s.turn.phase === 'recruit_respond')) && !(s.kind === 'event' && s.event.type === 'recruit')) return;
+          if (s.kind === 'turn' && s.turn.player === outsider) return; // their own turn is theirs
+          const view = seatView(log, steps, i, outsider);
+          expect(view.moment.title, `${outsider} at step ${i}`).not.toMatch(/recruit/i);
+        });
+      }
+    }
+    expect(found).toBeGreaterThan(0);
+  });
+
+  it('holds for every seat, traitors and recruits included: no one else’s notes, no whisper they were not in', async () => {
+    let recruits = 0;
+    for (let seed = 1; seed <= 12; seed++) {
+      const log = await playMock(seed);
+      recruits += log.events.filter((e) => e.type === 'recruit' && e.accepted).length;
+      const whispers = log.turns.filter((t) => t.phase === 'whispers' && typeof (t.action as { to?: unknown }).to === 'string' && ((t.action as { message?: string }).message ?? '').length > 8);
+      for (const { seat, i, json } of views(log, () => true)) {
+        for (const t of log.turns) {
+          if (t.player !== seat && t.private_notes.trim() !== '') expect(json.includes(JSON.stringify(t.private_notes).slice(1, -1)), `${seed} ${seat} ${i} notes`).toBe(false);
+        }
+        for (const w of whispers) {
+          const a = w.action as { to: string; message: string };
+          if (w.player !== seat && a.to !== seat) expect(json.includes(JSON.stringify(a.message).slice(1, -1)), `${seed} ${seat} ${i} whisper`).toBe(false);
+        }
+      }
+    }
+    expect(recruits).toBeGreaterThan(0); // at least one recruited seat was among the seats checked
+  });
+});

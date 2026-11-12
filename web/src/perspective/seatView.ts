@@ -16,23 +16,48 @@ export function lastTurnAt(steps: Step[], index: number): number {
   return id;
 }
 
-function momentFor(step: Step, seat: string): SceneMoment {
+/** The title shown when the step is something this seat is not part of: an offer made in private says nothing, not even its name. */
+const HIDDEN_TITLE = 'Behind closed doors';
+
+/** Whispers are handed out once everyone has whispered: the turn after which no whispers turn of the round remains. */
+function lastWhisperTurnOfRound(log: GameLog, turnId: number, round: number): boolean {
+  const next = log.turns.find((t) => t.id > turnId);
+  return !next || next.phase !== 'whispers' || next.round !== round;
+}
+
+function momentFor(step: Step, seat: string, log: GameLog): SceneMoment {
   const none: SceneMoment = { title: step.section.title, round: step.kind === 'result' ? null : step.section.round, speaker: null, text: null, kind: 'none' };
   if (step.kind === 'turn') {
     const t = step.turn;
     // Round-table speech is said aloud to everyone. Every other turn is private to the one who took it.
     if (t.phase === 'round_table') return { ...none, speaker: t.player, text: t.speech, kind: 'speech' };
-    // A whisper is shown to the two people in it, from their own side.
+    const lines: string[] = [];
     const a = t.action as { to?: string | null; message?: string };
-    if (t.phase === 'whispers' && typeof a.to === 'string' && typeof a.message === 'string' && (t.player === seat || a.to === seat)) {
-      const whisper: GameEvent = { type: 'whisper', round: t.round, afterTurn: t.id, visibleTo: [t.player, a.to], from: t.player, to: a.to, message: a.message };
-      return { ...none, text: renderEvent(whisper, seat), kind: 'event' };
+    if (t.phase === 'whispers') {
+      if (t.player === seat && typeof a.to === 'string' && typeof a.message === 'string') lines.push(renderEvent(whisperEvent(t.player, a.to, a.message, t.round, t.id), seat));
+      // What was whispered to this seat reaches it when the whisper phase ends, not when the sender typed it.
+      if (lastWhisperTurnOfRound(log, t.id, t.round)) {
+        for (const w of log.turns) {
+          const x = w.action as { to?: string | null; message?: string };
+          if (w.phase === 'whispers' && w.round === t.round && w.player !== seat && x.to === seat && typeof x.message === 'string') lines.push(renderEvent(whisperEvent(w.player, seat, x.message, w.round, w.id), seat));
+        }
+      }
+      if (lines.length > 0) return { ...none, text: lines.join(' '), kind: 'event' };
     }
+    const isRecruit = t.phase === 'recruit_choose' || t.phase === 'recruit_respond';
+    if (isRecruit && t.player !== seat) return { ...none, title: HIDDEN_TITLE };
     if (t.player === seat && t.private_notes.trim() !== '') return { ...none, speaker: seat, text: t.private_notes, kind: 'thought' };
     return none;
   }
-  if (step.kind === 'event' && canSee(step.event, seat)) return { ...none, text: renderEvent(step.event, seat), kind: 'event' };
+  if (step.kind === 'event') {
+    if (canSee(step.event, seat)) return { ...none, text: renderEvent(step.event, seat), kind: 'event' };
+    if (step.event.type === 'recruit') return { ...none, title: HIDDEN_TITLE };
+  }
   return none;
+}
+
+function whisperEvent(from: string, to: string, message: string, round: number, afterTurn: number): GameEvent {
+  return { type: 'whisper', round, afterTurn, visibleTo: [from, to], from, to, message };
 }
 
 /**
@@ -58,5 +83,5 @@ export function seatView(log: GameLog, steps: Step[], index: number, seat: strin
     return { name: c.name, model: c.model, status, role, mark };
   });
   const step = steps[index] as Step;
-  return { viewer: seat, seats, moment: momentFor(step, seat), night: step.section.title === 'Night' };
+  return { viewer: seat, seats, moment: momentFor(step, seat, log), night: step.section.title === 'Night' };
 }

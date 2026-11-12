@@ -75,7 +75,7 @@ export function Player({ log, onReload }: Props) {
         {playing ? '' : sv ? seatAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
-        {step.section.title}
+        {sv ? sv.moment.title : step.section.title}
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
