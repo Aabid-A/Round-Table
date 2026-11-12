@@ -54,11 +54,6 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                   {seat.mark === 'self' && <span className="room-tag">You</span>}
                   {seat.mark === 'fellow' && <span className="room-tag" data-role="traitor">Fellow traitor</span>}
                   {role && seat.mark === 'self' && <span className="room-tag" data-role={seat.role}>{role}</span>}
-                  {role && seat.mark !== 'self' && seat.mark !== 'fellow' && (
-                    <span className="room-flag" data-role={seat.role} data-testid="room-role">
-                      {role}
-                    </span>
-                  )}
                   {seat.status !== 'alive' && <span className="room-tag" data-out="true">{seat.status === 'murdered' ? 'Murdered' : 'Banished'}</span>}
                 </>
               );
@@ -73,6 +68,12 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                   data-speaking={speaking}
                   style={{ '--angle': `${degrees(i, n)}deg` } as CSSProperties}
                 >
+                  <div className="room-stand">
+                    {role && seat.mark !== 'self' && seat.mark !== 'fellow' && (
+                      <span className="room-flag" data-role={seat.role} data-testid="room-role">
+                        {role}
+                      </span>
+                    )}
                   {onSit ? (
                     <button
                       type="button"
@@ -88,6 +89,7 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                       {chair}
                     </div>
                   )}
+                  </div>
                 </li>
               );
             })}

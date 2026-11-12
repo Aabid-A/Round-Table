@@ -108,11 +108,19 @@
   transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg))) rotateX(var(--room-tilt));
   transition: transform 700ms ease;
 }
-.room-chair {
+.room-stand {
   position: absolute;
   left: -8.5cqmin;
   bottom: 0;
   width: 17cqmin;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqmin;
+}
+.room-chair {
+  position: relative;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -293,19 +301,17 @@
   .room-model {
     display: none;
   }
-  .room-chair {
+  .room-stand {
     left: -9.5cqmin;
     width: 19cqmin;
+  }
+  .room-chair {
     font-size: 12px;
   }
 }
 
 /* The role over a seat, for a viewer who may see it: traitors in red. */
 .room-flag {
-  position: absolute;
-  bottom: calc(100% + 0.6cqmin);
-  left: 50%;
-  transform: translateX(-50%);
   padding: 0.2cqmin 1.4cqmin;
   border-radius: 99px;
   border: 0.3cqmin solid currentColor;
@@ -344,9 +350,10 @@
 .room-link-line {
   position: absolute;
   left: calc(var(--room-r) * var(--len) * -0.5);
-  top: -5cqmin;
+  top: -2.2cqmin; /* a little above the table, so it does not sink into it */
   width: calc(var(--room-r) * var(--len));
-  height: 0.8cqmin;
+  height: 1.6cqmin;
+  transform: rotateX(90deg); /* lie flat on the table, so it reads as a line from any camera */
   border-radius: 99px;
   background: var(--accent);
   box-shadow: 0 0 2cqmin var(--accent);
