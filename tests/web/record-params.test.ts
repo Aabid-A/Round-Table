@@ -13,14 +13,14 @@ describe('parseRecordParams', () => {
   it('defaults to 16x9, the whole episode, normal speed', () => {
     expect(parseRecordParams('?mode=record&log=x')).toEqual({
       ok: true,
-      params: { aspect: '16x9', from: null, to: null, faces: null, speed: 1, seats: null },
+      params: { aspect: '16x9', from: null, to: null, faces: null, speed: 1, seats: null, spectator: false },
     });
   });
 
   it('reads aspect, a range, faces and speed', () => {
     expect(parseRecordParams('?mode=record&aspect=9x16&from=3&to=9&speed=2.5')).toEqual({
       ok: true,
-      params: { aspect: '9x16', from: 3, to: 9, faces: null, speed: 2.5, seats: null },
+      params: { aspect: '9x16', from: 3, to: 9, faces: null, speed: 2.5, seats: null, spectator: false },
     });
     expect(parseRecordParams('?faces=7')).toMatchObject({ ok: true, params: { faces: 7 } });
     expect(parseRecordParams('?from=0&to=0')).toMatchObject({ ok: true, params: { from: 0, to: 0 } });
@@ -69,5 +69,14 @@ describe('parseRecordParams: seats', () => {
       ['?seats=A,A', 'two different seats'],
     ];
     for (const [search, text] of bad) expect(parseRecordParams(search), search).toEqual({ ok: false, message: expect.stringContaining(text) });
+  });
+});
+
+describe('parseRecordParams: view', () => {
+  it('reads view=spectator, and refuses another view or one mixed with seats', () => {
+    expect(parseRecordParams('?mode=record&view=spectator&aspect=9x16')).toMatchObject({ ok: true, params: { spectator: true, aspect: '9x16', seats: null } });
+    expect(parseRecordParams('?view=table')).toEqual({ ok: false, message: expect.stringContaining('view must be spectator') });
+    expect(parseRecordParams('?view=spectator&seat=Aria')).toEqual({ ok: false, message: expect.stringContaining('not both') });
+    expect(parseRecordParams('?view=spectator&seats=A,B')).toEqual({ ok: false, message: expect.stringContaining('not both') });
   });
 });
