@@ -122,7 +122,7 @@ export function Player({ log, onReload }: Props) {
             onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
           >
             <option value="">The public table</option>
-            <option value="@all">All-seeing room (shows every role, note and whisper)</option>
+            <option value="@all">All-seeing room (spoilers)</option>
             {log.cast.map((c) => (
               <option key={c.name} value={c.name}>
                 {c.name}

@@ -282,6 +282,7 @@
   gap: var(--space-2);
 }
 .sit select {
+  max-width: 100%;
   min-height: var(--target);
   padding: 0 var(--space-3);
   font: inherit;

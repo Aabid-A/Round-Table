@@ -32,7 +32,8 @@ export function spectatorView(log: GameLog, steps: Step[], index: number, ctx: C
     role: roles[s.name] ?? null,
     mark: roles[s.name] === 'traitor' ? 'traitor' : null,
   }));
-  const text = described.bubble?.text ?? described.card?.body ?? null;
+  // A card says what happened in its title and body: "Hugo is banished. They were a faithful."
+  const text = described.bubble?.text ?? (described.card ? `${described.card.title}. ${described.card.body}` : null);
   const moment: SceneMoment = {
     title: step.section.title,
     round: step.kind === 'result' ? null : step.section.round,
