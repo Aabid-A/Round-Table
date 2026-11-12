@@ -62,7 +62,9 @@ builder: the CLI injects those). `players` and
 - **Log everything.** The log records every prompt and every raw reply (and
   retries and fallbacks), so a game can be audited and replayed.
 - **Secrets.** The API key comes from `OPENROUTER_API_KEY` at runtime. Never
-  write it to a file, a log or a prompt. In a room, the host's key lives in
+  write it to a file, a log or a prompt. The command line masks it in the
+  provider's reply (`players/scrub.ts`) and in the log before it is written.
+  In a room, the host's key lives in
   the room's private field only, is scrubbed from every error text and from
   the finished log, and is dropped when the game ends or the room closes.
 - **Rooms never send hidden information.** A client gets its own seat's

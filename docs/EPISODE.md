@@ -17,7 +17,8 @@ cp .env.example .env
 
 Put your OpenRouter key in `.env` as `OPENROUTER_API_KEY=...`. `.env` is gitignored. The key is read at run time,
 and this project never writes it to a file or puts it in a prompt. A provider can echo a key back inside an error message,
-and the engine logs error text, so check your logs before you publish them (see [Before you post](#before-you-post)).
+so the command line masks the key as `[redacted]` in what the provider sends back and again in the whole log before it is
+written. Run the grep check anyway before you publish (see [Before you post](#before-you-post)).
 For the card images, install the browser once:
 
 ```bash
@@ -188,8 +189,9 @@ site, adds mock episodes and stats, hosts it from a folder on a plain static ser
 - [ ] You read the transcript and are happy with every private note that a published log will show.
 - [ ] `web/public/games/` holds only logs you mean to publish (and no mock logs).
 - [ ] The links in the post open on the published site, not `localhost`.
-- [ ] No key in anything you publish. This prints nothing when it is clean (it loads `.env` the way the commands do, matches the
-  key as plain text, and looks in the logs, `web/public` and the built site):
+- [ ] No key in anything you publish. Logs are scrubbed when they are written, so this should print nothing. Keep it as a final
+  safety net. It loads `.env` the way the commands do, matches the key as plain text, and looks in the logs, `web/public`
+  and the built site:
 
   ```bash
   set -a; . ./.env; set +a
