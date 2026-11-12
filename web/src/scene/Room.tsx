@@ -73,17 +73,18 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                       {chair}
                     </div>
                   )}
-                  {speaking && view.moment.text && (
-                    <p className="room-bubble" data-kind={view.moment.kind}>
-                      {view.moment.text}
-                    </p>
-                  )}
                 </li>
               );
             })}
           </ul>
         </div>
       </div>
+      {speakerIndex >= 0 && view.moment.text && (
+        <p className="room-speech" data-kind={view.moment.kind} data-testid="room-speech">
+          <span className="room-who">{view.moment.kind === 'thought' ? 'Your thoughts' : view.moment.speaker}</span>
+          {view.moment.text}
+        </p>
+      )}
       <div className="room-caption" data-testid="room-caption">
         <p className="room-kicker">
           {view.moment.title}
