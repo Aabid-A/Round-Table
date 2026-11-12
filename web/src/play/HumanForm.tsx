@@ -34,7 +34,10 @@ export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, 
   const [chosen, setChosen] = useState(false);
   const set = (patch: Partial<HumanAnswer>): void => {
     setA((x) => ({ ...x, ...patch }));
-    if ('choice' in patch) setChosen(true);
+    if ('choice' in patch) {
+      setChosen(true);
+      onPicked?.(patch.choice ?? null); // a choice made in the form is told to the room; one made in the room is not echoed back
+    }
   };
   const title = useRef<HTMLHeadingElement>(null);
   // Sending replaces this form, so move keyboard focus to the new one instead of dropping it on the page.
@@ -45,7 +48,7 @@ export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, 
   useEffect(() => {
     if (picked === undefined || picked === a.choice) return;
     if (picked === null) setA((x) => ({ ...x, choice: null })), setChosen(false);
-    else if (spec.choices.some((c) => c.value === picked)) set({ choice: picked });
+    else if (spec.choices.some((c) => c.value === picked)) setA((x) => ({ ...x, choice: picked })), setChosen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   const missing = ready
@@ -59,9 +62,8 @@ export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, 
           : 'Finish the form';
   useEffect(() => {
     onState?.({ ready, missing });
-    onPicked?.(chosen ? a.choice : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, missing, chosen, a.choice]);
+  }, [ready, missing]);
   if (submitRef) submitRef.current = () => (ready ? onSubmit(a) : undefined);
 
   return (

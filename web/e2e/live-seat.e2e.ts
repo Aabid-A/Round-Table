@@ -103,6 +103,7 @@ test('everything can be done with the keyboard: arrows walk the seats, Enter pic
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
   await expect(all.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('live-send')).toBeEnabled(); // a disabled button cannot take focus
   await page.getByTestId('live-send').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator(`[data-testid=turn-form][data-turn="${n}"]`)).toBeHidden();
