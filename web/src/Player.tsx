@@ -9,6 +9,7 @@ import { describeStep, stepDurationMs, type StepView } from './replay/describe.j
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { Room } from './scene/Room.js';
+import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
 import { usePlayback } from './usePlayback.js';
 
@@ -19,6 +20,12 @@ interface Props {
 
 const announcement = (view: StepView): string =>
   view.card ? `${view.card.title}. ${view.card.body}` : view.bubble && view.speaker ? `${view.speaker}: ${view.bubble.text}` : '';
+
+/** What a screen reader is told while seated: only the seat's own view, never the public step (which includes whispers and notes). */
+const seatAnnouncement = (view: SceneView): string => {
+  const { title, speaker, text } = view.moment;
+  return text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title;
+};
 
 /** Plays one game log like an episode. */
 export function Player({ log, onReload }: Props) {
@@ -53,6 +60,7 @@ export function Player({ log, onReload }: Props) {
   const step = steps[index]!;
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
+  const sv = seat !== null ? seatView(log, steps, index, seat) : null;
 
   return (
     <main className="app">
@@ -64,7 +72,7 @@ export function Player({ log, onReload }: Props) {
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : announcement(view)}
+        {playing ? '' : sv ? seatAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {step.section.title}
@@ -73,7 +81,7 @@ export function Player({ log, onReload }: Props) {
       <div className="layout">
         {seat !== null ? (
           <div className="seat-room">
-            <Room view={seatView(log, steps, index, seat)} onSit={sit} label={`The room from ${seat}'s chair`} />
+            <Room view={sv!} onSit={sit} label={`The room from ${seat}'s chair`} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />

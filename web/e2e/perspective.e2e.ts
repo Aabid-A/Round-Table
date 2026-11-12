@@ -91,3 +91,26 @@ test('a clip of one seat, and a plain message for a seat that is not at the tabl
   await page.goto('/?mode=record&log=sample&seats=Aria,Nobody');
   await expect(page.getByRole('alert')).toContainText('There is no seat called Nobody');
 });
+
+test('the text a screen reader is given while seated holds nothing the seat could not know', async ({ page }) => {
+  const full = JSON.parse(readFileSync(FIXTURE, 'utf8')) as {
+    turns: { player: string; private_notes: string; phase: string; action: { to?: string | null; message?: string } }[];
+  };
+  const forbidden = [
+    ...full.turns.filter((t) => t.player !== 'Aria' && t.private_notes.trim() !== '').map((t) => t.private_notes),
+    ...full.turns.filter((t) => t.phase === 'whispers' && typeof t.action.message === 'string' && t.player !== 'Aria' && t.action.to !== 'Aria').map((t) => t.action.message as string),
+  ];
+  expect(forbidden.filter((x) => x.length > 8).length).toBeGreaterThan(10);
+  await open(page, '&seat=Aria');
+  const total = Number(/of (\d+)/.exec(await stepText(page))![1]);
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  for (let i = 0; i < total; i++) {
+    const body = await page.locator('body').innerText();
+    const announced = (await page.getByTestId('announcement').textContent()) ?? '';
+    for (const secret of forbidden.filter((x) => x.length > 8)) {
+      expect(body.includes(secret), `step ${i}: page text has ${secret}`).toBe(false);
+      expect(announced.includes(secret), `step ${i}: announcement`).toBe(false);
+    }
+    await page.keyboard.press('ArrowRight');
+  }
+});
