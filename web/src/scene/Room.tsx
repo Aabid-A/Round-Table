@@ -22,9 +22,9 @@ function roleText(seat: SceneSeat): string | null {
  */
 export function Room({ view, onSit, label = 'The room' }: Props) {
   const n = view.seats.length;
-  const viewerIndex = view.seats.findIndex((s) => s.name === view.viewer);
+  const focusIndex = view.seats.findIndex((s) => s.name === view.camera.focus);
   const turn = useRef(0);
-  turn.current = nearestAngle(turn.current, viewerIndex >= 0 ? degrees(viewerIndex, n) : 0);
+  turn.current = nearestAngle(turn.current, focusIndex >= 0 && !view.camera.wide ? degrees(focusIndex, n) : 0);
   const speakerIndex = view.seats.findIndex((s) => s.name === view.moment.speaker);
 
   return (

@@ -26,7 +26,7 @@ function lastWhisperTurnOfRound(log: GameLog, turnId: number, round: number): bo
 }
 
 function momentFor(step: Step, seat: string, log: GameLog): SceneMoment {
-  const none: SceneMoment = { title: step.section.title, round: step.kind === 'result' ? null : step.section.round, speaker: null, text: null, kind: 'none' };
+  const none: SceneMoment = { title: step.section.title, round: step.kind === 'result' ? null : step.section.round, speaker: null, text: null, thought: null, kind: 'none' };
   if (step.kind === 'turn') {
     const t = step.turn;
     // Round-table speech is said aloud to everyone. Every other turn is private to the one who took it.
@@ -94,7 +94,14 @@ export function seatView(log: GameLog, steps: Step[], index: number, seat: strin
     return { name: c.name, model: c.model, status, role, mark };
   });
   const step = steps[index] as Step;
-  return { viewer: seat, seats, moment: momentFor(step, seat, log), night: step.section.title === 'Night' };
+  return {
+    viewer: seat,
+    seats,
+    moment: momentFor(step, seat, log),
+    night: step.section.title === 'Night',
+    whispers: [],
+    camera: { focus: seat, wide: false, cut: false },
+  };
 }
 
 /**
