@@ -135,6 +135,12 @@ export class Session {
     return rt;
   }
 
+  /** The reply to a seat being taken: the host alone is also given the token of the read-only link, if the room has one. */
+  private joinedMessage(room: Room, seat: Seat): ServerMessage {
+    const watch = room.watchTokenFor(seat);
+    return { t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host, ...(watch ? { watch } : {}) };
+  }
+
   private sit(room: Room, name: string): Result {
     const joined = room.join(name, this.conn);
     if (!joined.ok) return joined;
@@ -142,7 +148,7 @@ export class Session {
     this.runtime(room).seatPlayers.set(name, new SeatPlayer({ timeoutMs: this.deps.options.turnMs, send: (m) => room.sendTo(name, m) }));
     this.room = room;
     this.seat = seat;
-    this.tell({ t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host });
+    this.tell(this.joinedMessage(room, seat));
     room.broadcast(room.lobbyMessage());
     return joined;
   }
@@ -158,6 +164,8 @@ export class Session {
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
     const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner, msg.aliases === true);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });
+    if (msg.ghosts) made.value.ghosts = true;
+    if (msg.spectators) made.value.enableSpectators();
     const sat = this.sit(made.value, msg.name);
     if (!sat.ok) made.value.close(sat.error);
   }
@@ -255,7 +263,7 @@ export class Session {
     const seat = back.value;
     this.room = room;
     this.seat = seat;
-    this.tell({ t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host });
+    this.tell(this.joinedMessage(room, seat));
     const rt = this.deps.runtimes.get(room.code);
     if (rt?.abandonTimer) {
       clearTimeout(rt.abandonTimer);
