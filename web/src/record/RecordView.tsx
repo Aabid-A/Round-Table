@@ -3,7 +3,7 @@ import './record.css';
 import type { GameLog } from '../../../src/engine/types.js';
 import { describeStep, stepDurationMs } from '../replay/describe.js';
 import { buildSteps, seatsAt } from '../replay/timeline.js';
-import { seatView } from '../perspective/seatView.js';
+import { seatStepMs, seatTimeline, seatView } from '../perspective/seatView.js';
 import { Room } from '../scene/Room.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
@@ -22,12 +22,25 @@ interface Props {
 /** The clip camera: no controls, fixed aspect, autoplay at reading speed, one URL per clip. */
 export function RecordView({ log, params }: Props) {
   const steps = useMemo(() => buildSteps(log), [log]);
-  const clip = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
+  const clip = useMemo(() => {
+    const range = stepsForRange(steps, params.from, params.to);
+    if (!params.seats) return range;
+    // Filming from a seat: walk only the steps that show some filmed seat something, so the length of the clip does not follow
+    // hidden turns (a seat that is not told about the traitors' night must not sit through it).
+    const keep = new Set(params.seats.flatMap((name) => (log.cast.some((c) => c.name === name) ? seatTimeline(log, steps, name) : [])));
+    return keep.size === 0 ? range : range.filter((s) => keep.has(steps.indexOf(s)));
+  }, [steps, log, params.from, params.to, params.seats]);
   const views = useMemo(() => clip.map((s) => describeStep(s, log)), [clip, log]);
   const durations = useMemo(
     // setTimeout overflows above 2^31-1 ms and then fires at once, so cap the hold.
-    () => views.map((v) => Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(stepDurationMs(v) / params.speed)))),
-    [views, params.speed],
+    () =>
+      clip.map((s, i) => {
+        const base = params.seats
+          ? Math.max(...params.seats.map((n) => (log.cast.some((c) => c.name === n) ? seatStepMs(seatView(log, steps, steps.indexOf(s), n)) : 0)))
+          : stepDurationMs(views[i]!);
+        return Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(base / params.speed)));
+      }),
+    [clip, views, log, steps, params.speed, params.seats],
   );
   const { index, playing } = usePlayback(durations, { autoStart: params.faces === null && clip.length > 0 });
 
