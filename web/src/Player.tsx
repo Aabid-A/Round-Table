@@ -3,9 +3,12 @@ import type { GameLog } from '../../src/engine/types.js';
 import { Controls } from './Controls.js';
 import { Details } from './Details.js';
 import { actionForKey } from './keys.js';
+import { searchWithSeat, seatFromSearch } from './perspective/params.js';
+import { seatView } from './perspective/seatView.js';
 import { describeStep, stepDurationMs, type StepView } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
+import { Room } from './scene/Room.js';
 import { Table } from './Table.js';
 import { usePlayback } from './usePlayback.js';
 
@@ -24,6 +27,12 @@ export function Player({ log, onReload }: Props) {
   const durations = useMemo(() => views.map(stepDurationMs), [views]);
   const { index, playing, seek, next, prev, toggle, restart } = usePlayback(durations);
   const [showNotes, setShowNotes] = useState(false);
+  // The seat the viewer sits in, or null for the public table. Switching seats keeps the same step, so the moment does not move.
+  const [seat, setSeat] = useState<string | null>(() => seatFromSearch(window.location.search, log.cast));
+  const sit = (name: string | null): void => {
+    setSeat(name);
+    window.history.replaceState(null, '', `${window.location.pathname}${searchWithSeat(window.location.search, name)}${window.location.hash}`);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -62,18 +71,41 @@ export function Player({ log, onReload }: Props) {
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
-        {step.kind === 'result' ? (
+        {seat !== null ? (
+          <div className="seat-room">
+            <Room view={seatView(log, steps, index, seat)} onSit={sit} label={`The room from ${seat}'s chair`} />
+          </div>
+        ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
         ) : (
           <Table seats={seats} view={view} />
         )}
-        {step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
+        {seat === null && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
+      <section className="sit" aria-label="Seat">
+        <label>
+          Sit in a seat
+          <select value={seat ?? ''} onChange={(e) => sit(e.target.value === '' ? null : e.target.value)}>
+            <option value="">Nobody: the public table</option>
+            {log.cast.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="hint">
+          {seat === null
+            ? 'Sit in a seat to see the game as that player: only what they were told.'
+            : `You see only what ${seat} knew. Choose another seat, or "Nobody", and the game stays at this moment.`}
+        </p>
+      </section>
       <Controls
         index={index}
         count={steps.length}
         playing={playing}
         showNotes={showNotes}
+        notesLocked={seat !== null}
         onPrev={prev}
         onNext={next}
         onToggle={toggle}

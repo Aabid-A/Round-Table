@@ -1,6 +1,7 @@
 /* The room. Sizes come from the box it sits in (container units), so it fits a phone, a wide clip, or one half of a split. */
 .room {
-  --room-r: 30cqmin;
+  --room-r: 38cqmin;
+  --room-tilt: 16deg;
   container-type: size;
   position: relative;
   overflow: hidden;
@@ -65,14 +66,14 @@
 .room-camera {
   position: absolute;
   inset: 0;
-  perspective: 120cqmin;
+  perspective: 150cqmin;
   perspective-origin: 50% 30%;
 }
 .room-stage {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--room-r) * -1.1)) translateY(12cqmin) rotateX(-18deg) rotateY(calc(var(--turn) * -1));
+  transform: translateZ(calc(var(--room-r) * -1.05)) translateY(10cqmin) rotateX(calc(var(--room-tilt) * -1)) rotateY(calc(var(--turn) * -1));
   transition: transform 700ms ease;
 }
 .room-table {
@@ -88,9 +89,12 @@
   transform: rotateX(90deg);
 }
 .room-seats {
+  position: absolute;
+  inset: 0;
   list-style: none;
   margin: 0;
   padding: 0;
+  transform-style: preserve-3d; /* without this the seats are flattened onto the list and vanish */
 }
 .room-seat {
   position: absolute;
@@ -100,14 +104,14 @@
   height: 0;
   transform-style: preserve-3d;
   /* Stand on the ring, then turn back to face the camera so the card is always readable. */
-  transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg)));
+  transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg))) rotateX(var(--room-tilt));
   transition: transform 700ms ease;
 }
 .room-chair {
   position: absolute;
-  left: -8.5cqmin;
+  left: -10cqmin;
   bottom: 0;
-  width: 17cqmin;
+  width: 20cqmin;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -118,7 +122,7 @@
   background: var(--room-chair);
   color: var(--room-ink);
   font: inherit;
-  font-size: max(11px, 2.1cqmin);
+  font-size: max(11px, 2.5cqmin);
   box-shadow: var(--shadow);
 }
 .room-chair:not(:disabled) {
@@ -174,16 +178,16 @@
 }
 .room-bubble {
   position: absolute;
-  left: -13cqmin;
+  left: -16cqmin;
   bottom: calc(100% + 0cqmin);
-  width: 26cqmin;
-  margin: 0 0 11cqmin;
+  width: 32cqmin;
+  margin: 0 0 14cqmin;
   padding: 1.2cqmin 1.6cqmin;
   border-radius: 1.6cqmin;
   background: var(--surface);
   color: var(--text);
   border: 0.3cqmin solid var(--accent);
-  font-size: max(11px, 2cqmin);
+  font-size: max(11px, 2.4cqmin);
   line-height: 1.3;
   z-index: 2;
 }
@@ -219,4 +223,31 @@
   .room-light {
     transition: none;
   }
+}
+
+/* In the replay page: the room takes the whole row, and the seat chooser sits under it. */
+.seat-room {
+  grid-column: 1 / -1;
+  height: min(70vh, 640px);
+  min-height: 360px;
+}
+.sit {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.sit label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sit select {
+  min-height: var(--target);
+  padding: 0 var(--space-3);
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
 }
