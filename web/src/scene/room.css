@@ -537,3 +537,18 @@
 .live-chosen {
   margin: 0;
 }
+
+/* A ghost chooses which seat to watch. */
+.ghost {
+  display: grid;
+  gap: var(--space-3);
+}
+.ghost-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.ghost-seats .btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}

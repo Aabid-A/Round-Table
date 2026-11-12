@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import type { ServerMessage } from '../../../server/protocol.js';
-import { inviteLink } from './params.js';
+import { inviteLink, watchLink } from './params.js';
 import type { Identity } from './state.js';
 
 type LobbyMessage = Extract<ServerMessage, { t: 'lobby' }>;
@@ -28,6 +28,16 @@ export function Lobby({ me, lobby, serverError, onStart, onLeave }: Props) {
     }
   };
   const host = lobby?.seats.find((s) => s.host)?.name ?? 'the host';
+  const watch = me.host && me.watch ? watchLink(window.location, me.code, me.watch) : null;
+  const copyWatch = async (): Promise<void> => {
+    if (!watch) return;
+    try {
+      await navigator.clipboard.writeText(watch);
+      setCopied('Watch link copied.');
+    } catch {
+      setCopied('Could not copy. Select the link and copy it by hand.');
+    }
+  };
 
   return (
     <main className="loader rooms" data-testid="lobby">
@@ -55,6 +65,19 @@ export function Lobby({ me, lobby, serverError, onStart, onLeave }: Props) {
         </span>
       </div>
 
+      {watch && (
+        <div className="field" data-testid="watch-field">
+          <label htmlFor={`${id}-watch`}>Read-only watch link</label>
+          <div className="invite">
+            <input id={`${id}-watch`} type="text" readOnly value={watch} onFocus={(e) => e.currentTarget.select()} data-testid="watch-link" />
+            <button type="button" className="btn" onClick={() => void copyWatch()}>
+              Copy watch link
+            </button>
+          </div>
+          <span className="hint">Share it only with people who are not playing. It shows every role, note and whisper, one full round behind the game.</span>
+        </div>
+      )}
+
       <section aria-labelledby={`${id}-seats`} className="room-section">
         <h2 id={`${id}-seats`}>At the table{lobby ? ` (${lobby.seats.length} of ${lobby.maxHumans})` : ''}</h2>
         {lobby === null ? (
@@ -76,6 +99,16 @@ export function Lobby({ me, lobby, serverError, onStart, onLeave }: Props) {
             {lobby.aliases && (
               <p className="notice" data-testid="alias-note">
                 Human or AI? Everyone plays under an alias, and you will be told yours when the game starts. At the end you guess which seats were AIs.
+              </p>
+            )}
+            {lobby.ghosts && (
+              <p className="notice" data-testid="ghosts-note">
+                Ghosts are on. If you are murdered or banished you can keep watching, and you will see what every seat knows, hidden information included.
+              </p>
+            )}
+            {lobby.spectators && !me.host && (
+              <p className="muted" data-testid="spectators-note">
+                This room has a read-only watch link, one full round behind the game, that the host can share.
               </p>
             )}
             <p className="muted" data-testid="ai-seats">
