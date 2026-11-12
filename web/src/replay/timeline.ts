@@ -35,7 +35,7 @@ const EVENT_TITLES: Partial<Record<GameEvent['type'], string>> = {
 const isShownByTurn = (e: GameEvent): boolean => e.type === 'speech' || e.type === 'whisper';
 
 /** Turns and events in the order they happened, then a result step. Arrow keys walk this list. */
-export function buildSteps(log: GameLog): Step[] {
+export function buildSteps(log: GameLog, opts: { partial?: boolean } = {}): Step[] {
   const steps: Step[] = [];
   const pushEvents = (afterTurn: number): void => {
     for (const event of log.events) {
@@ -49,7 +49,8 @@ export function buildSteps(log: GameLog): Step[] {
     steps.push({ kind: 'turn', turn, section: { round: turn.round, title: TURN_TITLES[turn.phase] } });
     pushEvents(turn.id);
   }
-  steps.push({ kind: 'result', section: { round: log.result.rounds, title: 'Result' } });
+  // A game that is still going has no result to show yet.
+  if (!opts.partial) steps.push({ kind: 'result', section: { round: log.result.rounds, title: 'Result' } });
   return steps;
 }
 

@@ -10,7 +10,8 @@ interface Props {
   onToggle: () => void;
   onSeek: (i: number) => void;
   onNotes: (on: boolean) => void;
-  onReload: () => void;
+  /** Absent for a page that has no other log to load (a watcher's). */
+  onReload?: () => void;
 }
 
 export function Controls(p: Props) {
@@ -47,9 +48,11 @@ export function Controls(p: Props) {
             Show private notes
           </label>
         )}
-        <button type="button" className="btn" onClick={p.onReload}>
-          Load another log
-        </button>
+        {p.onReload && (
+          <button type="button" className="btn" onClick={p.onReload}>
+            Load another log
+          </button>
+        )}
       </div>
       <p className="hint">Space plays or pauses. Left and right arrows step.</p>
     </section>
