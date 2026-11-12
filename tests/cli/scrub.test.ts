@@ -1,4 +1,8 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { playGame, prepareSetup } from '../../src/cli/setup.js';
 import { scrubFetch, scrubLog, scrubPlayer } from '../../src/cli/scrub.js';
 import { runGame } from '../../src/engine/game.js';
 import { DEFAULT_SETTINGS } from '../../src/engine/types.js';
@@ -47,5 +51,32 @@ describe('scrubLog', () => {
     const clean = scrubLog(log, [KEY]);
     expect(JSON.stringify(clean)).not.toContain(KEY);
     expect(clean.turns.length).toBe(log.turns.length);
+  });
+});
+
+describe('the game command with a provider that echoes the key', () => {
+  it('writes no key into the log or into any error text, and the key still reached the provider', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rt-scrub-'));
+    const castFile = join(dir, 'cast.json');
+    writeFileSync(castFile, JSON.stringify(MOCK_CAST.map((c, i) => ({ name: c.name, model: `vendor/model-${i}` }))));
+    const before = process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY = KEY;
+    let sentKey = false;
+    const provider = (async (_url: string, init?: RequestInit) => {
+      sentKey ||= (init?.headers as Record<string, string>).Authorization === `Bearer ${KEY}`;
+      return new Response(`invalid credentials for ${KEY}`, { status: 401 });
+    }) as unknown as typeof fetch;
+    try {
+      const setup = prepareSetup({ mock: false, cast: castFile, config: 'config/game.json', timeoutMs: undefined, fetchImpl: provider });
+      const log = await playGame(setup, 1);
+      const text = JSON.stringify(log);
+      expect(sentKey).toBe(true);
+      expect(text).not.toContain(KEY);
+      expect(text).not.toContain(KEY.slice(0, 12));
+      expect(text).toContain('[redacted]'); // the provider's error text is in the log, with the key masked
+    } finally {
+      if (before === undefined) delete process.env.OPENROUTER_API_KEY;
+      else process.env.OPENROUTER_API_KEY = before;
+    }
   });
 });
