@@ -13,6 +13,9 @@ export interface GameSettings {
   traitors: number;
 }
 
+/** What the spend cap counts for a real-model call with no usable cost, until a real cost has been seen in the game (USD). */
+export const DEFAULT_COST_FLOOR_USD = 0.01;
+
 export const DEFAULT_SETTINGS: GameSettings = { maxRounds: 6, traitors: 2 };
 
 /** Survivors at or below this count trigger the end-or-banish vote. */
@@ -53,6 +56,11 @@ export interface TurnAttempt {
   extracted?: true;
   /** Token counts and cost the provider reported for this attempt, if any. */
   usage?: Usage;
+  /**
+   * Present when this call was to a real model under a spend cap and no usable cost came back (it timed out, failed, or reported
+   * none): the amount the cap counted for it. The largest cost seen so far in the game, or the floor if none had been seen.
+   */
+  costEstimatedUsd?: number;
 }
 
 export interface Turn {

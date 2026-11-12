@@ -12,7 +12,7 @@ import {
   runRoundTable,
   runWhispers,
 } from './phases.js';
-import { ENDGAME_AT, type EndReason, type GameLog, type GameSettings, type PhaseRequest } from './types.js';
+import { DEFAULT_COST_FLOOR_USD, ENDGAME_AT, type EndReason, type GameLog, type GameSettings, type PhaseRequest } from './types.js';
 
 export interface RunGameInput {
   cast: CastMember[];
@@ -23,6 +23,11 @@ export interface RunGameInput {
   systemPrompt: string;
   /** Stop the game cleanly before a call that could pass this many USD in total. */
   maxCostUsd?: number;
+  /**
+   * With a spend cap: what a real-model call with no usable cost counts for until a real cost has been seen in the game (USD).
+   * After that it counts the largest cost seen so far. Default 0.01.
+   */
+  costFloorUsd?: number;
 }
 
 /**
@@ -38,6 +43,9 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
   if (input.maxCostUsd !== undefined && !(Number.isFinite(input.maxCostUsd) && input.maxCostUsd > 0)) {
     throw new Error('maxCostUsd must be a positive number');
   }
+  if (input.costFloorUsd !== undefined && !(Number.isFinite(input.costFloorUsd) && input.costFloorUsd > 0)) {
+    throw new Error('costFloorUsd must be a positive number');
+  }
   const rng = createRng(seed);
   const roles = assignRoles(cast.map((c) => c.name), settings.traitors, rng);
   const state = createState(cast, roles);
@@ -47,7 +55,7 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     players: input.players,
     buildPrompt: input.buildPrompt,
     systemPrompt: input.systemPrompt,
-    ...(input.maxCostUsd !== undefined ? { budget: { maxUsd: input.maxCostUsd, spentUsd: 0, maxCallUsd: 0 } } : {}),
+    ...(input.maxCostUsd !== undefined ? { budget: { maxUsd: input.maxCostUsd, spentUsd: 0, maxCallUsd: 0, floorUsd: input.costFloorUsd ?? DEFAULT_COST_FLOOR_USD } } : {}),
   };
 
   let reason: EndReason | null = null;

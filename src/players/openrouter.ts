@@ -40,6 +40,7 @@ export function createOpenRouterPlayer(opts: OpenRouterOptions): Player {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const doFetch = opts.fetchImpl ?? fetch;
   return {
+    metered: true,
     async respond(req: PromptRequest): Promise<PlayerReply> {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);

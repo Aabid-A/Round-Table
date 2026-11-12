@@ -17,8 +17,10 @@ export interface EngineContext {
 export interface Budget {
   maxUsd: number;
   spentUsd: number;
-  /** Largest single-call cost seen so far; used to predict the next call. */
+  /** Largest single-call cost seen so far (a floor counts too, once it has been used); used to predict the next call. */
   maxCallUsd: number;
+  /** What a real-model call with no usable cost counts for until a real cost has been seen. */
+  floorUsd: number;
 }
 
 /** Thrown before a model call when the next call could pass the cost cap. */
@@ -66,6 +68,7 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
   const attempts: TurnAttempt[] = [];
   const id = ctx.state.turns.length;
   let user = baseUser;
+  const metered = ctx.players[player]?.metered === true;
   let accepted: { speech: string; private_notes: string; action: Action } | null = null;
 
   for (let i = 0; i < 2 && !accepted; i++) {
@@ -97,18 +100,26 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
     } catch (e) {
       error = errorMessage(e);
     }
+    // A cost that is not a finite, non-negative number would corrupt the total (NaN never caps, negative refunds).
+    let estimate: number | undefined;
+    if (ctx.budget && isUsableCost(usage?.costUsd)) {
+      ctx.budget.spentUsd += usage.costUsd;
+      ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, usage.costUsd);
+    } else if (ctx.budget && metered) {
+      // A real model was called and no cost came back (a timeout, an error, no usage in the reply). It may still have been billed,
+      // so count the largest cost seen so far, or the floor if none yet, and say in the log that it was an estimate.
+      estimate = ctx.budget.maxCallUsd > 0 ? ctx.budget.maxCallUsd : ctx.budget.floorUsd;
+      ctx.budget.spentUsd += estimate;
+      ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, estimate);
+    }
     attempts.push({
       prompt: user,
       raw,
       error,
       ...(extracted ? { extracted: true as const } : {}),
       ...(usage ? { usage } : {}),
+      ...(estimate !== undefined ? { costEstimatedUsd: estimate } : {}),
     });
-    // A cost that is not a finite, non-negative number would corrupt the total (NaN never caps, negative refunds).
-    if (ctx.budget && isUsableCost(usage?.costUsd)) {
-      ctx.budget.spentUsd += usage.costUsd;
-      ctx.budget.maxCallUsd = Math.max(ctx.budget.maxCallUsd, usage.costUsd);
-    }
     if (error !== null) user = baseUser + retryNote(raw, error);
   }
 

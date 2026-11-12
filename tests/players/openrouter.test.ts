@@ -76,6 +76,17 @@ describe('createOpenRouterPlayer', () => {
     expect(seen?.init.signal).toBeInstanceOf(AbortSignal);
   });
 
+  it('declares itself metered, so the spend cap counts its calls even when no cost comes back', () => {
+    expect(createOpenRouterPlayer({ model: 'm', apiKey: KEY }).metered).toBe(true);
+  });
+
+  it('asks for no cost flag: the current OpenRouter docs return usage and cost on every response, and say usage.include is deprecated', async () => {
+    let body: Record<string, unknown> = {};
+    const player = createOpenRouterPlayer({ model: 'm', apiKey: KEY, fetchImpl: stub(async (_url, init) => ((body = JSON.parse(init.body as string) as Record<string, unknown>), new Response(okBody('{}'), { status: 200 }))) });
+    await player.respond(req);
+    expect(Object.keys(body).sort()).toEqual(['messages', 'model']);
+  });
+
   it('rejects an empty key', () => {
     expect(() => createOpenRouterPlayer({ model: 'm', apiKey: '' })).toThrow();
   });
