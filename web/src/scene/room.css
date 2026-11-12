@@ -1,0 +1,222 @@
+/* The room. Sizes come from the box it sits in (container units), so it fits a phone, a wide clip, or one half of a split. */
+.room {
+  --room-r: 30cqmin;
+  container-type: size;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  border-radius: var(--radius-m);
+  background: radial-gradient(ellipse at 50% 30%, var(--room-wall-a), var(--room-wall-b));
+  --room-wall-a: #efe9dc;
+  --room-wall-b: #cfc6b2;
+  --room-table-a: #8a6a45;
+  --room-table-b: #5d452b;
+  --room-chair: var(--surface);
+  --room-ink: var(--text);
+}
+.room[data-night='true'] {
+  --room-wall-a: #232a45;
+  --room-wall-b: #0d1020;
+  --room-table-a: #3a3140;
+  --room-table-b: #1d1822;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .room {
+    --room-wall-a: #2a2a35;
+    --room-wall-b: #121217;
+    --room-table-a: #5a452e;
+    --room-table-b: #34281a;
+  }
+  :root:not([data-theme='light']) .room[data-night='true'] {
+    --room-wall-a: #1a2038;
+    --room-wall-b: #07080f;
+    --room-table-a: #2a2230;
+    --room-table-b: #120e16;
+  }
+}
+:root[data-theme='dark'] .room {
+  --room-wall-a: #2a2a35;
+  --room-wall-b: #121217;
+  --room-table-a: #5a452e;
+  --room-table-b: #34281a;
+}
+:root[data-theme='dark'] .room[data-night='true'] {
+  --room-wall-a: #1a2038;
+  --room-wall-b: #07080f;
+  --room-table-a: #2a2230;
+  --room-table-b: #120e16;
+}
+
+.room-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background: radial-gradient(circle at 50% 38%, transparent 0, rgb(0 0 0 / 0.45) 100%);
+  opacity: 0;
+  transition: opacity 400ms;
+}
+.room[data-night='true'] .room-light {
+  opacity: 1;
+}
+
+.room-camera {
+  position: absolute;
+  inset: 0;
+  perspective: 120cqmin;
+  perspective-origin: 50% 30%;
+}
+.room-stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--room-r) * -1.1)) translateY(12cqmin) rotateX(-18deg) rotateY(calc(var(--turn) * -1));
+  transition: transform 700ms ease;
+}
+.room-table {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--room-r) * 1.7);
+  height: calc(var(--room-r) * 1.7);
+  margin: calc(var(--room-r) * -0.85) 0 0 calc(var(--room-r) * -0.85);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--room-table-a), var(--room-table-b));
+  box-shadow: 0 0 0 1.2cqmin rgb(0 0 0 / 0.25);
+  transform: rotateX(90deg);
+}
+.room-seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.room-seat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  /* Stand on the ring, then turn back to face the camera so the card is always readable. */
+  transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg)));
+  transition: transform 700ms ease;
+}
+.room-chair {
+  position: absolute;
+  left: -8.5cqmin;
+  bottom: 0;
+  width: 17cqmin;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4cqmin;
+  padding: 1.4cqmin 1cqmin;
+  border: 0.3cqmin solid var(--border);
+  border-radius: 1.6cqmin;
+  background: var(--room-chair);
+  color: var(--room-ink);
+  font: inherit;
+  font-size: max(11px, 2.1cqmin);
+  box-shadow: var(--shadow);
+}
+.room-chair:not(:disabled) {
+  cursor: pointer;
+}
+.room-chair:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.room-seat[data-mark='self'] .room-chair,
+.room-chair[aria-pressed='true'] {
+  border-color: var(--accent);
+  border-width: 0.6cqmin;
+}
+.room-seat[data-speaking='true'] .room-chair {
+  border-color: var(--accent);
+  transform: translateY(-1cqmin);
+}
+.room-seat[data-status='murdered'] .room-chair,
+.room-seat[data-status='banished'] .room-chair {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.room-name {
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-model {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.8em;
+}
+.room-tag {
+  padding: 0 0.8cqmin;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  font-size: 0.8em;
+  font-weight: 600;
+}
+.room-tag[data-role='traitor'] {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.room-tag[data-role='faithful'] {
+  color: var(--success);
+  border-color: var(--success);
+}
+.room-bubble {
+  position: absolute;
+  left: -13cqmin;
+  bottom: calc(100% + 0cqmin);
+  width: 26cqmin;
+  margin: 0 0 11cqmin;
+  padding: 1.2cqmin 1.6cqmin;
+  border-radius: 1.6cqmin;
+  background: var(--surface);
+  color: var(--text);
+  border: 0.3cqmin solid var(--accent);
+  font-size: max(11px, 2cqmin);
+  line-height: 1.3;
+  z-index: 2;
+}
+.room-bubble[data-kind='thought'] {
+  font-style: italic;
+  border-style: dashed;
+}
+.room-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  padding: 1.2cqmin 2cqmin;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.65));
+  color: #fff;
+  text-align: center;
+}
+.room-kicker {
+  margin: 0;
+  font-size: max(12px, 2.2cqmin);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.room-line {
+  margin: 0.4cqmin 0 0;
+  font-size: max(13px, 2.8cqmin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-stage,
+  .room-seat,
+  .room-light {
+    transition: none;
+  }
+}
