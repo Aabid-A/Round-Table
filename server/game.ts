@@ -86,6 +86,8 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   // traitors are alive, whether they disagreed, and whether a recruit offer was made.
   for (const [name, inner] of Object.entries(base)) {
     players[name] = {
+      // The wrapper must keep the flag: it is what makes the spend cap count a real-model call that returns no cost.
+      ...(inner.metered ? { metered: true } : {}),
       respond: async (req) => {
         if (signal?.aborted) throw new Error('the room closed');
         const label = publicPhase(req.phase);

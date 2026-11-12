@@ -117,4 +117,19 @@ describe('runRoomGame', () => {
       expect(await play()).toEqual(await play());
     });
   });
+
+  it('counts failed AI calls against the room\'s spend cap as estimates, so a failing provider cannot spend without limit', async () => {
+    const { room, seatPlayers } = autoRoom(['Quinn'], { mode: 'openrouter', key: 'sk-test-cap', models: ['a/b'], maxCostUsd: 0.05 });
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls++;
+      return new Response('{"error":"down"}', { status: 500 });
+    }) as unknown as typeof fetch;
+    const log = await runRoomGame(room, { seatPlayers, fetchImpl });
+    expect(log.result).toMatchObject({ reason: 'cost_cap', winner: null });
+    const aiAttempts = log.turns.filter((t) => t.player !== 'Quinn').flatMap((t) => t.attempts);
+    expect(aiAttempts.length).toBeGreaterThan(0);
+    expect(aiAttempts.every((a) => a.costEstimatedUsd === 0.01)).toBe(true);
+    expect(calls).toBeLessThanOrEqual(5); // the cap of 0.05 at 0.01 a call: it stopped
+  });
 });

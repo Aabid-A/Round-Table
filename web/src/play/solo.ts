@@ -69,6 +69,8 @@ export async function runSolo(
     // Once aborted, every turn fails at once without touching the network, so the game ends in a moment.
     for (const [name, inner] of Object.entries(players)) {
       players[name] = {
+        // Keep the flag: it is what makes the spend cap count a real-model call that returns no cost.
+        ...(inner.metered ? { metered: true } : {}),
         respond: async (req) => {
           if (signal.aborted) throw new Error('The game was ended.');
           return inner.respond(req);
