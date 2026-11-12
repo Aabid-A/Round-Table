@@ -27,6 +27,22 @@ export function roomServerUrl(configured: string | undefined, loc: { protocol: s
   return `${loc.protocol === 'https:' ? 'wss' : 'ws'}://${loc.hostname}:${DEFAULT_ROOM_PORT}`;
 }
 
+/** ?mode=watch&room=CODE&k=TOKEN opens the read-only watch page. */
+export const isWatchMode = (search: string): boolean => new URLSearchParams(search).get('mode') === 'watch';
+
+/** The room code and token in a watch link, or null unless both look right. */
+export function watchFromSearch(search: string): { code: string; token: string } | null {
+  const q = new URLSearchParams(search);
+  const code = normalizeCode(q.get('room'));
+  const token = q.get('k') ?? '';
+  return code !== null && /^[0-9a-f-]{36}$/.test(token) ? { code, token } : null;
+}
+
+/** The read-only link a host may share when the room has one. It shows the game one full round behind. */
+export function watchLink(loc: { origin: string; pathname: string }, code: string, token: string): string {
+  return `${loc.origin}${loc.pathname}?mode=watch&room=${code}&k=${token}`;
+}
+
 /** The link a host shares: the same page, opened on the join form with the code filled in. */
 export function inviteLink(loc: { origin: string; pathname: string }, code: string): string {
   return `${loc.origin}${loc.pathname}?mode=room&room=${code}`;

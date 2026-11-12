@@ -22,12 +22,14 @@ export interface Identity {
   host: boolean;
   /** The name this person plays under, in alias mode, once the game has started. */
   alias: string | null;
+  /** The token of the read-only watch link, given only to the host of a room that has one. */
+  watch: string | null;
 }
 
 export type RoomView =
   | { kind: 'home' }
   | { kind: 'lobby'; lobby: Msg<'lobby'> | null }
-  | { kind: 'playing'; phase: PublicPhase | null; turn: TurnInfo | null; timedOut: boolean }
+  | { kind: 'playing'; phase: PublicPhase | null; turn: TurnInfo | null; timedOut: boolean; ghost: Msg<'ghost'> | null }
   /** After the game, in alias mode: guess which seats were AIs. `sent` once this person has answered. */
   | { kind: 'guessing'; seats: string[]; you: string; timeoutMs: number; sent: boolean }
   | { kind: 'finished'; log: GameLog; outcome: RoomOutcome }
@@ -71,7 +73,7 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
   const { view } = state;
   switch (msg.t) {
     case 'joined':
-      return { ...state, error: null, me: { code: msg.code, you: msg.you, host: msg.host, alias: state.me?.code === msg.code ? state.me.alias : null }, view: view.kind === 'home' ? { kind: 'lobby', lobby: null } : view };
+      return { ...state, error: null, me: { code: msg.code, you: msg.you, host: msg.host, alias: state.me?.code === msg.code ? state.me.alias : null, watch: msg.watch ?? null }, view: view.kind === 'home' ? { kind: 'lobby', lobby: null } : view };
     case 'alias':
       return state.me ? { ...state, me: { ...state.me, alias: msg.alias } } : state;
     case 'guess':
@@ -82,13 +84,13 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
       if (view.kind === 'finished' || view.kind === 'closed' || view.kind === 'guessing') return state;
       const was = view.kind === 'playing' ? view : null;
       // Someone else is acting now, so this person's own turn (if it was open) is over.
-      return { ...state, view: { kind: 'playing', phase: msg.phase ?? was?.phase ?? null, turn: null, timedOut: was?.timedOut ?? false } };
+      return { ...state, view: { kind: 'playing', phase: msg.phase ?? was?.phase ?? null, turn: null, timedOut: was?.timedOut ?? false, ghost: was?.ghost ?? null } };
     }
     case 'turn': {
       if (view.kind === 'finished' || view.kind === 'closed' || view.kind === 'guessing') return state;
       const turn: TurnInfo = { id: msg.turn, phase: msg.phase, options: msg.options, user: msg.user, timeoutMs: msg.timeoutMs, error: msg.error };
       // A missed turn is reported until the person answers a later one: the next turn often arrives at once.
-      return { ...state, view: { kind: 'playing', phase: publicPhase(msg.phase), turn, timedOut: view.kind === 'playing' ? view.timedOut : false } };
+      return { ...state, view: { kind: 'playing', phase: publicPhase(msg.phase), turn, timedOut: view.kind === 'playing' ? view.timedOut : false, ghost: view.kind === 'playing' ? view.ghost : null } };
     }
     case 'turn_over':
       return view.kind === 'playing' && view.turn?.id === msg.turn ? { ...state, view: { ...view, turn: null, timedOut: true } } : state;
@@ -100,7 +102,9 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
     case 'error':
       return { ...state, error: msg.message };
     case 'ghost':
+      // A person who is out: every seat's view, as of now. Only a game in progress has a ghost.
+      return view.kind === 'playing' ? { ...state, view: { ...view, ghost: msg } } : view.kind === 'lobby' || view.kind === 'home' ? { ...state, view: { kind: 'playing', phase: null, turn: null, timedOut: false, ghost: msg } } : state;
     case 'spectate':
-      return state; // not shown yet
+      return state; // only a watcher is sent this
   }
 }

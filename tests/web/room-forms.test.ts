@@ -43,3 +43,12 @@ describe('checkJoin', () => {
     expect(checkJoin({ code: 'AB2CD', name: '<b>' })).toMatchObject({ ok: false });
   });
 });
+
+describe('checkCreate: ghosts and a watch link', () => {
+  it('asks for each only when its box is ticked, in either kind of room', () => {
+    expect(checkCreate({ ...real, real: false, ghosts: true, spectators: true })).toEqual({ ok: true, value: { t: 'create', name: 'Quinn', mode: 'mock', ghosts: true, spectators: true } });
+    expect(checkCreate({ ...real, spectators: true })).toMatchObject({ ok: true, value: { mode: 'openrouter', spectators: true } });
+    expect(checkCreate({ ...real, real: false, ghosts: false, spectators: false })).toEqual({ ok: true, value: { t: 'create', name: 'Quinn', mode: 'mock' } });
+    expect(checkCreate({ ...real, real: false })).not.toHaveProperty('value.ghosts');
+  });
+});
