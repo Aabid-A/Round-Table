@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { GameLog } from '../../src/engine/types.js';
-import { seatView } from '../../web/src/perspective/seatView.js';
+import { seatTimeline, seatView } from '../../web/src/perspective/seatView.js';
 import { buildSteps, finalRoles } from '../../web/src/replay/timeline.js';
 import { playMock } from '../helpers/game.js';
 
@@ -148,5 +148,57 @@ describe('what a seat is told, and when', () => {
       }
     }
     expect(recruits).toBeGreaterThan(0); // at least one recruited seat was among the seats checked
+  });
+});
+
+describe('a seat’s own timeline', () => {
+  it('has no run of empty steps and no step about a private recruitment, so its length tells nothing hidden', async () => {
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const log = await playMock(seed);
+      const steps = buildSteps(log);
+      for (const c of log.cast) {
+        const line = seatTimeline(log, steps, c.name);
+        const moments = line.map((i) => seatView(log, steps, i, c.name).moment);
+        for (let k = 1; k < moments.length; k++) {
+          const empty = (m: (typeof moments)[number]): boolean => m.kind === 'none' && m.title !== 'Result';
+          expect(empty(moments[k]!) && empty(moments[k - 1]!), `${seed} ${c.name}: two empty steps in a row at ${k}`).toBe(false);
+        }
+        expect(moments.some((m) => /closed doors|recruit/i.test(m.title) && m.kind === 'none')).toBe(false);
+        expect(line.at(-1)).toBe(steps.length - 1); // it still ends on the result
+      }
+    }
+  });
+
+  it('gives a faithful one Night step per round however many traitors act or disagree', async () => {
+    for (const traitors of [1, 2, 3]) {
+      const log = await playMock(5, { traitors });
+      const steps = buildSteps(log);
+      const faithful = log.cast.find((c) => log.roles[c.name] === 'faithful')!.name;
+      const line = seatTimeline(log, steps, faithful);
+      const perRound = new Map<number, number>();
+      for (const i of line) {
+        const s = steps[i]!;
+        if (s.section.title === 'Night') perRound.set(s.section.round, (perRound.get(s.section.round) ?? 0) + 1);
+      }
+      expect([...perRound.values()].every((n) => n === 1), `${traitors} traitors`).toBe(true);
+      const fullNight = steps.filter((s) => s.section.title === 'Night').length;
+      expect(fullNight).toBeGreaterThan(perRound.size); // the full timeline does show the extra night turns
+    }
+  });
+
+  it('shows a recruited seat as a traitor, and its recruiter a fellow, as soon as the offer is accepted', async () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const log = await playMock(seed);
+      const accepted = log.events.find((e) => e.type === 'recruit' && e.accepted) as { offeredBy: string; offeredTo: string } | undefined;
+      if (!accepted) continue;
+      const steps = buildSteps(log);
+      const at = steps.findIndex((s) => s.kind === 'event' && s.event.type === 'recruit');
+      const target = seatView(log, steps, at, accepted.offeredTo).seats.find((s) => s.name === accepted.offeredTo)!;
+      expect(target.role).toBe('traitor');
+      const recruiter = seatView(log, steps, at, accepted.offeredBy).seats.find((s) => s.name === accepted.offeredTo)!;
+      expect(recruiter.mark).toBe('fellow');
+      return;
+    }
+    throw new Error('no game with an accepted recruitment in 40 seeds');
   });
 });

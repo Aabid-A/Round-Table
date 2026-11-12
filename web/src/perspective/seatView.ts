@@ -75,13 +75,42 @@ export function seatView(log: GameLog, steps: Step[], index: number, seat: strin
     if (e.type === 'breakfast' && e.victim !== null && e.role !== null) out.set(e.victim, { name: e.victim, how: 'murdered', role: e.role });
     if (e.type === 'banishment') out.set(e.player, { name: e.player, how: 'banished', role: e.role });
   }
+  // A recruitment this seat was told about changes who is a traitor now, before its next prompt says so.
+  let selfRole = k?.role ?? null;
+  const fellows = new Set(k?.fellowTraitors ?? []);
+  for (let i = 0; i <= index && i < steps.length; i++) {
+    const s = steps[i] as Step;
+    if (s.kind !== 'event' || s.event.type !== 'recruit' || !s.event.accepted || !canSee(s.event, seat)) continue;
+    if (s.event.offeredTo === seat) {
+      selfRole = 'traitor';
+      fellows.add(s.event.offeredBy);
+    } else if (s.event.offeredBy === seat) fellows.add(s.event.offeredTo);
+  }
   const seats: SceneSeat[] = log.cast.map((c) => {
     const gone = out.get(c.name);
-    const mark = c.name === seat ? 'self' : k?.fellowTraitors.includes(c.name) ? 'fellow' : null;
-    const role = gone ? gone.role : c.name === seat ? (k?.role ?? null) : mark === 'fellow' ? 'traitor' : null;
+    const mark = c.name === seat ? 'self' : fellows.has(c.name) && selfRole === 'traitor' ? 'fellow' : null;
+    const role = gone ? gone.role : c.name === seat ? selfRole : mark === 'fellow' ? 'traitor' : null;
     const status = gone ? gone.how : 'alive';
     return { name: c.name, model: c.model, status, role, mark };
   });
   const step = steps[index] as Step;
   return { viewer: seat, seats, moment: momentFor(step, seat, log), night: step.section.title === 'Night' };
+}
+
+/**
+ * The steps this seat's replay walks, as indexes into the full step list. A run of steps that show this seat nothing (the
+ * other players' secret votes, the traitors' night) is one step, so the number of presses and the counter do not tell how
+ * many traitors there are or whether they disagreed. A recruitment this seat is not part of is left out entirely.
+ */
+export function seatTimeline(log: GameLog, steps: Step[], seat: string): number[] {
+  const timeline: number[] = [];
+  let lastWasEmpty = false;
+  steps.forEach((step, i) => {
+    const m = momentFor(step, seat, log);
+    if (m.title === HIDDEN_TITLE) return;
+    const empty = m.kind === 'none' && step.kind !== 'result';
+    if (!(empty && lastWasEmpty)) timeline.push(i);
+    lastWasEmpty = empty;
+  });
+  return timeline;
 }
