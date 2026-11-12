@@ -74,21 +74,21 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                         {role}
                       </span>
                     )}
-                  {onSit ? (
-                    <button
-                      type="button"
-                      className="room-chair"
-                      aria-pressed={seat.name === view.viewer}
-                      aria-label={`${seat.mark === 'self' ? 'You are ' : 'Sit at '}${seat.name}${seat.status === 'alive' ? '' : `, ${seat.status}`}`}
-                      onClick={() => onSit(seat.name)}
-                    >
-                      {chair}
-                    </button>
-                  ) : (
-                    <div className="room-chair" data-self={seat.mark === 'self'}>
-                      {chair}
-                    </div>
-                  )}
+                    {onSit ? (
+                      <button
+                        type="button"
+                        className="room-chair"
+                        aria-pressed={seat.name === view.viewer}
+                        aria-label={`${seat.mark === 'self' ? 'You are ' : 'Sit at '}${seat.name}${seat.status === 'alive' ? '' : `, ${seat.status}`}${role && seat.mark !== 'self' ? `, ${seat.role}` : ''}`}
+                        onClick={() => onSit(seat.name)}
+                      >
+                        {chair}
+                      </button>
+                    ) : (
+                      <div className="room-chair" data-self={seat.mark === 'self'}>
+                        {chair}
+                      </div>
+                    )}
                   </div>
                 </li>
               );

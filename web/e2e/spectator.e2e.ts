@@ -104,10 +104,38 @@ test('recording mode: the all-seeing room in 16:9 and 9:16', async ({ page }) =>
   }
 });
 
-test('reduced motion: the room keeps still, and the director’s cuts do not glide either way', async ({ page }) => {
+test('reduced motion: the light does not fade and a seat’s camera does not glide', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await open(page, '&view=spectator');
+  await expect(page.locator('.room-light')).toHaveCSS('transition-duration', '0s'); // not already off because of a director's cut
+  await open(page, '&seat=Aria');
+  await expect(page.locator('.room-stage')).toHaveAttribute('style', /--turn/);
   await expect(page.locator('.room-stage')).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.room-seat').first()).toHaveCSS('transition-duration', '0s');
+});
+
+test('dropping into a traitor’s seat shows their fellow traitor and no traitor marks, notes or whispers', async ({ page }) => {
+  await open(page, '&view=spectator');
+  await walkTo(page, 'Round table');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const box = (await page.locator('[data-name=Bram] button').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Bram');
+  await expect(page.locator('[data-mark=traitor]')).toHaveCount(0);
+  await expect(page.locator('[data-name=Cleo]')).toHaveAttribute('data-mark', 'fellow');
+  await expect(page.getByTestId('room-thought')).toHaveCount(0);
+  await expect(page.getByTestId('room-whisper')).toHaveCount(0);
+  // Roles are shown only for seats that have left the table (the game revealed them), never for those still in it.
+  await expect(page.locator('[data-status=alive] [data-testid=room-role]')).toHaveCount(0);
+});
+
+test('the status line in the all-seeing room reads out the notes and the whisper’s recipient', async ({ page }) => {
+  await open(page, '&view=spectator');
+  await walkTo(page, 'Round table');
+  await expect(page.getByTestId('announcement')).toContainText('Private notes: MOCKNOTE-');
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 20 && (await page.getByTestId('room-whisper').count()) === 0; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('announcement')).toContainText(/Whisper from \w+ to \w+: .*WHISPER-/);
 });
 
 test('the plain public table is still the default, with no room', async ({ page }) => {

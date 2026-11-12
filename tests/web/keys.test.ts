@@ -5,17 +5,18 @@ const body = { tagName: 'BODY' };
 const input = (type: string) => ({ tagName: 'INPUT', type });
 
 describe('actionForKey', () => {
-  it('a returns to the all-seeing view, except while typing', () => {
-    expect(actionForKey('A', body)).toBe('spectate');
-    expect(actionForKey('a', { tagName: 'SELECT' })).toBeNull();
-    expect(actionForKey('a', input('text'))).toBeNull();
+  it('a returns to the all-seeing view only where a page asks for it, and never while typing', () => {
+    expect(actionForKey('A', body, { spectate: true })).toBe('spectate');
+    expect(actionForKey('a', body)).toBeNull(); // the guess page does not ask, so a does nothing there
+    expect(actionForKey('a', { tagName: 'SELECT' }, { spectate: true })).toBeNull();
+    expect(actionForKey('a', input('text'), { spectate: true })).toBeNull();
   });
 
   it('steps with the arrows and plays with space on the page', () => {
     expect(actionForKey('ArrowRight', body)).toBe('next');
     expect(actionForKey('ArrowLeft', body)).toBe('prev');
     expect(actionForKey(' ', body)).toBe('toggle');
-    expect(actionForKey('a', body)).toBe('spectate');
+    expect(actionForKey('a', body)).toBeNull();
     expect(actionForKey('x', body)).toBeNull();
   });
 

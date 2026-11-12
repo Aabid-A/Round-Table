@@ -23,10 +23,17 @@ interface Props {
 const announcement = (view: StepView): string =>
   view.card ? `${view.card.title}. ${view.card.body}` : view.bubble && view.speaker ? `${view.speaker}: ${view.bubble.text}` : '';
 
-/** What a screen reader is told while seated: only the seat's own view, never the public step (which includes whispers and notes). */
-const seatAnnouncement = (view: SceneView): string => {
-  const { title, speaker, text } = view.moment;
-  return text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title;
+/**
+ * What a screen reader is told in the room: only what the view holds, never the public step. A seat's view has no notes and no
+ * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
+ * panel and a line a screen reader cannot see.
+ */
+const roomAnnouncement = (view: SceneView): string => {
+  const { title, speaker, text, thought } = view.moment;
+  const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];
+  if (thought) parts.push(`Private notes: ${thought}`);
+  for (const w of view.whispers) parts.push(`Whisper from ${w.from} to ${w.to}: ${w.text}`);
+  return parts.join('. ');
 };
 
 /** Plays one game log like an episode. */
@@ -67,7 +74,7 @@ export function Player({ log, onReload }: Props) {
     const onKey = (e: KeyboardEvent): void => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target instanceof HTMLElement ? e.target : null;
-      const action = actionForKey(e.key, t && { tagName: t.tagName, type: (t as HTMLInputElement).type, isContentEditable: t.isContentEditable });
+      const action = actionForKey(e.key, t && { tagName: t.tagName, type: (t as HTMLInputElement).type, isContentEditable: t.isContentEditable }, { spectate: true });
       if (!action) return;
       e.preventDefault();
       if (e.repeat && action === 'toggle') return; // holding space must not flip play/pause at key-repeat speed
@@ -95,7 +102,7 @@ export function Player({ log, onReload }: Props) {
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : sv ? seatAnnouncement(sv) : announcement(view)}
+        {playing ? '' : sv ? roomAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {sv ? sv.moment.title : step.section.title}
