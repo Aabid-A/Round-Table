@@ -39,7 +39,8 @@ export function Room({ view, onSit, onPick, label = 'The room' }: Props) {
       onPick?.(null);
       return;
     }
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    // Walking the seats with the arrows is for choosing a seat. Anywhere else (the replay page) the arrows still step the game.
+    if (!picking || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
     const chairs = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button.room-chair:not([disabled])')];
     const at = chairs.indexOf(document.activeElement as HTMLButtonElement);
     if (chairs.length === 0) return;
@@ -63,7 +64,7 @@ export function Room({ view, onSit, onPick, label = 'The room' }: Props) {
       aria-label={label}
     >
       <div className="room-light" aria-hidden="true" />
-      <div className="room-camera">
+      <div className="room-camera" inert={view.sleep === true}>
         <div className="room-stage" style={{ '--turn': `${turn.current}deg` } as CSSProperties}>
           <div className="room-table" aria-hidden="true" />
           <ul className="room-seats" aria-label="Seats" onKeyDown={onSeatKeys}>
