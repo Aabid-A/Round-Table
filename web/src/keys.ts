@@ -1,4 +1,4 @@
-export type Action = 'next' | 'prev' | 'toggle';
+export type Action = 'next' | 'prev' | 'toggle' | 'spectate';
 
 export interface KeyTarget {
   tagName: string;
@@ -9,8 +9,8 @@ export interface KeyTarget {
 /**
  * Which playback action a key press means, or null to leave it to the browser.
  * Arrows step except on the scrubber (they move it natively); space plays or
- * pauses except on buttons and checkboxes (it activates them natively); nothing
- * fires while typing in a text field.
+ * pauses except on buttons and checkboxes (it activates them natively); `a` goes to
+ * the all-seeing view; nothing fires while typing in a text field.
  */
 export function actionForKey(key: string, target: KeyTarget | null): Action | null {
   const tag = target?.tagName ?? '';
@@ -20,6 +20,7 @@ export function actionForKey(key: string, target: KeyTarget | null): Action | nu
   const onScrubber = tag === 'INPUT' && type === 'range';
   if (key === 'ArrowRight') return onScrubber ? null : 'next';
   if (key === 'ArrowLeft') return onScrubber ? null : 'prev';
+  if (key === 'a' || key === 'A') return 'spectate';
   if (key === ' ') {
     const activates = tag === 'BUTTON' || tag === 'A' || (tag === 'INPUT' && ['checkbox', 'radio', 'button', 'file'].includes(type));
     return activates ? null : 'toggle';

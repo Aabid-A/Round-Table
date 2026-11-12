@@ -23,7 +23,7 @@ test('?seat= opens the replay in that player’s chair', async ({ page }) => {
   await expect(room).toBeVisible();
   await expect(room.getByTestId('room-seat')).toHaveCount(8);
   await expect(room.locator('[data-name=Aria]')).toHaveAttribute('data-mark', 'self');
-  await expect(page.getByLabel('Sit in a seat')).toHaveValue('Aria');
+  await expect(page.getByLabel('View', { exact: true })).toHaveValue('Aria');
   await expect(page.getByText('Show private notes')).toHaveCount(0);
 });
 
@@ -48,7 +48,7 @@ test('switching seats keeps the same moment, and a traitor sees their fellow tra
   for (let i = 0; i < 60 && !(await page.getByTestId('section').innerText()).startsWith('Round table'); i++) await page.keyboard.press('ArrowRight');
   await expect(page.getByTestId('room-speech')).toBeVisible();
   const said = await speech(page);
-  await page.getByLabel('Sit in a seat').selectOption('Bram');
+  await page.getByLabel('View', { exact: true }).selectOption('Bram');
   expect(await speech(page)).toBe(said);
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Bram');
   await expect(page.locator('[data-name=Cleo] .room-tag', { hasText: 'Fellow traitor' })).toBeVisible();
@@ -56,7 +56,7 @@ test('switching seats keeps the same moment, and a traitor sees their fellow tra
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Hugo');
   expect(await speech(page)).toBe(said);
   expect(page.url()).toContain('seat=Hugo');
-  await page.getByLabel('Sit in a seat').selectOption('');
+  await page.getByLabel('View', { exact: true }).selectOption('');
   await expect(page.getByTestId('table')).toBeVisible();
   await expect(page.getByTestId('bubble')).toContainText(said.replace(/^\S+\s*/, '').slice(0, 20));
   expect(page.url()).not.toContain('seat=');
@@ -66,15 +66,15 @@ test('a round trip through a seat does not move the public step, even from a ste
   await open(page, '');
   await stepTo(page, 3); // a night turn: empty for a faithful
   const before = await page.locator('main').getAttribute('data-step');
-  await page.getByLabel('Sit in a seat').selectOption('Aria');
-  await page.getByLabel('Sit in a seat').selectOption('');
+  await page.getByLabel('View', { exact: true }).selectOption('Aria');
+  await page.getByLabel('View', { exact: true }).selectOption('');
   expect(await page.locator('main').getAttribute('data-step')).toBe(before);
 });
 
 test('playing keeps playing when the seat is switched', async ({ page }) => {
   await open(page, '&seat=Aria');
   await page.getByRole('button', { name: 'Play' }).click();
-  await page.getByLabel('Sit in a seat').selectOption('Hugo');
+  await page.getByLabel('View', { exact: true }).selectOption('Hugo');
   await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
 });
 
@@ -95,7 +95,7 @@ test('while seated, the page numbers steps by the seat’s own list: one at a ti
 test('a step that is empty for the seat is stood on the nearest earlier one when switching, and the counter follows the seat', async ({ page }) => {
   await open(page, '&seat=Aria');
   const aria = Number(/of (\d+)/.exec(await stepText(page))![1]);
-  await page.getByLabel('Sit in a seat').selectOption('');
+  await page.getByLabel('View', { exact: true }).selectOption('');
   const publicTotal = Number(/of (\d+)/.exec(await stepText(page))![1]);
   expect(aria).toBeLessThan(publicTotal); // the seat's list leaves out the traitors' night turns and other empty steps
 });

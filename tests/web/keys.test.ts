@@ -5,11 +5,18 @@ const body = { tagName: 'BODY' };
 const input = (type: string) => ({ tagName: 'INPUT', type });
 
 describe('actionForKey', () => {
+  it('a returns to the all-seeing view, except while typing', () => {
+    expect(actionForKey('A', body)).toBe('spectate');
+    expect(actionForKey('a', { tagName: 'SELECT' })).toBeNull();
+    expect(actionForKey('a', input('text'))).toBeNull();
+  });
+
   it('steps with the arrows and plays with space on the page', () => {
     expect(actionForKey('ArrowRight', body)).toBe('next');
     expect(actionForKey('ArrowLeft', body)).toBe('prev');
     expect(actionForKey(' ', body)).toBe('toggle');
-    expect(actionForKey('a', body)).toBeNull();
+    expect(actionForKey('a', body)).toBe('spectate');
+    expect(actionForKey('x', body)).toBeNull();
   });
 
   it('keeps stepping with the arrows after the notes checkbox was clicked', () => {
