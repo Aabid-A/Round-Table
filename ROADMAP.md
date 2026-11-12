@@ -189,7 +189,7 @@ Each milestone needs the one before it.
     OpenRouter key from provider error text and from the saved log, reusing the
     room server's `redact` function, with a test.
 
-- [ ] **M15. Spectator mode (replays and published episodes only).**
+- [x] **M15. Spectator mode (replays and published episodes only).**
   - All-seeing view: role shown above every seat, traitors marked; each
     speaker's private notes as a thought bubble beside their speech; whispers
     drawn as a visible line between the two seats, with the text.

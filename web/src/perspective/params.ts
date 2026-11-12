@@ -21,3 +21,24 @@ export function splitSeatsFromSearch(search: string, cast: readonly { name: stri
   const at = (n: string): boolean => cast.some((c) => c.name === n);
   return a !== b && at(a) && at(b) ? [a, b] : null;
 }
+
+/** What the replay shows: the public 2D table, the all-seeing room (spoilers), or the room from one seat. */
+export type Perspective = { kind: 'table' } | { kind: 'spectator' } | { kind: 'seat'; name: string };
+
+/** ?seat=<name> wins over ?view=spectator; anything else is the public table. */
+export function perspectiveFromSearch(search: string, cast: readonly { name: string }[]): Perspective {
+  const seat = seatFromSearch(search, cast);
+  if (seat !== null) return { kind: 'seat', name: seat };
+  return new URLSearchParams(search).get('view') === 'spectator' ? { kind: 'spectator' } : { kind: 'table' };
+}
+
+/** The same query with the perspective set. Other parameters are kept. */
+export function searchWithPerspective(search: string, p: Perspective): string {
+  const q = new URLSearchParams(search);
+  q.delete('seat');
+  q.delete('view');
+  if (p.kind === 'seat') q.set('seat', p.name);
+  if (p.kind === 'spectator') q.set('view', 'spectator');
+  const text = q.toString();
+  return text === '' ? '' : `?${text}`;
+}

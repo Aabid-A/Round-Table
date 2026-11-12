@@ -14,6 +14,8 @@ export interface RecordParams {
   speed: number;
   /** Seats to film from instead of the public table: one for a single view, two for a split view. Null for the public table. */
   seats: string[] | null;
+  /** Film the all-seeing room with the director's camera. Shows every role, note and whisper: for replays and published episodes only. */
+  spectator: boolean;
 }
 
 export type RecordParse = { ok: true; params: RecordParams } | { ok: false; message: string };
@@ -47,7 +49,10 @@ export function parseRecordParams(search: string): RecordParse {
   }
   const seats = parseSeats(q);
   if (typeof seats === 'string') return { ok: false, message: seats };
-  return { ok: true, params: { aspect, from: from as number | null, to: to as number | null, faces: faces as number | null, speed, seats } };
+  const view = q.get('view');
+  if (view !== null && view !== 'spectator') return { ok: false, message: `view must be spectator, not "${view}".` };
+  if (view === 'spectator' && seats !== null) return { ok: false, message: 'Use view=spectator or seat/seats, not both.' };
+  return { ok: true, params: { aspect, from: from as number | null, to: to as number | null, faces: faces as number | null, speed, seats, spectator: view === 'spectator' } };
 }
 
 /** ?seat=Aria for one seat, ?seats=Aria,Bram for a split view. Names are checked against the cast when the log is loaded. */

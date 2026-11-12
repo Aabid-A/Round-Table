@@ -2,8 +2,8 @@ import type { Role } from '../../../src/types.js';
 
 export type SeatStatus = 'alive' | 'murdered' | 'banished';
 
-/** `self` is the chair the viewer sits in; `fellow` is a fellow traitor the viewer was told about. */
-export type SeatMark = 'self' | 'fellow';
+/** `self` is the chair the viewer sits in; `fellow` is a fellow traitor the viewer was told about; `traitor` marks a traitor for a viewer who sees every role. */
+export type SeatMark = 'self' | 'fellow' | 'traitor';
 
 export interface SceneSeat {
   name: string;
@@ -21,7 +21,26 @@ export interface SceneMoment {
   /** The seat that is speaking or thinking. */
   speaker: string | null;
   text: string | null;
+  /** The speaker's private notes, shown beside what they said. Only a viewer who may see everyone's notes gets this. */
+  thought: string | null;
   kind: 'speech' | 'thought' | 'event' | 'none';
+}
+
+/** A whisper drawn as a line between two seats, with its text. Only a viewer who may see whispers between others gets these. */
+export interface SceneWhisper {
+  from: string;
+  to: string;
+  text: string;
+}
+
+/** Where the camera looks. */
+export interface SceneCamera {
+  /** The seat the camera turns to. Null looks at the table from the front. */
+  focus: string | null;
+  /** Pull back to see the whole table, for votes and reveals. */
+  wide: boolean;
+  /** Jump to the new shot instead of gliding (a director's cut). */
+  cut: boolean;
 }
 
 /**
@@ -35,4 +54,6 @@ export interface SceneView {
   moment: SceneMoment;
   /** True during the night phase: the room goes dark. */
   night: boolean;
+  whispers: SceneWhisper[];
+  camera: SceneCamera;
 }

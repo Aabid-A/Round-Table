@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameLog } from '../../src/engine/types.js';
+import { buildContext } from '../../src/log/highlights/context.js';
 import { Controls } from './Controls.js';
 import { Details } from './Details.js';
 import { actionForKey } from './keys.js';
-import { searchWithSeat, seatFromSearch } from './perspective/params.js';
+import { perspectiveFromSearch, searchWithPerspective, type Perspective } from './perspective/params.js';
+import { spectatorView } from './perspective/spectatorView.js';
 import { positionAtOrBefore, seatStepMs, seatTimeline, seatView } from './perspective/seatView.js';
 import { describeStep, stepDurationMs, type StepView } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
@@ -21,10 +23,17 @@ interface Props {
 const announcement = (view: StepView): string =>
   view.card ? `${view.card.title}. ${view.card.body}` : view.bubble && view.speaker ? `${view.speaker}: ${view.bubble.text}` : '';
 
-/** What a screen reader is told while seated: only the seat's own view, never the public step (which includes whispers and notes). */
-const seatAnnouncement = (view: SceneView): string => {
-  const { title, speaker, text } = view.moment;
-  return text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title;
+/**
+ * What a screen reader is told in the room: only what the view holds, never the public step. A seat's view has no notes and no
+ * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
+ * panel and a line a screen reader cannot see.
+ */
+const roomAnnouncement = (view: SceneView): string => {
+  const { title, speaker, text, thought } = view.moment;
+  const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];
+  if (thought) parts.push(`Private notes: ${thought}`);
+  for (const w of view.whispers) parts.push(`Whisper from ${w.from} to ${w.to}: ${w.text}`);
+  return parts.join('. ');
 };
 
 /** Plays one game log like an episode. */
@@ -33,7 +42,10 @@ export function Player({ log, onReload }: Props) {
   const views = useMemo(() => steps.map((s) => describeStep(s, log)), [steps, log]);
   const [showNotes, setShowNotes] = useState(false);
   // The seat the viewer sits in, or null for the public table.
-  const [seat, setSeat] = useState<string | null>(() => seatFromSearch(window.location.search, log.cast));
+  const [perspective, setPerspective] = useState<Perspective>(() => perspectiveFromSearch(window.location.search, log.cast));
+  const seat = perspective.kind === 'seat' ? perspective.name : null;
+  const spectating = perspective.kind === 'spectator';
+  const ctx = useMemo(() => buildContext(log), [log]);
   // The steps this viewer walks: all of them at the public table, a seat's own list when seated (see seatTimeline).
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
   const durations = useMemo(
@@ -49,37 +61,39 @@ export function Player({ log, onReload }: Props) {
   useEffect(() => {
     if (pos !== positionAtOrBefore(timeline, anchor.current)) anchor.current = timeline[Math.min(pos, timeline.length - 1)] ?? 0;
   }, [pos, timeline]);
-  const sit = (name: string | null): void => {
-    const next = name === null ? steps.map((_, i) => i) : seatTimeline(log, steps, name);
-    // Change the seat and the position in one update, so playback never sees the old position against the new list.
-    setSeat(name);
+  const choose = (p: Perspective): void => {
+    const next = p.kind === 'seat' ? seatTimeline(log, steps, p.name) : steps.map((_, i) => i);
+    // Change the perspective and the position in one update, so playback never sees the old position against the new list.
+    setPerspective(p);
     jump(positionAtOrBefore(next, anchor.current));
-    window.history.replaceState(null, '', `${window.location.pathname}${searchWithSeat(window.location.search, name)}${window.location.hash}`);
+    window.history.replaceState(null, '', `${window.location.pathname}${searchWithPerspective(window.location.search, p)}${window.location.hash}`);
   };
+  const sit = (name: string | null): void => choose(name === null ? { kind: 'table' } : { kind: 'seat', name });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target instanceof HTMLElement ? e.target : null;
-      const action = actionForKey(e.key, t && { tagName: t.tagName, type: (t as HTMLInputElement).type, isContentEditable: t.isContentEditable });
+      const action = actionForKey(e.key, t && { tagName: t.tagName, type: (t as HTMLInputElement).type, isContentEditable: t.isContentEditable }, { spectate: true });
       if (!action) return;
       e.preventDefault();
       if (e.repeat && action === 'toggle') return; // holding space must not flip play/pause at key-repeat speed
       if (action === 'next') next();
       else if (action === 'prev') prev();
+      else if (action === 'spectate') choose({ kind: 'spectator' });
       else toggle();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [next, prev, toggle]);
+  });
 
   const step = steps[index]!;
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
-  const sv = seat !== null ? seatView(log, steps, index, seat) : null;
+  const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
 
   return (
-    <main className="app" data-step={seat === null ? index : pos} data-seat={seat ?? ''}>
+    <main className="app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
       <header className="topbar">
         <h1>Round Table</h1>
         <span className="muted">
@@ -88,40 +102,47 @@ export function Player({ log, onReload }: Props) {
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : sv ? seatAnnouncement(sv) : announcement(view)}
+        {playing ? '' : sv ? roomAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {sv ? sv.moment.title : step.section.title}
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
-        {seat !== null ? (
+        {sv ? (
           <div className="seat-room">
-            <Room view={sv!} onSit={sit} label={`The room from ${seat}'s chair`} />
+            <Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
         ) : (
           <Table seats={seats} view={view} />
         )}
-        {seat === null && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
+        {perspective.kind === 'table' && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
       <section className="sit" aria-label="Seat">
-        <label>
-          Sit in a seat
-          <select value={seat ?? ''} onChange={(e) => sit(e.target.value === '' ? null : e.target.value)}>
-            <option value="">Nobody: the public table</option>
+        <div className="sit-row">
+          <label htmlFor="view-select">View</label>
+          <select
+            id="view-select"
+            value={seat ?? (spectating ? '@all' : '')}
+            onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
+          >
+            <option value="">The public table</option>
+            <option value="@all">All-seeing room (spoilers)</option>
             {log.cast.map((c) => (
               <option key={c.name} value={c.name}>
                 {c.name}
               </option>
             ))}
           </select>
-        </label>
+        </div>
         <p className="hint">
-          {seat === null
-            ? 'Sit in a seat to see the game as that player: only what they were told.'
-            : `You see only what ${seat} knew. Choose another seat, or "Nobody", and the game stays at this moment.`}
+          {seat !== null
+            ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
+            : spectating
+              ? 'You see everything. Click a seat to see the game as that player. The camera follows the speaker; press A to come back here.'
+              : 'Choose the all-seeing room, or sit in a seat to see the game as that player: only what they were told.'}
         </p>
       </section>
       <Controls
@@ -129,7 +150,7 @@ export function Player({ log, onReload }: Props) {
         count={timeline.length}
         playing={playing}
         showNotes={showNotes}
-        notesLocked={seat !== null}
+        notesLocked={perspective.kind !== 'table'}
         onPrev={prev}
         onNext={next}
         onToggle={toggle}
