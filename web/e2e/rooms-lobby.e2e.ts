@@ -74,7 +74,14 @@ test('real models need a key, model IDs and a cap before anything is sent; the k
   const key = create.getByLabel('Your OpenRouter key');
   await expect(key).toHaveAttribute('type', 'password');
   await expect(key).toHaveAttribute('autocomplete', 'new-password');
-  await expect(page.getByTestId('key-note')).toContainText('held in memory for this room only');
+  // The host is told where the key goes (the room server this page is built for), what happens to it, and to use a dedicated key.
+  await expect(page.getByTestId('key-server')).toHaveText('localhost:8788');
+  const note = page.getByTestId('key-note');
+  await expect(note).toContainText('Your key is sent to this room server');
+  await expect(note).toContainText('held in memory for this room only');
+  await expect(note).toContainText('never put in the game log');
+  await expect(note).toContainText('dedicated OpenRouter key with a credit limit');
+  await expect(note).toContainText('not your main key');
   await create.getByRole('button', { name: 'Make room' }).click();
   await expect(page.getByRole('alert')).toContainText('Paste your OpenRouter key');
   await key.fill('not-a-real-key');

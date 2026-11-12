@@ -6,17 +6,15 @@ import { Game } from './Game.js';
 import { Guess } from './Guess.js';
 import { Home } from './Home.js';
 import { Lobby } from './Lobby.js';
-import { roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from './params.js';
+import { roomCodeFromSearch, roomSeedFromSearch, roomServerHost, roomServerUrl } from './params.js';
 import { initialState, roomReducer } from './state.js';
 
 /** ?mode=room, or an invite link: play a game with friends through a room server. */
 export function RoomPage() {
   const [state, dispatch] = useReducer(roomReducer, undefined, initialState);
   const conn = useRef<RoomConnection | null>(null);
-  if (conn.current === null) {
-    const url = roomServerUrl(import.meta.env.VITE_ROOM_SERVER as string | undefined, window.location);
-    conn.current = new RoomConnection({ url, onEvent: dispatch, store: sessionStore() });
-  }
+  const serverUrl = roomServerUrl(import.meta.env.VITE_ROOM_SERVER as string | undefined, window.location);
+  if (conn.current === null) conn.current = new RoomConnection({ url: serverUrl, onEvent: dispatch, store: sessionStore() });
   const connection = conn.current;
 
   useEffect(() => {
@@ -28,6 +26,7 @@ export function RoomPage() {
   if (state.view.kind === 'home') {
     return (
       <Home
+        serverHost={roomServerHost(serverUrl)}
         inviteCode={roomCodeFromSearch(window.location.search)}
         serverError={state.error}
         offline={!state.online}
