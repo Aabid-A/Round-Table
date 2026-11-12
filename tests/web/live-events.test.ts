@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderEvent } from '../../src/prompts/history.js';
-import { parseHistoryLine, newHistoryLines, nightProposals } from '../../web/src/live/events.js';
+import { parseHistoryLine, newHistoryLines, newsToPlay, nightProposals } from '../../web/src/live/events.js';
 import { parsePrompt } from '../../web/src/perspective/knowledge.js';
 import { playMock } from '../helpers/game.js';
 
@@ -79,5 +79,30 @@ describe('nightProposals', () => {
       }
     }
     expect(seen).toBeGreaterThan(0);
+  });
+});
+
+describe('newsToPlay', () => {
+  const lines = [
+    '-- Round 1 --',
+    'Breakfast: Esme was murdered in the night. They were a faithful.',
+    'Bram said "One." and suspects Cleo.',
+    'Sam said "Mine." and suspects Cleo.',
+    'Cleo said "Two." and suspects Bram.',
+    'Dax said "Three." and suspects Bram.',
+    'Gwen said "Four." and suspects Bram.',
+  ];
+  it('skips your own words and the round markers', () => {
+    const news = newsToPlay(null, lines, 'Sam', false);
+    expect(news.map((e) => e.kind)).toEqual(['breakfast', 'speech', 'speech', 'speech', 'speech']);
+    expect(news.some((e) => e.kind === 'speech' && e.player === 'Sam')).toBe(false);
+  });
+  it('after a reload plays only the latest three, not the whole game', () => {
+    const news = newsToPlay(null, lines, 'Sam', true);
+    expect(news).toHaveLength(3);
+    expect(news.map((e) => (e.kind === 'speech' ? e.player : e.kind))).toEqual(['Cleo', 'Dax', 'Gwen']);
+  });
+  it('plays only what is new when the page has seen an earlier prompt', () => {
+    expect(newsToPlay(lines.slice(0, 3), lines, 'Sam', false).map((e) => (e.kind === 'speech' ? e.player : e.kind))).toEqual(['Cleo', 'Dax', 'Gwen']);
   });
 });
