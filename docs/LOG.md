@@ -44,11 +44,12 @@ Rules for readers:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `winner` | `"traitor" \| "faithful" \| null` | Traitors win if any traitor is alive at the end. `null` only when `reason` is `cost_cap`. |
-| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds" \| "cost_cap"` | Why it ended. `cost_cap` means the game was stopped early by the cost cap. |
+| `winner` | `"traitor" \| "faithful" \| null` | Traitors win if any traitor is alive at the end. `null` only when `reason` is `cost_cap` or `call_limit`. |
+| `reason` | `"no_traitors" \| "no_faithfuls" \| "two_remaining" \| "endgame_vote" \| "max_rounds" \| "cost_cap" \| "call_limit"` | Why it ended. `cost_cap` means the game was stopped early by the cost cap; `call_limit` by the hard limit on calls. |
 | `rounds` | integer | Rounds played (the last round may be partial). |
 | `survivors` | `{ name: string, role: "traitor" \| "faithful" }[]` | Players alive at the end, with their final role. |
 | `costCap` | `{ maxUsd: number, spentUsd: number }` (optional) | Present only when `reason` is `cost_cap`: the cap and what had been spent. |
+| `callLimit` | `{ maxCalls: number, calls: number }` (optional) | Present only when `reason` is `call_limit`: the limit and how many calls had been made. |
 
 ## Turn
 
@@ -79,6 +80,16 @@ finite and non-negative) is not free: it may still have been billed, so the cap 
 far in that game, or a floor (default 0.01 dollars) if none yet. That attempt has `costEstimatedUsd` set to the amount counted.
 Calls by mock and human players are free and are never marked. To replay a capped log, pass the same cap
 (`costCap.maxUsd`), the same floor if you set one, and the same seed; without the cap the replay runs past the logged replies.
+
+### The limit on calls
+
+Whatever the calls cost, a game stops before the call that would pass a hard limit, worked out from the seats and
+`maxRounds`: `(7 x seats + 2) x 2 x maxRounds`, which is 696 for 8 seats and 6 rounds. Per round a seat takes at most
+7 turns (a night turn and a second one if the traitors disagree, whispers, the round table, the vote, a revote and the
+end-or-banish vote), a recruitment adds 2, and each turn gets at most two calls (the reply and one retry). A normal game
+uses a fraction of it (the most seen in 120 mock games, half with every reply invalid, was 154), so it only ever stops a
+game that has gone wrong. Like the cost cap, if it lands before a retry the turn is settled with its fallback and the next
+turn stops the game, and the log ends with `reason: "call_limit"`, no winner and `callLimit`.
 
 Night turns happen twice in a round when traitors disagree: the second set of
 `night` turns is the single re-proposal.

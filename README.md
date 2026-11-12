@@ -76,7 +76,10 @@ than any before it, can overshoot. The log ends with `reason: "cost_cap"`. A cal
 back with no usable cost (it timed out, failed, or reported none) still counts, as an estimate: the largest
 cost seen so far in that game, or 0.01 dollars if none yet (`--cost-floor-usd <n>` changes that, and needs
 `--max-cost-usd`). The attempt is marked `costEstimatedUsd` in the log and the command says how many calls were
-estimated. Mock and human players are free, so a mock game under a cap has nothing to count. Every attempt
+estimated. Mock and human players are free, so a mock game under a cap has nothing to count.
+Separately, every game has a hard limit on calls to players, worked out from the seats and the rounds (696 for
+the default game, which a normal game never gets near), whatever the calls cost; a game that hits it ends with
+`reason: "call_limit"` ([docs/LOG.md](docs/LOG.md#the-limit-on-calls)). Every attempt
 records the response's `usage` (tokens, and cost when returned) in the log.
 
 Each game writes `games/<name>.json` and prints its path. Print the readable
