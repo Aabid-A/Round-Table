@@ -155,6 +155,91 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     server, and recommend a dedicated OpenRouter key with a credit limit.
   - Tests for each.
 
+## The room: sitting in a seat
+
+The aim: the game feels like sitting in a real room. A player experiences it
+from their own chair and knows only what their character knows. A spectator
+sees everything: roles, private notes, whispers. One scene, built once in
+`web/src/scene/` (table, seats, camera, lighting, day and night), draws every
+mode. It is driven by a "view" object that lists exactly what this viewer may
+see, and it never reads a game log or room state directly. The existing 2D
+pages stay as the fallback for small screens, `prefers-reduced-motion`, and
+devices that fail a WebGL check. No voices, no text-to-speech, no audio.
+
+Dependencies: M14 adds none (CSS 3D only). From M15, `three`, `@types/three`,
+`@react-three/fiber` and `@react-three/drei` are approved, to be used only if
+the CSS 3D scene cannot hold 50 fps in the M15 spectator view on the
+Playwright Chromium run. The PR states the route taken and the measured frame
+rate. Any other dependency: `needs-human`.
+
+Each milestone needs the one before it.
+
+- [ ] **M14. Perspective replay.**
+  - Replay only. No changes to `server/` or to live play.
+  - A seat's view is derived from that player's logged prompts, so it shows
+    exactly what they knew at each turn and nothing more. Test: a faithful's
+    view at every turn contains no traitor identities, no other player's
+    private notes, and no whispers they were not part of.
+  - Click any seat to sit there. Scrubbing keeps the same moment when you
+    switch seats.
+  - Split view of two seats at the same moment, available in recording mode
+    by URL, in 16:9 and 9:16.
+  - The shared scene in `web/src/scene/`, driven by the view object.
+  - Also in this PR, as its own commits: the `game` command scrubs the
+    OpenRouter key from provider error text and from the saved log, reusing the
+    room server's `redact` function, with a test.
+
+- [ ] **M15. Spectator mode (replays and published episodes only).**
+  - All-seeing view: role shown above every seat, traitors marked; each
+    speaker's private notes as a thought bubble beside their speech; whispers
+    drawn as a visible line between the two seats, with the text.
+  - Director camera: cuts to the speaker, holds on a traitor while a player
+    they targeted or framed speaks, pulls wide for votes and reveals. Driven by
+    the highlight finder's rules where they apply.
+  - Click a seat to drop into that player's limited view (M14). One key returns
+    to the all-seeing view at the same moment.
+  - Works in recording mode by URL, 16:9 and 9:16.
+  - No server changes.
+
+- [ ] **M16. First-person live seat (solo, then rooms).**
+  - The camera sits in your chair. Other players face you and turn toward
+    whoever speaks.
+  - Night differs by role. A faithful's screen goes dark, then they wake to an
+    empty chair. A traitor stays in a dim room and chooses the victim, with
+    their fellow traitor's proposal visible.
+  - A whisper to you arrives as a lean-in from the sender's seat. Other
+    whispers show two heads together and no text.
+  - Your actions are made in the scene: select a seat to accuse or vote, then
+    confirm. The existing form stays available as an accessible alternative.
+    Full keyboard use.
+  - The turn timer is visible in the scene. Banished and murdered seats stay
+    empty.
+  - The view object for a live player is built from the per-seat data the
+    server already sends. No new fields reach a living player's client.
+
+- [ ] **M17. Watching live rooms.**
+  - Ghost view: a murdered or banished player may move between seats and see
+    each seat's limited view. Off by default. The host turns it on when
+    creating the room, beside a line saying ghosts can see hidden information.
+  - Delayed spectator link: a read-only link showing the all-seeing view
+    exactly one full round behind the live game, and the whole game once it
+    ends. Off by default; host option.
+  - The server decides what each viewer receives. A living player's connection
+    never receives roles, other players' notes, or whispers they are not part
+    of, whatever options are on.
+  - Tests in the style of `tests/server/hidden-info.test.ts`: drive full games
+    with several simulated clients and assert, for every message sent, that
+    living players got nothing hidden, ghosts got nothing before their own
+    exit, and spectators got nothing newer than the delay allows. Cover
+    reconnects, and a player who leaves and rejoins as a ghost.
+  - The gate A reviewer checks hidden-information leaks specifically.
+
+For every milestone above: all checks in `AGENTS.md` pass; `/design-review` at
+375, 768 and 1280 wide, light and dark, plus reduced motion and the 2D
+fallback; a 20 to 40 second Playwright video of the main flow saved under
+`.artifacts/` and linked in the PR; the measured frame rate stated in the PR;
+Playwright tests that open each mode by URL.
+
 ## Final version
 
 The project is ready when every milestone above is `[x]`. What is left then
