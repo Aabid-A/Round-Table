@@ -99,5 +99,8 @@ function onMessage(state: RoomState, msg: ServerMessage): RoomState {
       return view.kind === 'finished' ? state : { ...state, view: { kind: 'closed', reason: msg.reason } };
     case 'error':
       return { ...state, error: msg.message };
+    case 'ghost':
+    case 'spectate':
+      return state; // not shown yet
   }
 }

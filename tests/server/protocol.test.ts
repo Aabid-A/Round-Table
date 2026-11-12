@@ -79,6 +79,33 @@ describe('parseClientMessage', () => {
   });
 });
 
+describe('ghosts, spectators and watching', () => {
+  const create = (extra: object) => parseClientMessage(JSON.stringify({ t: 'create', name: 'Quinn', mode: 'mock', ...extra }));
+
+  it('are off unless the host asks for them, for either kind of room', () => {
+    expect(create({})).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock' } });
+    expect(create({ ghosts: true, spectators: true })).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock', ghosts: true, spectators: true } });
+    expect(create({ ghosts: false, spectators: false })).toEqual({ ok: true, msg: { t: 'create', name: 'Quinn', mode: 'mock' } });
+    const real = parseClientMessage(JSON.stringify({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'k', models: ['a/b'], maxCostUsd: 1, ghosts: true }));
+    expect(real).toMatchObject({ ok: true, msg: { ghosts: true } });
+  });
+
+  it('refuse a value that is not on or off', () => {
+    for (const bad of ['yes', 1, null, {}]) {
+      expect(create({ ghosts: bad })).toEqual({ ok: false, error: 'Ghosts must be on or off.' });
+      expect(create({ spectators: bad })).toEqual({ ok: false, error: 'Spectators must be on or off.' });
+    }
+  });
+
+  it('read a watch message: a room code and a token, nothing else', () => {
+    const token = '3f2c9a1e-8b4d-4c7a-9e1f-0a2b3c4d5e6f';
+    expect(parseClientMessage(JSON.stringify({ t: 'watch', code: 'ab2cd', token }))).toEqual({ ok: true, msg: { t: 'watch', code: 'AB2CD', token } });
+    expect(parseClientMessage(JSON.stringify({ t: 'watch', code: 'AB2CD', token: 'nope' }))).toEqual({ ok: false, error: 'That watch link does not look right.' });
+    expect(parseClientMessage(JSON.stringify({ t: 'watch', code: 'xx', token }))).toEqual({ ok: false, error: 'That room code does not look right.' });
+    expect(parseClientMessage(JSON.stringify({ t: 'watch', code: 'AB2CD' }))).toMatchObject({ ok: false });
+  });
+});
+
 describe('normalizeCode', () => {
   it('accepts five letters and digits without lookalikes, in any case', () => {
     expect(normalizeCode(' ab2cd ')).toBe('AB2CD');
