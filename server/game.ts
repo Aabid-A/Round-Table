@@ -10,7 +10,8 @@ import { HUMAN_MODEL } from '../src/cast.js';
 import { publicPhase } from '../src/publicPhase.js';
 import type { Room } from './room.js';
 import type { SeatPlayer } from './seatPlayer.js';
-import { redact } from './text.js';
+import { redact } from '../src/redact.js';
+import { redactLog, scrubbedFetch } from '../src/players/scrub.js';
 
 export interface RunRoomOptions {
   /** One SeatPlayer per person in the room, by name. */
@@ -46,18 +47,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   const fetchImpl: typeof fetch = signal
     ? ((url: string, init?: RequestInit) => baseFetch(url, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, signal]) : signal })) as typeof fetch
     : baseFetch;
-  // Scrub what the provider sends back before anything reads it. The OpenRouter player cuts an error body to 120 characters, which could
-  // leave only the front of a key that a provider echoed; a model reply that repeated the key would go into later prompts. Both
-  // are masked here, while the whole key is still there to find.
-  const scrubbedFetch: typeof fetch = secrets.length
-    ? ((async (url: string, init?: RequestInit) => {
-        const res = await fetchImpl(url, init);
-        const headers = new Headers(res.headers);
-        headers.delete('content-length');
-        headers.delete('content-encoding');
-        return new Response(redact(await res.text(), secrets), { status: res.status, statusText: res.statusText, headers });
-      }) as typeof fetch)
-    : fetchImpl;
+  const scrubbed = scrubbedFetch(fetchImpl, secrets);
   const base: Record<string, Player> =
     setup.mode === 'mock'
       ? createMockPlayers(aiCast, room.seed)
@@ -67,7 +57,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
             createOpenRouterPlayer({
               model: c.model,
               apiKey: setup.key,
-              fetchImpl: scrubbedFetch,
+              fetchImpl: scrubbed,
               ...(opts.aiTimeoutMs !== undefined ? { timeoutMs: opts.aiTimeoutMs } : {}),
             }),
           ]),
@@ -111,7 +101,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
       ...(setup.mode === 'openrouter' ? { maxCostUsd: setup.maxCostUsd } : {}),
     });
     // Belt and braces: nothing that leaves the server may carry the key, whatever a model or provider said.
-    return secrets.length ? (JSON.parse(redact(JSON.stringify(log), secrets)) as GameLog) : log;
+    return redactLog(log, secrets);
   } finally {
     room.dropKey();
   }

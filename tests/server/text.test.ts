@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cleanText, redact } from '../../server/text.js';
+import { redact } from '../../src/redact.js';
+import { cleanText } from '../../server/text.js';
 
 describe('cleanText', () => {
   it('turns line breaks and runs of spaces into one space, so a note cannot fake a new line in a prompt', () => {
