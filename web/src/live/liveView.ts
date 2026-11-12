@@ -59,7 +59,7 @@ function momentFor(s: LiveSnapshot): { moment: SceneMoment; whispers: SceneWhisp
         leanTo: b.player,
       };
     case 'whisper_in':
-      return { moment: { ...base, title: 'Whispers', text: `${b.from} whispers to you: ${b.text}`, kind: 'event' }, whispers: [{ from: b.from, to: s.me, text: b.text }], leanTo: b.from };
+      return { moment: { ...base, title: 'Whispers', speaker: b.from, text: `Whispers to you: ${b.text}`, kind: 'event' }, whispers: [{ from: b.from, to: s.me, text: b.text }], leanTo: b.from };
     case 'whisper_out':
       return { moment: { ...base, title: 'Whispers', text: `You whispered to ${b.to}: ${b.text}`, kind: 'event' }, whispers: [], leanTo: null };
     case 'breakfast':

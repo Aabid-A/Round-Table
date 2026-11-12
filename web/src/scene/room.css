@@ -105,7 +105,7 @@
   height: 0;
   transform-style: preserve-3d;
   /* Stand on the ring, then turn back to face the camera so the card is always readable. */
-  transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg))) rotateX(var(--room-tilt));
+  transform: rotateY(var(--angle)) translateZ(var(--room-r)) rotateY(calc(var(--angle) * -1 + var(--turn, 0deg) + var(--lean, 0deg))) rotateX(var(--room-tilt));
   transition: transform 700ms ease;
 }
 .room-stand {
@@ -394,4 +394,114 @@
 }
 .room-chair {
   pointer-events: auto;
+}
+
+/* First person: the camera sits in your chair, behind where it would be, looking across the table. */
+.room[data-pov='first'] {
+  --room-tilt: 9deg;
+  --room-pull: 1.2;
+}
+.room-seat .room-stand {
+  transition: transform 500ms ease;
+}
+/* A whisper to you: the sender leans in toward you. */
+.room-seat[data-leaning='true'] .room-stand {
+  transform: translateY(2cqmin) scale(1.35);
+}
+.room-seat[data-leaning='true'] .room-chair {
+  border-color: var(--accent);
+  border-width: 0.5cqmin;
+}
+/* An empty chair: nobody sits there any more. */
+.room-chair[data-empty='true'] {
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+  opacity: 0.6;
+  filter: none;
+}
+.room-seat[data-picked='true'] .room-chair {
+  border-color: var(--accent);
+  border-width: 0.7cqmin;
+  box-shadow: 0 0 0 0.6cqmin var(--accent);
+}
+.room-chair[disabled] {
+  cursor: default;
+}
+.room-chair:disabled:not([data-empty='true']) {
+  opacity: 0.55;
+}
+.room-model:empty {
+  display: none;
+}
+.room-proposal {
+  padding: 0.2cqmin 1.4cqmin;
+  border-radius: 99px;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+/* The turn timer, in the room. */
+.room-timer {
+  position: absolute;
+  top: 1.6cqmin;
+  right: 1.6cqmin;
+  z-index: 5;
+  width: min(40cqw, 36cqmin);
+  height: 4.4cqmin;
+  min-height: 24px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 0.3cqmin solid var(--border);
+  color: var(--text);
+}
+.room-timer-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.room-timer[data-low='true'] .room-timer-bar {
+  background: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.room-timer-text {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-weight: 700;
+  font-size: max(12px, 2.4cqmin);
+}
+
+/* A faithful asleep: the screen goes dark, and they wake when the night is over. */
+.room-sleep {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  background: #05060d;
+  color: #c9cdf2;
+  animation: room-sleep-in 700ms ease both;
+  text-align: center;
+  font-size: max(14px, 3cqmin);
+}
+@keyframes room-sleep-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-seat .room-stand,
+  .room-sleep {
+    transition: none;
+    animation: none;
+  }
+}
+
+.room-chair:not(:disabled):hover {
+  border-color: var(--accent);
 }
