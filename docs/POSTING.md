@@ -36,6 +36,15 @@ http://localhost:5173/?mode=record&log=<name>&from=10&to=14&seats=Aria,Bram&aspe
 `seats=<a>,<b>` shows the same moment from two chairs, each with only what that player knew (a faithful and
 a traitor make a good pair). `seat=<name>` films one chair.
 
+```text
+http://localhost:5173/?mode=record&log=<name>&from=10&to=14&view=spectator               all-seeing room, 16:9
+http://localhost:5173/?mode=record&log=<name>&from=10&to=14&view=spectator&aspect=9x16   vertical
+```
+
+`view=spectator` shows every role, the speaker's private notes and the whispers, with a camera that cuts to the
+speaker, holds on a traitor and goes wide for votes. It spoils the game, so use it for the reveal post, not the
+"guess the traitor" post.
+
 The "two faces" shot is the one the show is built on: what a player said, beside what they privately wrote, marked
 hidden from the other players. It is offered where a moment is speech against private notes.
 

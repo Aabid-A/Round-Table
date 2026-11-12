@@ -123,6 +123,17 @@ A traitor sees their fellow traitor. Switching seats, or going back to the publi
 moment. The room is plain CSS 3D (no dependency); with `prefers-reduced-motion` it does not animate,
 and the 2D table is still the public view.
 
+### The all-seeing room (spoilers)
+
+Choose "All-seeing room" under "View" (or open `?log=<name>&view=spectator`) to watch a finished game
+from outside: every role is shown over its seat with the traitors marked in red, the speaker's private
+notes sit in a dashed panel beside what they said, and a whisper is a line between the two seats with
+its text. A director moves the camera: it cuts to whoever acts, holds on a traitor while a player they
+framed (named as their suspect) or targeted (their night choice) speaks, and pulls wide for votes and
+reveals. Click a seat to see the game as that player, at the same moment; press `A` to come back.
+This is for replays and published episodes only: it shows everything, so it is not offered in a room
+that is still being played, and the guess page never uses it.
+
 ### Recording mode (the clip camera)
 
 `?mode=record` shows the episode with no controls or chrome, in a fixed shape, and plays by
@@ -142,6 +153,7 @@ http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice a
 - `faces=<turn>` is the shot the show is built on: what the player said beside what they
   privately wrote, marked hidden from players.
 - `speed` divides the pacing (0.05 to 100). A bad value is shown as plain text.
+- `view=spectator` films the all-seeing room with the director's camera (it cannot be mixed with `seat`).
 - `seat=<name>` films the game from that player's chair, and `seats=<a>,<b>` is a split view
   of two seats at the same moment (side by side in 16:9, one above the other in 9:16). A seat
   shows only what that player was told; see "Sitting in a seat" below.
