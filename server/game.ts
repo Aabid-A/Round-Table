@@ -1,6 +1,6 @@
 import { buildAliasCast, buildRoomCast } from '../src/cast.js';
 import { runGame } from '../src/engine/game.js';
-import { DEFAULT_SETTINGS, type GameLog } from '../src/engine/types.js';
+import { DEFAULT_SETTINGS, type GameEvent, type GameLog, type Turn } from '../src/engine/types.js';
 import { createMockPlayers } from '../src/players/mock.js';
 import { createOpenRouterPlayer } from '../src/players/openrouter.js';
 import type { Player } from '../src/players/player.js';
@@ -8,9 +8,11 @@ import { buildPrompt } from '../src/prompts/phases.js';
 import { buildSystemPrompt } from '../src/prompts/system.js';
 import { HUMAN_MODEL } from '../src/cast.js';
 import { publicPhase } from '../src/publicPhase.js';
+import type { Role } from '../src/types.js';
 import type { Room } from './room.js';
 import type { SeatPlayer } from './seatPlayer.js';
 import { redact } from './text.js';
+import { Watching } from './watching.js';
 
 export interface RunRoomOptions {
   /** One SeatPlayer per person in the room, by name. */
@@ -83,6 +85,13 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
   // Each person is told their own alias, and nobody else's.
   for (const [alias, person] of Object.entries(room.people)) room.sendTo(person, { t: 'alias', alias });
 
+  const systemPrompt = buildSystemPrompt({ players: cast.length, traitors: DEFAULT_SETTINGS.traitors, maxRounds: DEFAULT_SETTINGS.maxRounds });
+  // Ghosts and spectators are told about the game through this and nothing else; without either option nothing is kept.
+  const watching = room.ghosts || room.spectators ? new Watching({ cast, settings: DEFAULT_SETTINGS, seed: room.seed, systemPrompt, hideModels: room.aliases }) : null;
+  room.watching = watching;
+  /** The person at a seat, or undefined for an AI. */
+  const personOf = (seatName: string): string | undefined => (room.aliases ? room.people[seatName] : humans.includes(seatName) ? seatName : undefined);
+
   const players: Record<string, Player> = {};
   // Tell everyone the phase only when it changes. One status per turn would show how many turns a phase took, and so how many
   // traitors are alive, whether they disagreed, and whether a recruit offer was made.
@@ -94,6 +103,10 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
         if (signal?.aborted) throw new Error('the room closed');
         const label = publicPhase(req.phase);
         if (label !== room.status) room.announce(label);
+        if (watching) {
+          watching.prompt(name, req.user); // what this seat is about to know, for the ghosts
+          room.publishGhosts();
+        }
         try {
           return await inner.respond(req);
         } catch (e) {
@@ -111,7 +124,27 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
       seed: room.seed,
       players,
       buildPrompt,
-      systemPrompt: buildSystemPrompt({ players: cast.length, traitors: DEFAULT_SETTINGS.traitors, maxRounds: DEFAULT_SETTINGS.maxRounds }),
+      systemPrompt,
+      ...(watching
+        ? {
+            observer: {
+              start: (i: { roles: Record<string, Role> }) => watching.start(i.roles),
+              turn: (t: Turn) => {
+                watching.turn(t);
+                room.publishSpectators();
+              },
+              event: (e: GameEvent) => {
+                const left = watching.event(e);
+                const person = left ? personOf(left.name) : undefined;
+                if (person) {
+                  room.outPeople.add(person); // from here this person is a ghost, if the room has them
+                  room.publishGhosts();
+                }
+                room.publishSpectators();
+              },
+            },
+          }
+        : {}),
       ...(setup.mode === 'openrouter' ? { maxCostUsd: setup.maxCostUsd } : {}),
       ...(opts.costFloorUsd !== undefined ? { costFloorUsd: opts.costFloorUsd } : {}),
     });
