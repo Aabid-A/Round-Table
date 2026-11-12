@@ -68,7 +68,7 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
     // A faithful's first prompt comes after the first night: they slept through it, and wake to its news.
     if (mem.k === null && k.role === 'faithful') startHold();
     setMem((m) => ({ order: ringOrder(m.order, k), k, before: m.k?.history ?? null }));
-    const news = newHistoryLines(mem.k?.history ?? null, k.history).map(parseHistoryLine).filter((e) => WORTH_SHOWING.includes(e.kind));
+    const news = newHistoryLines(mem.k?.history ?? null, k.history).map(parseHistoryLine).filter((e) => WORTH_SHOWING.includes(e.kind) && !(e.kind === 'speech' && e.player === k.name)); // your own words are not news to you
     setReel(news);
     setBeatAt(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,7 +125,7 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
       {children}
       {turn && (
         <div className="live-confirm" data-testid="live-confirm">
-          <p className="live-chosen" aria-live="polite">
+          <p className="live-chosen" data-testid="live-chosen" aria-live="polite">
             {canPick ? (picked ? `You chose ${picked}.` : 'Choose a seat in the room, or use the form below.') : 'Answer in the form below.'}
           </p>
           <button type="button" className="btn btn-primary" disabled={!form.ready} onClick={() => submit.current?.()} data-testid="live-send">
