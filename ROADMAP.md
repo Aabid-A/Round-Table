@@ -174,7 +174,7 @@ rate. Any other dependency: `needs-human`.
 
 Each milestone needs the one before it.
 
-- [ ] **M14. Perspective replay.**
+- [x] **M14. Perspective replay.**
   - Replay only. No changes to `server/` or to live play.
   - A seat's view is derived from that player's logged prompts, so it shows
     exactly what they knew at each turn and nothing more. Test: a faithful's

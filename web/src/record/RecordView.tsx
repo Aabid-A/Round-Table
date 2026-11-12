@@ -3,6 +3,8 @@ import './record.css';
 import type { GameLog } from '../../../src/engine/types.js';
 import { describeStep, stepDurationMs } from '../replay/describe.js';
 import { buildSteps, seatsAt } from '../replay/timeline.js';
+import { seatStepMs, seatTimeline, seatView } from '../perspective/seatView.js';
+import { Room } from '../scene/Room.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
 import { Faces } from './Faces.js';
@@ -20,12 +22,26 @@ interface Props {
 /** The clip camera: no controls, fixed aspect, autoplay at reading speed, one URL per clip. */
 export function RecordView({ log, params }: Props) {
   const steps = useMemo(() => buildSteps(log), [log]);
-  const clip = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
+  const range = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
+  const stepIndex = useMemo(() => new Map(steps.map((s, i) => [s, i] as const)), [steps]);
+  const clip = useMemo(() => {
+    if (!params.seats) return range;
+    // Filming from a seat: walk only the steps that show some filmed seat something, so the length of the clip does not follow
+    // hidden turns (a seat that is not told about the traitors' night must not sit through it).
+    const keep = new Set(params.seats.flatMap((name) => (log.cast.some((c) => c.name === name) ? seatTimeline(log, steps, name) : [])));
+    return keep.size === 0 ? range : range.filter((s) => keep.has(stepIndex.get(s) ?? -1));
+  }, [range, stepIndex, steps, log, params.seats]);
   const views = useMemo(() => clip.map((s) => describeStep(s, log)), [clip, log]);
   const durations = useMemo(
     // setTimeout overflows above 2^31-1 ms and then fires at once, so cap the hold.
-    () => views.map((v) => Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(stepDurationMs(v) / params.speed)))),
-    [views, params.speed],
+    () =>
+      clip.map((s, i) => {
+        const base = params.seats
+          ? Math.max(...params.seats.map((n) => (log.cast.some((c) => c.name === n) ? seatStepMs(seatView(log, steps, stepIndex.get(s) ?? 0, n)) : 0)))
+          : stepDurationMs(views[i]!);
+        return Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(base / params.speed)));
+      }),
+    [clip, views, log, steps, stepIndex, params.speed, params.seats],
   );
   const { index, playing } = usePlayback(durations, { autoStart: params.faces === null && clip.length > 0 });
 
@@ -38,6 +54,13 @@ export function RecordView({ log, params }: Props) {
       </div>
     );
   }
+  if (clip.length === 0 && range.length > 0) {
+    return (
+      <p className="rec-error" role="alert">
+        Nothing between turn {params.from ?? 0} and turn {params.to ?? 'the end'} is shown to {params.seats?.join(' and ')}. Try a wider range.
+      </p>
+    );
+  }
   if (clip.length === 0) {
     return (
       <p className="rec-error" role="alert">
@@ -46,11 +69,38 @@ export function RecordView({ log, params }: Props) {
     );
   }
 
+  const unknownSeat = params.seats?.find((name) => !log.cast.some((c) => c.name === name));
+  if (unknownSeat !== undefined) {
+    return (
+      <p className="rec-error" role="alert">
+        There is no seat called {unknownSeat}. The seats are {log.cast.map((c) => c.name).join(', ')}.
+      </p>
+    );
+  }
+
   const step = clip[index] as (typeof clip)[number];
   const view = views[index]!;
-  const seats = seatsAt(log, steps, steps.indexOf(step));
+  const seats = seatsAt(log, steps, stepIndex.get(step) ?? 0);
   const done = !playing && index === clip.length - 1;
   const turnId = step.kind === 'turn' ? step.turn.id : '';
+
+  if (params.seats) {
+    // One shared step for every seat, so a split view always shows the same moment.
+    const at = stepIndex.get(step) ?? 0;
+    // data-turn is left empty here: a turn id from the full log would show where hidden turns were dropped.
+    return (
+      <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn="">
+        <div className="rec-stage" data-testid="stage" data-mode="seats" data-count={params.seats.length} role="region" aria-label="Round Table clip">
+          {params.seats.map((name) => (
+            <div key={name} className="rec-seat-view" data-seat={name}>
+              <Room view={seatView(log, steps, at, name)} label={`The room from ${name}'s chair`} />
+              <p className="rec-seat-label">{name}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId}>

@@ -3,6 +3,8 @@ interface Props {
   count: number;
   playing: boolean;
   showNotes: boolean;
+  /** True when sitting in a seat: a player has no one else's notes to show. */
+  notesLocked?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToggle: () => void;
@@ -39,10 +41,12 @@ export function Controls(p: Props) {
         </span>
       </div>
       <div className="controls-row">
-        <label className="switch">
-          <input type="checkbox" checked={p.showNotes} onChange={(e) => p.onNotes(e.target.checked)} />
-          Show private notes
-        </label>
+        {!p.notesLocked && (
+          <label className="switch">
+            <input type="checkbox" checked={p.showNotes} onChange={(e) => p.onNotes(e.target.checked)} />
+            Show private notes
+          </label>
+        )}
         <button type="button" className="btn" onClick={p.onReload}>
           Load another log
         </button>

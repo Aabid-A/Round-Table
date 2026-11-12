@@ -113,6 +113,16 @@ cp games/mock-seed-1.json web/public/games/
 Logs with a `schemaVersion` other than 1 are rejected with a message. `npm run build:web`
 writes a static site to `web/dist/`; nothing is deployed.
 
+### Sitting in a seat
+
+Choose a seat under "Sit in a seat" (or open `?log=<name>&seat=<player>`) and the replay moves into
+a 3D room, with the camera in that player's chair. The view is built from what that player's own
+prompts told them, plus the events the log says they could see: a faithful never sees who the
+living traitors are, and nobody sees another player's private notes or whispers they were not part of.
+A traitor sees their fellow traitor. Switching seats, or going back to the public table, keeps the same
+moment. The room is plain CSS 3D (no dependency); with `prefers-reduced-motion` it does not animate,
+and the 2D table is still the public view.
+
 ### Recording mode (the clip camera)
 
 `?mode=record` shows the episode with no controls or chrome, in a fixed shape, and plays by
@@ -132,6 +142,9 @@ http://localhost:5173/?mode=record&log=mock-seed-1&from=10&to=14&speed=2 twice a
 - `faces=<turn>` is the shot the show is built on: what the player said beside what they
   privately wrote, marked hidden from players.
 - `speed` divides the pacing (0.05 to 100). A bad value is shown as plain text.
+- `seat=<name>` films the game from that player's chair, and `seats=<a>,<b>` is a split view
+  of two seats at the same moment (side by side in 16:9, one above the other in 9:16). A seat
+  shows only what that player was told; see "Sitting in a seat" below.
 - When a clip finishes it holds the last frame and sets `data-done="true"` on the `.rec`
   element, so a screen recorder or script knows when to stop.
 

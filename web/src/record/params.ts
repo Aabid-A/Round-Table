@@ -12,6 +12,8 @@ export interface RecordParams {
   faces: number | null;
   /** Pacing multiplier: 2 plays twice as fast. Between MIN_SPEED and MAX_SPEED. */
   speed: number;
+  /** Seats to film from instead of the public table: one for a single view, two for a split view. Null for the public table. */
+  seats: string[] | null;
 }
 
 export type RecordParse = { ok: true; params: RecordParams } | { ok: false; message: string };
@@ -43,5 +45,20 @@ export function parseRecordParams(search: string): RecordParse {
   if (!Number.isFinite(speed) || speed < MIN_SPEED || speed > MAX_SPEED) {
     return { ok: false, message: `speed must be a number from ${MIN_SPEED} to ${MAX_SPEED}.` };
   }
-  return { ok: true, params: { aspect, from: from as number | null, to: to as number | null, faces: faces as number | null, speed } };
+  const seats = parseSeats(q);
+  if (typeof seats === 'string') return { ok: false, message: seats };
+  return { ok: true, params: { aspect, from: from as number | null, to: to as number | null, faces: faces as number | null, speed, seats } };
+}
+
+/** ?seat=Aria for one seat, ?seats=Aria,Bram for a split view. Names are checked against the cast when the log is loaded. */
+function parseSeats(q: URLSearchParams): string[] | null | string {
+  const one = q.get('seat');
+  const two = q.get('seats');
+  if (one !== null && two !== null) return 'Use seat for one seat or seats for two, not both.';
+  if (one !== null) return one === '' ? 'seat needs a name.' : [one];
+  if (two === null) return null;
+  const names = two.split(',');
+  if (names.length !== 2 || names.some((n) => n === '')) return 'seats needs two names with a comma between them, like seats=Aria,Bram.';
+  if (names[0] === names[1]) return 'seats needs two different seats.';
+  return names;
 }

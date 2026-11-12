@@ -8,6 +8,7 @@ import { buildPrompt } from '../prompts/phases.js';
 import { buildSystemPrompt } from '../prompts/system.js';
 import type { CastMember } from '../types.js';
 import { loadCast } from './cast.js';
+import { scrubFetch, scrubLog, scrubPlayer } from './scrub.js';
 
 export function loadSettings(path: string): GameSettings {
   if (!existsSync(path)) return DEFAULT_SETTINGS;
@@ -21,6 +22,8 @@ export interface SetupOptions {
   timeoutMs: string | undefined;
   maxCostUsd?: string | undefined;
   costFloorUsd?: string | undefined;
+  /** Injectable for tests: the fetch the real-model players use. */
+  fetchImpl?: typeof fetch | undefined;
 }
 
 /** Everything that stays the same across games in one command. */
@@ -33,6 +36,8 @@ export interface Setup {
   maxCostUsd?: number;
   /** What a real-model call with no reported cost counts for until a real cost has been seen in the game (USD). */
   costFloorUsd?: number;
+  /** Masked in everything the real-model players report and in the finished log (the API key). */
+  secrets?: string[];
 }
 
 export const USAGE = 'usage: use either --mock or --cast <path> (not both)';
@@ -80,18 +85,21 @@ function buildSetup(opts: SetupOptions): Setup {
   const cast = loadCast(opts.cast as string);
   const timeoutMs = Number(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1) throw new Error('--timeout-ms must be a positive integer');
+  const secrets = [apiKey];
+  const fetchImpl = scrubFetch(opts.fetchImpl ?? fetch, secrets);
   return {
     cast,
     settings,
+    secrets,
     makePlayers: () =>
-      Object.fromEntries(cast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey, timeoutMs })])),
+      Object.fromEntries(cast.map((c) => [c.name, scrubPlayer(createOpenRouterPlayer({ model: c.model, apiKey, timeoutMs, fetchImpl }), secrets)])),
     gameName: (seed) => `game-${new Date().toISOString().replace(/[:.]/g, '-')}-seed-${seed}`,
   };
 }
 
-export function playGame(setup: Setup, seed: number): Promise<GameLog> {
+export async function playGame(setup: Setup, seed: number): Promise<GameLog> {
   const { cast, settings } = setup;
-  return runGame({
+  const log = await runGame({
     cast,
     settings,
     seed,
@@ -101,4 +109,6 @@ export function playGame(setup: Setup, seed: number): Promise<GameLog> {
     ...(setup.maxCostUsd !== undefined ? { maxCostUsd: setup.maxCostUsd } : {}),
     ...(setup.costFloorUsd !== undefined ? { costFloorUsd: setup.costFloorUsd } : {}),
   });
+  // Nothing that is saved may carry the key, whatever a model or provider said.
+  return setup.secrets?.length ? scrubLog(log, setup.secrets) : log;
 }

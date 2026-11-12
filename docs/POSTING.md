@@ -29,7 +29,12 @@ the `.rec` element when it ends.
 http://localhost:5173/?mode=record&log=<name>&from=10&to=14                16:9
 http://localhost:5173/?mode=record&log=<name>&from=10&to=14&aspect=9x16    vertical
 http://localhost:5173/?mode=record&log=<name>&faces=14                     "two faces" for turn 14
+http://localhost:5173/?mode=record&log=<name>&from=10&to=14&seats=Aria,Bram   two players' views side by side
+http://localhost:5173/?mode=record&log=<name>&from=10&to=14&seats=Aria,Bram&aspect=9x16   stacked, vertical
 ```
+
+`seats=<a>,<b>` shows the same moment from two chairs, each with only what that player knew (a faithful and
+a traitor make a good pair). `seat=<name>` films one chair.
 
 The "two faces" shot is the one the show is built on: what a player said, beside what they privately wrote, marked
 hidden from the other players. It is offered where a moment is speech against private notes.

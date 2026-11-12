@@ -13,14 +13,14 @@ describe('parseRecordParams', () => {
   it('defaults to 16x9, the whole episode, normal speed', () => {
     expect(parseRecordParams('?mode=record&log=x')).toEqual({
       ok: true,
-      params: { aspect: '16x9', from: null, to: null, faces: null, speed: 1 },
+      params: { aspect: '16x9', from: null, to: null, faces: null, speed: 1, seats: null },
     });
   });
 
   it('reads aspect, a range, faces and speed', () => {
     expect(parseRecordParams('?mode=record&aspect=9x16&from=3&to=9&speed=2.5')).toEqual({
       ok: true,
-      params: { aspect: '9x16', from: 3, to: 9, faces: null, speed: 2.5 },
+      params: { aspect: '9x16', from: 3, to: 9, faces: null, speed: 2.5, seats: null },
     });
     expect(parseRecordParams('?faces=7')).toMatchObject({ ok: true, params: { faces: 7 } });
     expect(parseRecordParams('?from=0&to=0')).toMatchObject({ ok: true, params: { from: 0, to: 0 } });
@@ -47,5 +47,27 @@ describe('parseRecordParams', () => {
     for (const [q, why] of bad) {
       expect(parseRecordParams(q), q).toMatchObject({ ok: false, message: expect.stringContaining(why) });
     }
+  });
+});
+
+describe('parseRecordParams: seats', () => {
+  it('reads one seat or two, and keeps the other parameters', () => {
+    expect(parseRecordParams('?mode=record&seat=Aria')).toMatchObject({ ok: true, params: { seats: ['Aria'] } });
+    expect(parseRecordParams('?mode=record&aspect=9x16&seats=Aria,Bram&from=3')).toMatchObject({
+      ok: true,
+      params: { aspect: '9x16', from: 3, seats: ['Aria', 'Bram'] },
+    });
+  });
+
+  it('says what is wrong with the seat parameters', () => {
+    const bad: [string, string][] = [
+      ['?seat=A&seats=B,C', 'not both'],
+      ['?seat=', 'seat needs a name'],
+      ['?seats=A', 'two names'],
+      ['?seats=A,B,C', 'two names'],
+      ['?seats=A,', 'two names'],
+      ['?seats=A,A', 'two different seats'],
+    ];
+    for (const [search, text] of bad) expect(parseRecordParams(search), search).toEqual({ ok: false, message: expect.stringContaining(text) });
   });
 });
