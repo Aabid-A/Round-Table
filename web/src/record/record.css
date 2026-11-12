@@ -223,6 +223,6 @@
   font-size: max(13px, 2.4cqmin);
 }
 /* The seat label sits top left, so the speech panel starts below it. */
-.rec-seat-view .room-speech {
+.rec-seat-view .room-talk {
   top: 9cqmin;
 }

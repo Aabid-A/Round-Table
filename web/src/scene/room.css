@@ -2,6 +2,7 @@
 .room {
   --room-r: 44cqmin;
   --room-tilt: 16deg;
+  --room-pull: 0.9;
   container-type: size;
   position: relative;
   overflow: hidden;
@@ -73,7 +74,7 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--room-r) * -0.9)) translateY(14cqmin) rotateX(calc(var(--room-tilt) * -1)) rotateY(calc(var(--turn) * -1));
+  transform: translateZ(calc(var(--room-r) * var(--room-pull) * -1)) translateY(14cqmin) rotateX(calc(var(--room-tilt) * -1)) rotateY(calc(var(--turn) * -1));
   transition: transform 700ms ease;
 }
 .room-table {
@@ -177,15 +178,26 @@
   color: var(--success);
   border-color: var(--success);
 }
-.room-speech {
+.room-talk {
   position: absolute;
   top: 2cqmin;
   left: 50%;
   z-index: 4;
   display: grid;
-  gap: 0.4cqmin;
-  width: min(86cqw, 70cqmin * 1.4);
+  gap: 1.2cqmin;
+  width: min(92cqw, 100cqmin * 1.4);
   transform: translateX(-50%);
+  align-items: start;
+}
+@container (min-width: 760px) {
+  .room-talk:has(.room-thought) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.room-speech,
+.room-thought {
+  display: grid;
+  gap: 0.4cqmin;
   margin: 0;
   padding: 1.4cqmin 2cqmin;
   border-radius: 2cqmin;
@@ -194,6 +206,15 @@
   border: 0.3cqmin solid var(--accent);
   font-size: max(13px, 2.8cqmin);
   line-height: 1.35;
+}
+.room-thought {
+  font-style: italic;
+  border-style: dashed;
+  border-color: var(--hidden-border);
+  background: var(--hidden-bg);
+}
+.room-thought .room-who {
+  color: var(--hidden-border);
 }
 .room-speech[data-kind='thought'] {
   font-style: italic;
@@ -277,4 +298,80 @@
     width: 19cqmin;
     font-size: 12px;
   }
+}
+
+/* The role over a seat, for a viewer who may see it: traitors in red. */
+.room-flag {
+  position: absolute;
+  bottom: calc(100% + 0.6cqmin);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2cqmin 1.4cqmin;
+  border-radius: 99px;
+  border: 0.3cqmin solid currentColor;
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+.room-flag[data-role='traitor'] {
+  color: var(--danger);
+}
+.room-flag[data-role='faithful'] {
+  color: var(--success);
+}
+.room-seat[data-mark='traitor'] .room-chair {
+  border-color: var(--danger);
+  border-width: 0.5cqmin;
+}
+
+/* Whispers: a line between two seats, with what was said. */
+.room-links {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.room-link {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: rotateY(var(--mid)) translateZ(calc(var(--room-r) * var(--dist)));
+}
+.room-link-line {
+  position: absolute;
+  left: calc(var(--room-r) * var(--len) * -0.5);
+  top: -5cqmin;
+  width: calc(var(--room-r) * var(--len));
+  height: 0.8cqmin;
+  border-radius: 99px;
+  background: var(--accent);
+  box-shadow: 0 0 2cqmin var(--accent);
+}
+.room-link-text {
+  position: absolute;
+  left: -15cqmin;
+  top: -17cqmin;
+  width: 30cqmin;
+  padding: 1cqmin 1.6cqmin;
+  border-radius: 1.6cqmin;
+  background: var(--surface);
+  color: var(--text);
+  border: 0.3cqmin solid var(--accent);
+  font-size: max(11px, 2.2cqmin);
+  line-height: 1.3;
+  transform: rotateY(calc(var(--mid) * -1 + var(--turn, 0deg))) rotateX(var(--room-tilt));
+}
+
+/* A wide shot looks down on the whole table, from further back. A director's cut jumps instead of gliding. */
+.room[data-wide='true'] {
+  --room-tilt: 30deg;
+  --room-pull: 1.35;
+}
+.room[data-cut='true'] .room-stage,
+.room[data-cut='true'] .room-seat {
+  transition: none;
 }
