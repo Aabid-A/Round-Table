@@ -1,6 +1,7 @@
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { GameLog } from '../src/engine/types.js';
 import { addressOf } from './address.js';
+import { originAllowed } from './config.js';
 import { LIMITS, type ServerMessage } from './protocol.js';
 import { Registry } from './registry.js';
 import { saveLog } from './saveLog.js';
@@ -21,6 +22,8 @@ export interface ServerOptions {
   logDir?: string;
   /** Take a client's address from the last X-Forwarded-For entry (set this only behind a single reverse proxy you run). */
   trustProxy?: boolean;
+  /** Only accept connections from pages on these origins (see parseOrigins). Absent means any origin. */
+  allowedOrigins?: string[];
   /** Connections one address may hold. */
   maxConnectionsPerAddress?: number;
   /** Open rooms one address may have (used when no registry is given). */
@@ -57,7 +60,17 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
   const registry = opts.registry ?? new Registry(opts.maxRoomsPerAddress !== undefined ? { maxRoomsPerOwner: opts.maxRoomsPerAddress } : {});
   const runtimes = new Map<string, Runtime>();
   const log = opts.log ?? ((line: string) => console.log(`${new Date().toISOString()} ${line}`));
-  const wss = new WebSocketServer({ port: opts.port ?? 0, ...(opts.host ? { host: opts.host } : {}), maxPayload: LIMITS.messageBytes });
+  const wss = new WebSocketServer({
+    port: opts.port ?? 0,
+    ...(opts.host ? { host: opts.host } : {}),
+    maxPayload: LIMITS.messageBytes,
+    // Refused at the handshake, before a connection exists. A page on another origin cannot talk to this server (and so cannot
+    // be used to point a host's key at it, or to make a room on someone's behalf); a connection with no Origin header is refused too.
+    verifyClient: (info, done) => {
+      if (originAllowed(info.origin, opts.allowedOrigins)) done(true);
+      else done(false, 403, 'Origin not allowed');
+    },
+  });
 
   const perAddress = new Map<string, number>();
   const maxPerAddress = opts.maxConnectionsPerAddress ?? LIMITS.connectionsPerAddress;
