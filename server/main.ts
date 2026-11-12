@@ -1,9 +1,12 @@
 import { countFromEnv, msFromEnv } from './config.js';
 import { startServer } from './server.js';
 
-const port = Number(process.env.PORT ?? 8787);
-if (!Number.isInteger(port) || port < 0 || port > 65535) {
-  console.error('PORT must be a whole number from 0 to 65535.');
+let port: number;
+try {
+  // An empty PORT counts as unset (it used to become 0, a random port). 0 is not offered: a deployment needs a port it can name.
+  port = countFromEnv(process.env, 'PORT', 8787, 1, 65535);
+} catch (e) {
+  console.error(e instanceof Error ? e.message : String(e));
   process.exit(1);
 }
 const host = process.env.HOST;

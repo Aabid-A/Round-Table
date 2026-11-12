@@ -20,4 +20,11 @@ describe('countFromEnv', () => {
     expect(countFromEnv({ MAX_ROOMS_PER_ADDRESS: '50' }, 'MAX_ROOMS_PER_ADDRESS', 3)).toBe(50);
     for (const bad of ['0', '-1', 'x', '2.5', '100001']) expect(() => countFromEnv({ N: bad }, 'N', 3), bad).toThrow('N must be a whole number from 1 to 100000.');
   });
+
+  it('treats an empty value as unset, and takes a range for a port', () => {
+    expect(countFromEnv({ PORT: '' }, 'PORT', 8787, 1, 65535)).toBe(8787);
+    expect(countFromEnv({ PORT: '  ' }, 'PORT', 8787, 1, 65535)).toBe(8787);
+    expect(countFromEnv({ PORT: '65535' }, 'PORT', 8787, 1, 65535)).toBe(65535);
+    for (const bad of ['0', '65536', 'abc', '80.5']) expect(() => countFromEnv({ PORT: bad }, 'PORT', 8787, 1, 65535), bad).toThrow('PORT must be a whole number from 1 to 65535.');
+  });
 });
