@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nearestAngle } from '../../web/src/scene/Room.js';
+import { nearestAngle } from '../../web/src/scene/camera.js';
 
 describe('nearestAngle', () => {
   it('takes the short way round: from 315 to 0 goes on to 360, not back to 0', () => {
