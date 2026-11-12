@@ -13,17 +13,19 @@ export interface Shot {
 const WIDE: Shot = { focus: null, wide: true, reason: 'wide' };
 
 /**
- * The traitor to hold on while `speaker` talks at round-table turn `turnId`: a living traitor who framed them (named them as
- * the suspect in an earlier round-table speech) or targeted them (their final night proposal). The most recent framing wins,
- * then a night target. Uses the highlight finder's context for who was a traitor and who had left the table.
+ * The traitor to hold on while `speaker` talks at round-table turn `turnId` in `round`: a living traitor who, this round, named
+ * them as the suspect earlier at the table (framed) or whose last night proposal this round was them (targeted). The most
+ * recent framing wins, then a night target. Uses the highlight finder's context for who was a traitor and who had left;
+ * like its `defendsNightTarget` rule, it looks inside one round.
  */
 function traitorToHold(ctx: Context, speaker: string, turnId: number, round: number): string | null {
   const traitors = ctx.log.cast.map((c) => c.name).filter((n) => n !== speaker && ctx.isTraitorAt(n, turnId) && !ctx.isOutAt(n, turnId));
-  const framed = [...ctx.log.turns]
+  const framed = [...ctx.turnsOf(round, 'round_table')]
     .reverse()
-    .find((t) => t.id < turnId && t.phase === 'round_table' && traitors.includes(t.player) && (t.action as { suspect?: string }).suspect === speaker);
+    .find((t) => t.id < turnId && traitors.includes(t.player) && (t.action as { suspect?: string }).suspect === speaker);
   if (framed) return framed.player;
-  return traitors.find((t) => ctx.nightTargets(t, round).has(speaker)) ?? null;
+  const lastNight = (t: string) => ctx.turnsOf(round, 'night').filter((n) => n.player === t).at(-1);
+  return traitors.find((t) => (lastNight(t)?.action as { target?: string } | undefined)?.target === speaker) ?? null;
 }
 
 /**
