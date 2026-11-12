@@ -1,6 +1,7 @@
 import type { Player } from '../players/player.js';
 import type { Rng } from './rng.js';
 import { isUsableCost, type Usage } from '../types.js';
+import { notify } from './state.js';
 import type { Action, GameState, PhaseRequest, Turn, TurnAttempt } from './types.js';
 import { fallbackAction, parseReply } from './validate.js';
 
@@ -154,5 +155,6 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
     fallback: accepted === null,
   };
   ctx.state.turns.push(turn);
+  notify(ctx.state, (o) => o.turn?.(turn));
   return turn;
 }

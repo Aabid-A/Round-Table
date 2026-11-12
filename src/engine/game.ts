@@ -1,7 +1,7 @@
 import type { Player } from '../players/player.js';
 import type { CastMember } from '../types.js';
 import { createRng } from './rng.js';
-import { assignRoles, aliveNames, checkEnd, createState, getPlayer, winnerOf } from './state.js';
+import { assignRoles, aliveNames, checkEnd, createState, getPlayer, notify, winnerOf } from './state.js';
 import { maxModelCalls } from './limits.js';
 import { CallLimitReached, CostCapReached, roundUsd, type EngineContext } from './turn.js';
 import {
@@ -13,7 +13,7 @@ import {
   runRoundTable,
   runWhispers,
 } from './phases.js';
-import { DEFAULT_COST_FLOOR_USD, ENDGAME_AT, type EndReason, type GameLog, type GameSettings, type PhaseRequest } from './types.js';
+import { DEFAULT_COST_FLOOR_USD, ENDGAME_AT, type EndReason, type GameLog, type GameObserver, type GameSettings, type PhaseRequest } from './types.js';
 
 export interface RunGameInput {
   cast: CastMember[];
@@ -34,6 +34,8 @@ export interface RunGameInput {
    * rounds (see maxModelCalls), which a normal game never reaches. Lower it only to test, or to be stricter.
    */
   maxModelCalls?: number;
+  /** Told about each turn and event as it is logged. It cannot change the game. */
+  observer?: GameObserver;
 }
 
 /**
@@ -58,6 +60,8 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
   const rng = createRng(seed);
   const roles = assignRoles(cast.map((c) => c.name), settings.traitors, rng);
   const state = createState(cast, roles);
+  if (input.observer) state.observer = input.observer;
+  notify(state, (o) => o.start?.({ roles: { ...roles } }));
   const ctx: EngineContext = {
     state,
     rng,
