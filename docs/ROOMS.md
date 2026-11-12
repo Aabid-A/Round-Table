@@ -22,7 +22,7 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `MAX_ROOMS_PER_ADDRESS` | server | Open rooms one network address may have. Default 3 (finished rooms do not count). |
 | `MAX_CONNECTIONS_PER_ADDRESS` | server | Connections one network address may hold. Default 20. |
 | `TRUST_PROXY` | server | Set to `1` only behind exactly one reverse proxy that you run: the address is then the last `X-Forwarded-For` entry, the one your proxy added (earlier entries are whatever the client sent). Without it, every client behind the proxy looks like one address and shares these limits. With it, a room with real models is also refused unless the last `X-Forwarded-Proto` is `https`. |
-| `ALLOWED_ORIGINS` | server | Comma-separated origins (`scheme://host[:port]`, no path, no `*`) allowed to connect. When set, a connection from any other origin, or with no `Origin` header, is refused with a 403 at the handshake. Default: any origin. |
+| `ALLOWED_ORIGINS` | server | Comma-separated origins (`scheme://host[:port]`, no path, no `*`; leave out the port when it is the default for the scheme, as browsers do) allowed to connect. When set, a connection from any other origin, or with no `Origin` header, is refused with a 403 at the handshake. Default: any origin. |
 | `LOG_DIR` | server | Folder where each finished game's log is saved. Default `games/`; `LOG_DIR=none` turns saving off. See "Saved logs". |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
