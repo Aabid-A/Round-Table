@@ -72,9 +72,12 @@ npm run games -- --mock --seeds 1-20
 Spend cap, for real games: `--max-cost-usd <n>` on `game` or `games` stops each game
 cleanly before a call that could pass `n` USD (spend so far plus the dearest call
 yet). It is per game, not per batch, and a prediction: the first call, or a call dearer
-than any before it, can overshoot. The log ends with `reason: "cost_cap"`. It needs OpenRouter to report a
-cost; if none is reported the commands warn that the cap could not apply. Every
-attempt records the response's `usage` (tokens, and cost when returned) in the log.
+than any before it, can overshoot. The log ends with `reason: "cost_cap"`. A call to a real model that comes
+back with no usable cost (it timed out, failed, or reported none) still counts, as an estimate: the largest
+cost seen so far in that game, or 0.01 dollars if none yet (`--cost-floor-usd <n>` changes that, and needs
+`--max-cost-usd`). The attempt is marked `costEstimatedUsd` in the log and the command says how many calls were
+estimated. Mock and human players are free, so a mock game under a cap has nothing to count. Every attempt
+records the response's `usage` (tokens, and cost when returned) in the log.
 
 Each game writes `games/<name>.json` and prints its path. Print the readable
 transcript (public speech with each player's hidden private notes beneath it):

@@ -72,9 +72,13 @@ if so it stops before the call. If that happens before a retry, the turn is sett
 with its fallback (`fallback: true`, one attempt) and the next turn stops the game.
 
 The cap is a prediction, not a hard ceiling: the first call, or a call dearer than any
-before it, can overshoot, and `costCap.spentUsd` can then be above `maxUsd`. A call with
-no reported cost counts as free. To replay a capped log, pass the same cap
-(`costCap.maxUsd`) as well as the same seed; without it the replay runs past the logged replies.
+before it, can overshoot, and `costCap.spentUsd` can then be above `maxUsd`.
+
+A call to a real model that returns no usable cost (it timed out, failed, or reported none, or a number that is not
+finite and non-negative) is not free: it may still have been billed, so the cap counts an estimate, the largest cost seen so
+far in that game, or a floor (default 0.01 dollars) if none yet. That attempt has `costEstimatedUsd` set to the amount counted.
+Calls by mock and human players are free and are never marked. To replay a capped log, pass the same cap
+(`costCap.maxUsd`), the same floor if you set one, and the same seed; without the cap the replay runs past the logged replies.
 
 Night turns happen twice in a round when traitors disagree: the second set of
 `night` turns is the single re-proposal.
@@ -87,6 +91,7 @@ Night turns happen twice in a round when traitors disagree: the second set of
 | `raw` | string \| null | Raw reply text exactly as returned. `null` if the player threw (timeout, HTTP error); then `error` is the thrown message. |
 | `extracted` | `true` (optional) | Present only when the reply had text around a single JSON object and the object was taken from it. Absent otherwise. |
 | `usage` | `Usage` (optional) | What the provider reported for this call. Absent for mock players, thrown errors, and providers that report nothing. |
+| `costEstimatedUsd` | number (optional) | Present when the game had a spend cap, the call was to a real model, and no usable cost came back: what the cap counted for it. |
 | `error` | string \| null | Why the attempt was rejected, or `null` if it was accepted. The accepted attempt is always last and has `error: null`; on fallback both attempts have an error. |
 
 ### Usage
