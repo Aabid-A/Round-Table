@@ -132,4 +132,13 @@ describe('runRoomGame', () => {
     expect(aiAttempts.every((a) => a.costEstimatedUsd === 0.01)).toBe(true);
     expect(calls).toBeLessThanOrEqual(5); // the cap of 0.05 at 0.01 a call: it stopped
   });
+
+  it('uses the floor the server was given for failed AI calls', async () => {
+    const { room, seatPlayers } = autoRoom(['Quinn'], { mode: 'openrouter', key: 'sk-test-floor', models: ['a/b'], maxCostUsd: 0.5 });
+    const down = (async () => new Response('{"error":"down"}', { status: 500 })) as unknown as typeof fetch;
+    const log = await runRoomGame(room, { seatPlayers, fetchImpl: down, costFloorUsd: 0.1 });
+    const aiAttempts = log.turns.filter((t) => t.player !== 'Quinn').flatMap((t) => t.attempts);
+    expect(aiAttempts.every((a) => a.costEstimatedUsd === 0.1)).toBe(true);
+    expect(log.result.costCap?.spentUsd).toBe(0.5);
+  });
 });

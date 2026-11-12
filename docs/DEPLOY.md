@@ -66,11 +66,12 @@ server is stopping.
 | `MAX_ROOMS_PER_ADDRESS` | 3 | Open rooms one network address may have (finished rooms do not count). |
 | `MAX_CONNECTIONS_PER_ADDRESS` | 20 | Connections one network address may hold. |
 | `TRUST_PROXY` | off | `1` only behind exactly one reverse proxy you run. The client's address is then the last `X-Forwarded-For` entry, and a room with real models is refused unless the last `X-Forwarded-Proto` is `https` (so your proxy must set that header). |
+| `COST_FLOOR_USD` | 0.01 | What a room's spend cap counts for a real-model call that comes back with no cost, until a real cost has been seen in the game (then it counts the largest seen). A positive number of dollars. |
 | `ALLOWED_ORIGINS` | any origin | Comma-separated origins allowed to connect, such as `https://play.example.org`. Each is `scheme://host` or `scheme://host:port`, with no path and no `*`. When set, any other origin, and any connection that sends no `Origin` header, is refused with a 403 before it connects. |
 | `LOG_DIR` | `games` | Where each finished room game's log is saved. `LOG_DIR=none` turns saving off. |
 | `ALLOW_SEED` | off | **Never set this in production.** It lets a page choose a room's seed, and the seed decides every role. For tests. |
 
-A bad number for `PORT`, `TURN_MS`, `ABANDON_MS` or the two `MAX_` settings stops the server at start with a message naming the
+A bad number for `PORT`, `TURN_MS`, `ABANDON_MS`, `COST_FLOOR_USD` or the two `MAX_` settings stops the server at start with a message naming the
 variable. The on/off settings (`TRUST_PROXY`, `ALLOW_SEED`) are on only when set to exactly `1`; any other value leaves them off.
 Details of each, the limits, and
 what the server never sends to a client: [ROOMS.md](ROOMS.md).

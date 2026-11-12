@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countFromEnv, msFromEnv, originAllowed, parseOrigins } from '../../server/config.js';
+import { countFromEnv, msFromEnv, originAllowed, parseOrigins, positiveFromEnv } from '../../server/config.js';
 
 describe('msFromEnv', () => {
   it('uses the fallback when unset or empty', () => {
@@ -65,5 +65,14 @@ describe('originAllowed', () => {
     expect(originAllowed(undefined, list)).toBe(false);
     expect(originAllowed('', list)).toBe(false);
     expect(originAllowed('null', list)).toBe(false); // what a sandboxed page sends
+  });
+});
+
+describe('positiveFromEnv', () => {
+  it('uses the fallback when unset or empty, reads a positive decimal, and refuses anything else', () => {
+    expect(positiveFromEnv({}, 'COST_FLOOR_USD', undefined)).toBeUndefined();
+    expect(positiveFromEnv({ COST_FLOOR_USD: '' }, 'COST_FLOOR_USD', 0.01)).toBe(0.01);
+    expect(positiveFromEnv({ COST_FLOOR_USD: '0.025' }, 'COST_FLOOR_USD', undefined)).toBe(0.025);
+    for (const bad of ['0', '-1', 'abc', 'NaN', 'Infinity']) expect(() => positiveFromEnv({ COST_FLOOR_USD: bad }, 'COST_FLOOR_USD', undefined), bad).toThrow('COST_FLOOR_USD must be a number above 0.');
   });
 });

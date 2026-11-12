@@ -31,6 +31,8 @@ export interface ServerOptions {
   /** Injectable for tests. */
   fetchImpl?: typeof fetch;
   aiTimeoutMs?: number;
+  /** The spend cap's floor for a call with no reported cost (USD). Default 0.01. */
+  costFloorUsd?: number;
   /** One line per event, never a message's content. */
   log?: (line: string) => void;
 }
@@ -97,6 +99,7 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
           ...(opts.logDir !== undefined ? { saveLog: (name: string, log: GameLog) => saveLog(opts.logDir as string, name, log) } : {}),
           ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
           ...(opts.aiTimeoutMs !== undefined ? { aiTimeoutMs: opts.aiTimeoutMs } : {}),
+          ...(opts.costFloorUsd !== undefined ? { costFloorUsd: opts.costFloorUsd } : {}),
         },
       },
       address,

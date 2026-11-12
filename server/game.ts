@@ -19,6 +19,8 @@ export interface RunRoomOptions {
   fetchImpl?: typeof fetch;
   /** How long one AI call may take. */
   aiTimeoutMs?: number;
+  /** What a real-model call with no usable cost counts for under the spend cap until a real cost has been seen in the game (USD). */
+  costFloorUsd?: number;
   /** Aborting cancels AI calls in flight and fails every later turn at once, so a closed room stops spending. */
   signal?: AbortSignal;
 }
@@ -111,6 +113,7 @@ export async function runRoomGame(room: Room, opts: RunRoomOptions): Promise<Gam
       buildPrompt,
       systemPrompt: buildSystemPrompt({ players: cast.length, traitors: DEFAULT_SETTINGS.traitors, maxRounds: DEFAULT_SETTINGS.maxRounds }),
       ...(setup.mode === 'openrouter' ? { maxCostUsd: setup.maxCostUsd } : {}),
+      ...(opts.costFloorUsd !== undefined ? { costFloorUsd: opts.costFloorUsd } : {}),
     });
     // Belt and braces: nothing that leaves the server may carry the key, whatever a model or provider said.
     return secrets.length ? (JSON.parse(redact(JSON.stringify(log), secrets)) as GameLog) : log;

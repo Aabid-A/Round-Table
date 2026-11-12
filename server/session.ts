@@ -37,6 +37,7 @@ export interface SessionOptions {
   fetchImpl?: typeof fetch;
   now?: () => number;
   aiTimeoutMs?: number;
+  costFloorUsd?: number;
   /** Where the server writes what happened. Never given a message's content. */
   log: (line: string) => void;
 }
@@ -183,6 +184,7 @@ export class Session {
       signal: rt.abort.signal,
       ...(options.fetchImpl ? { fetchImpl: options.fetchImpl } : {}),
       ...(options.aiTimeoutMs !== undefined ? { aiTimeoutMs: options.aiTimeoutMs } : {}),
+      ...(options.costFloorUsd !== undefined ? { costFloorUsd: options.costFloorUsd } : {}),
     }).then(
       (log) => {
         if (room.phase !== 'playing') return; // the room closed while the game ran

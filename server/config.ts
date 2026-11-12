@@ -49,3 +49,12 @@ export function originAllowed(origin: string | undefined, allowed: readonly stri
   if (origin === undefined || origin === '') return false;
   return allowed.includes(origin.trim().replace(/\/+$/, '').toLowerCase());
 }
+
+/** A positive decimal number from an environment variable (such as a dollar amount), or `fallback` when unset or empty. Anything else is an error. */
+export function positiveFromEnv(env: Record<string, string | undefined>, name: string, fallback: number | undefined): number | undefined {
+  const raw = env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) throw new Error(`${name} must be a number above 0.`);
+  return n;
+}
