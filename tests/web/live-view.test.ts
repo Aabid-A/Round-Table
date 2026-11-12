@@ -87,7 +87,7 @@ describe('liveView: the night, the options and the news', () => {
   const base = (over: Partial<LiveSnapshot>): LiveSnapshot => ({
     me: 'Aria',
     order: ['Aria', 'Bram', 'Cleo'],
-    knowledge: { role: 'faithful', fellowTraitors: [], round: 1, alive: ['Aria', 'Bram', 'Cleo'], out: [], history: [] },
+    knowledge: { name: 'Aria', role: 'faithful', fellowTraitors: [], round: 1, alive: ['Aria', 'Bram', 'Cleo'], out: [], history: [] },
     beat: null,
     turn: null,
     publicPhase: null,

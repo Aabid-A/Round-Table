@@ -2,15 +2,30 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { PromptRequest } from '../../../src/players/player.js';
 import { emptyAnswer, formFor, isComplete, splitPrompt, type HumanAnswer } from './human.js';
 
+/** What the room outside the form needs to know about it. */
+export interface FormState {
+  ready: boolean;
+  /** What is still missing, in words, or null when Send is possible. */
+  missing: string | null;
+}
+
 interface Props {
   request: PromptRequest;
+  /** A seat chosen in the room. The form takes it as its choice. */
+  picked?: string | null;
+  /** Called when the choice changes in the form, so the room can show it. */
+  onPicked?: (choice: string | null) => void;
+  /** Told whether Send is possible and what is missing. */
+  onState?: (state: FormState) => void;
+  /** Filled in with a function that sends the answer, for a button outside the form. */
+  submitRef?: { current: (() => void) | null };
   /** Which of the human's turns this is, from 1. */
   turn: number;
   onSubmit: (answer: HumanAnswer) => void;
 }
 
 /** One of the human's turns: what you know, the task, and the form for that phase. */
-export function HumanForm({ request, turn, onSubmit }: Props) {
+export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, submitRef }: Props) {
   const id = useId();
   const spec = formFor(request.phase, request.options);
   const { context, task } = splitPrompt(request.user);
@@ -26,6 +41,28 @@ export function HumanForm({ request, turn, onSubmit }: Props) {
   useEffect(() => title.current?.focus(), []);
   const ready = chosen && isComplete(spec, a);
   const NONE = '__none__';
+  // A seat picked in the room is this form's choice. (Only a seat the form offers; anything else is ignored.)
+  useEffect(() => {
+    if (picked === undefined || picked === a.choice) return;
+    if (picked === null) setA((x) => ({ ...x, choice: null })), setChosen(false);
+    else if (spec.choices.some((c) => c.value === picked)) set({ choice: picked });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked]);
+  const missing = ready
+    ? null
+    : !chosen || (a.choice === null && spec.noneLabel === null)
+      ? 'Choose an answer'
+      : spec.speechLabel !== null && a.speech.trim() === ''
+        ? 'Write what you say to the table'
+        : spec.messageLabel !== null && a.choice !== null && a.message.trim() === ''
+          ? 'Write your reason or message'
+          : 'Finish the form';
+  useEffect(() => {
+    onState?.({ ready, missing });
+    onPicked?.(chosen ? a.choice : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, missing, chosen, a.choice]);
+  if (submitRef) submitRef.current = () => (ready ? onSubmit(a) : undefined);
 
   return (
     <form
