@@ -17,6 +17,8 @@ export function usePlayback(durations: number[], options: { autoStart?: boolean 
   }, [playing, index, last, durations]);
 
   const seek = useCallback((i: number) => setIndex(Math.max(0, Math.min(i, last))), [last]);
+  /** Set the position without clamping to the current list, for a change of list in the same update (a different seat's steps). */
+  const jump = useCallback((i: number) => setIndex(Math.max(0, i)), []);
   const next = useCallback(() => setIndex((i) => Math.min(i + 1, last)), [last]);
   const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
   const toggle = useCallback(() => {
@@ -30,5 +32,5 @@ export function usePlayback(durations: number[], options: { autoStart?: boolean 
     setPlaying(false);
   }, []);
 
-  return { index, playing, seek, next, prev, toggle, restart };
+  return { index, playing, seek, jump, next, prev, toggle, restart };
 }

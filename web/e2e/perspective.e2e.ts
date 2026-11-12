@@ -39,26 +39,57 @@ test('a faithful never sees a living traitor’s role, at any step', async ({ pa
   }
 });
 
-const stepAt = (page: Page): Promise<string | null> => page.locator('main').getAttribute('data-step');
+const speech = async (page: Page): Promise<string> => ((await page.getByTestId('room-speech').textContent()) ?? '').trim();
 
 test('switching seats keeps the same moment, and a traitor sees their fellow traitor', async ({ page }) => {
   await open(page, '&seat=Aria');
   await page.getByRole('slider', { name: 'Step' }).focus();
-  // Walk to a round-table speech: every seat sees those, so the same step is on every seat's list.
+  // Walk to a round-table speech: every seat sees those, so the same moment is on every seat's list.
   for (let i = 0; i < 60 && !(await page.getByTestId('section').innerText()).startsWith('Round table'); i++) await page.keyboard.press('ArrowRight');
-  const before = await stepAt(page);
+  await expect(page.getByTestId('room-speech')).toBeVisible();
+  const said = await speech(page);
   await page.getByLabel('Sit in a seat').selectOption('Bram');
-  expect(await stepAt(page)).toBe(before);
+  expect(await speech(page)).toBe(said);
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Bram');
   await expect(page.locator('[data-name=Cleo] .room-tag', { hasText: 'Fellow traitor' })).toBeVisible();
   await page.locator('[data-name=Hugo] button').click(); // clicking a chair sits there
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Hugo');
-  expect(await stepAt(page)).toBe(before);
+  expect(await speech(page)).toBe(said);
   expect(page.url()).toContain('seat=Hugo');
   await page.getByLabel('Sit in a seat').selectOption('');
   await expect(page.getByTestId('table')).toBeVisible();
+  await expect(page.getByTestId('bubble')).toContainText(said.replace(/^\S+\s*/, '').slice(0, 20));
   expect(page.url()).not.toContain('seat=');
-  expect(await stepAt(page)).toBe(before);
+});
+
+test('a round trip through a seat does not move the public step, even from a step that is empty for the seat', async ({ page }) => {
+  await open(page, '');
+  await stepTo(page, 3); // a night turn: empty for a faithful
+  const before = await page.locator('main').getAttribute('data-step');
+  await page.getByLabel('Sit in a seat').selectOption('Aria');
+  await page.getByLabel('Sit in a seat').selectOption('');
+  expect(await page.locator('main').getAttribute('data-step')).toBe(before);
+});
+
+test('playing keeps playing when the seat is switched', async ({ page }) => {
+  await open(page, '&seat=Aria');
+  await page.getByRole('button', { name: 'Play' }).click();
+  await page.getByLabel('Sit in a seat').selectOption('Hugo');
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+});
+
+test('while seated, the page numbers steps by the seat’s own list: one at a time, never by the full log', async ({ page }) => {
+  await open(page, '&seat=Aria');
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  const total = Number(/of (\d+)/.exec(await stepText(page))![1]);
+  let last = Number(await page.locator('main').getAttribute('data-step'));
+  for (let i = 1; i < total; i++) {
+    await page.keyboard.press('ArrowRight');
+    const now = Number(await page.locator('main').getAttribute('data-step'));
+    expect(now, `press ${i}`).toBe(last + 1);
+    last = now;
+  }
+  expect(last).toBe(total - 1);
 });
 
 test('a step that is empty for the seat is stood on the nearest earlier one when switching, and the counter follows the seat', async ({ page }) => {
@@ -125,4 +156,12 @@ test('the text a screen reader is given while seated holds nothing the seat coul
     }
     await page.keyboard.press('ArrowRight');
   }
+});
+
+test('a clip from a seat carries no turn numbers, and a range with nothing for the seat says so', async ({ page }) => {
+  await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
+  await page.goto('/?mode=record&log=sample&seat=Aria&speed=50');
+  await expect(page.locator('.rec')).toHaveAttribute('data-turn', '');
+  await page.goto('/?mode=record&log=sample&seat=Aria&from=1&to=1'); // the second of two night turns: nothing for a faithful
+  await expect(page.getByRole('alert')).toContainText('Nothing between turn 1 and turn 1 is shown to Aria');
 });

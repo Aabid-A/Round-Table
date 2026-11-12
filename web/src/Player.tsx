@@ -4,7 +4,7 @@ import { Controls } from './Controls.js';
 import { Details } from './Details.js';
 import { actionForKey } from './keys.js';
 import { searchWithSeat, seatFromSearch } from './perspective/params.js';
-import { seatStepMs, seatTimeline, seatView } from './perspective/seatView.js';
+import { positionAtOrBefore, seatStepMs, seatTimeline, seatView } from './perspective/seatView.js';
 import { describeStep, stepDurationMs, type StepView } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
@@ -40,24 +40,20 @@ export function Player({ log, onReload }: Props) {
     () => timeline.map((i) => (seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat)))),
     [timeline, views, log, steps, seat],
   );
-  const { index: pos, playing, seek, next, prev, toggle, restart } = usePlayback(durations);
-  // Switching seats keeps the same moment: find the step the old list was on, and stand on the nearest one at or before it in the new list.
-  const before = useRef({ timeline, pos });
+  const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
+  const at = Math.min(pos, timeline.length - 1);
+  const index = timeline[at] ?? 0;
+  // The step the viewer last chose themselves. Switching seats stands on the nearest step at or before it in the new list, and
+  // going back lands on it again, so a round trip does not drift when the step is empty for the seat.
+  const anchor = useRef(0);
   useEffect(() => {
-    if (before.current.timeline !== timeline) {
-      const old = before.current.timeline;
-      const at = old[Math.min(before.current.pos, old.length - 1)] ?? 0;
-      let target = 0;
-      timeline.forEach((step, k) => {
-        if (step <= at) target = k;
-      });
-      seek(target);
-    }
-    before.current = { timeline, pos };
-  }, [timeline, pos, seek]);
-  const index = timeline[Math.min(pos, timeline.length - 1)] ?? 0;
+    if (pos !== positionAtOrBefore(timeline, anchor.current)) anchor.current = timeline[Math.min(pos, timeline.length - 1)] ?? 0;
+  }, [pos, timeline]);
   const sit = (name: string | null): void => {
+    const next = name === null ? steps.map((_, i) => i) : seatTimeline(log, steps, name);
+    // Change the seat and the position in one update, so playback never sees the old position against the new list.
     setSeat(name);
+    jump(positionAtOrBefore(next, anchor.current));
     window.history.replaceState(null, '', `${window.location.pathname}${searchWithSeat(window.location.search, name)}${window.location.hash}`);
   };
 
@@ -83,7 +79,7 @@ export function Player({ log, onReload }: Props) {
   const sv = seat !== null ? seatView(log, steps, index, seat) : null;
 
   return (
-    <main className="app" data-step={index} data-seat={seat ?? ''}>
+    <main className="app" data-step={seat === null ? index : pos} data-seat={seat ?? ''}>
       <header className="topbar">
         <h1>Round Table</h1>
         <span className="muted">

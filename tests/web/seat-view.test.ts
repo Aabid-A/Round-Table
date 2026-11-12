@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { GameLog } from '../../src/engine/types.js';
-import { seatTimeline, seatView } from '../../web/src/perspective/seatView.js';
+import { positionAtOrBefore, seatTimeline, seatView } from '../../web/src/perspective/seatView.js';
 import { buildSteps, finalRoles } from '../../web/src/replay/timeline.js';
 import { playMock } from '../helpers/game.js';
 
@@ -200,5 +200,17 @@ describe('a seat’s own timeline', () => {
       return;
     }
     throw new Error('no game with an accepted recruitment in 40 seeds');
+  });
+});
+
+describe('positionAtOrBefore', () => {
+  it('stands on the last step at or before the one asked for, or the start', () => {
+    const line = [0, 4, 9, 20];
+    expect(positionAtOrBefore(line, 9)).toBe(2);
+    expect(positionAtOrBefore(line, 12)).toBe(2);
+    expect(positionAtOrBefore(line, 100)).toBe(3);
+    expect(positionAtOrBefore(line, 0)).toBe(0);
+    expect(positionAtOrBefore([5, 8], 2)).toBe(0);
+    expect(positionAtOrBefore([], 3)).toBe(0);
   });
 });

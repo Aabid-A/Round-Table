@@ -117,3 +117,12 @@ export function seatTimeline(log: GameLog, steps: Step[], seat: string): number[
 
 /** How long a seated step stays up while playing: time to read what the seat is shown. */
 export const seatStepMs = (view: SceneView): number => Math.min(9000, 1800 + (view.moment.text?.length ?? 0) * 40);
+
+/** The position in `timeline` of the last step at or before `step` (0 when none is). Where a seat's replay stands for a moment. */
+export function positionAtOrBefore(timeline: number[], step: number): number {
+  let pos = 0;
+  timeline.forEach((s, k) => {
+    if (s <= step) pos = k;
+  });
+  return pos;
+}
