@@ -88,6 +88,7 @@ test('everything can be done with the keyboard: arrows walk the seats, Enter pic
   await startSolo(page, FAITHFUL);
   await goToPhase(page, 'vote');
   const n = await turnNo(page);
+  await expect(page.getByTestId('room-sleep')).toHaveCount(0, { timeout: 8000 }); // the room is out of reach while it is dark
   const all = chairs(page);
   expect(await all.count()).toBeGreaterThan(2);
   await all.first().focus();

@@ -5,7 +5,7 @@ import type { PublicPhase } from '../../../src/publicPhase.js';
 import { HumanForm, type FormState } from '../play/HumanForm.js';
 import { parsePrompt, type Knowledge } from '../perspective/knowledge.js';
 import { Room } from '../scene/Room.js';
-import { newHistoryLines, parseHistoryLine, type LiveEvent } from './events.js';
+import { newsToPlay, type LiveEvent } from './events.js';
 import { liveView, ringOrder } from './liveView.js';
 
 /** How long each piece of news stays up in the room. */
@@ -13,8 +13,6 @@ export const BEAT_MS = 2800;
 
 /** The least time a faithful's night lasts on screen, even when the AIs answer at once, so the dark and the waking can be seen. */
 export const SLEEP_MS = 1600;
-
-const WORTH_SHOWING: LiveEvent['kind'][] = ['speech', 'whisper_in', 'breakfast', 'votes', 'banished'];
 
 export interface LiveTurn {
   id: number;
@@ -68,7 +66,8 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
     // A faithful's first prompt comes after the first night: they slept through it, and wake to its news.
     if (mem.k === null && k.role === 'faithful') startHold();
     setMem((m) => ({ order: ringOrder(m.order, k), k, before: m.k?.history ?? null }));
-    const news = newHistoryLines(mem.k?.history ?? null, k.history).map(parseHistoryLine).filter((e) => WORTH_SHOWING.includes(e.kind) && !(e.kind === 'speech' && e.player === k.name)); // your own words are not news to you
+    // The first prompt this page has seen (a fresh start or a reload) replays only the latest few pieces of news, not the whole game.
+    const news = newsToPlay(mem.k?.history ?? null, k.history, k.name, mem.k === null);
     setReel(news);
     setBeatAt(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps

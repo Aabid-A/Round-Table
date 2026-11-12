@@ -49,3 +49,12 @@ export function nightProposals(user: string): { by: string; target: string }[] {
     return x ? [{ by: x[1] as string, target: x[2] as string }] : [];
   });
 }
+
+/** What a seat's room plays when a prompt arrives: the new news worth showing, minus your own words; after a reload (no earlier prompt) only the latest few. */
+export function newsToPlay(previous: string[] | null, current: string[], me: string, reload: boolean): LiveEvent[] {
+  const worth: LiveEvent['kind'][] = ['speech', 'whisper_in', 'breakfast', 'votes', 'banished'];
+  const news = newHistoryLines(previous, current)
+    .map(parseHistoryLine)
+    .filter((e) => worth.includes(e.kind) && !(e.kind === 'speech' && e.player === me));
+  return reload ? news.slice(-3) : news;
+}
