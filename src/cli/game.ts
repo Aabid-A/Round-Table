@@ -33,7 +33,7 @@ async function main(): Promise<void> {
       console.error(`warning: ${countUncostedAttempts(log)} attempts reported no cost; --max-cost-usd counted them as free.`);
     }
   }
-  console.log(writeGameLog(log, values.out as string, setup.gameName(seed)));
+  console.log(writeGameLog(log, values.out as string, setup.gameName(seed), setup.secrets));
 }
 
 main().catch((e: unknown) => {

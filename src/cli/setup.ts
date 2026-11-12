@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, type GameLog, type GameSettings } from '../engine/typ
 import { createMockPlayers, MOCK_CAST } from '../players/mock.js';
 import { createOpenRouterPlayer, DEFAULT_TIMEOUT_MS } from '../players/openrouter.js';
 import type { Player } from '../players/player.js';
+import { redactErrors, scrubbedFetch } from '../players/scrub.js';
 import { buildPrompt } from '../prompts/phases.js';
 import { buildSystemPrompt } from '../prompts/system.js';
 import type { CastMember } from '../types.js';
@@ -20,6 +21,8 @@ export interface SetupOptions {
   config: string;
   timeoutMs: string | undefined;
   maxCostUsd?: string | undefined;
+  /** Injectable for tests. */
+  fetchImpl?: typeof fetch;
 }
 
 /** Everything that stays the same across games in one command. */
@@ -30,6 +33,8 @@ export interface Setup {
   gameName(seed: number): string;
   /** Stop each game before a call that would pass this many USD. */
   maxCostUsd?: number;
+  /** Values that must never reach a log, a prompt or an error line (the API key). */
+  secrets?: readonly string[];
 }
 
 export const USAGE = 'usage: use either --mock or --cast <path> (not both)';
@@ -68,11 +73,16 @@ function buildSetup(opts: SetupOptions): Setup {
   const cast = loadCast(opts.cast as string);
   const timeoutMs = Number(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1) throw new Error('--timeout-ms must be a positive integer');
+  const secrets = [apiKey];
+  const fetchImpl = scrubbedFetch(opts.fetchImpl ?? fetch, secrets);
   return {
     cast,
     settings,
+    secrets,
     makePlayers: () =>
-      Object.fromEntries(cast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey, timeoutMs })])),
+      Object.fromEntries(
+        cast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey, timeoutMs, fetchImpl })]),
+      ),
     gameName: (seed) => `game-${new Date().toISOString().replace(/[:.]/g, '-')}-seed-${seed}`,
   };
 }
@@ -83,7 +93,9 @@ export function playGame(setup: Setup, seed: number): Promise<GameLog> {
     cast,
     settings,
     seed,
-    players: setup.makePlayers(seed),
+    players: Object.fromEntries(
+      Object.entries(setup.makePlayers(seed)).map(([name, p]) => [name, redactErrors(p, setup.secrets ?? [])]),
+    ),
     buildPrompt,
     systemPrompt: buildSystemPrompt({ players: cast.length, traitors: settings.traitors, maxRounds: settings.maxRounds }),
     ...(setup.maxCostUsd !== undefined ? { maxCostUsd: setup.maxCostUsd } : {}),
