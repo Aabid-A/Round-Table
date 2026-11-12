@@ -12,8 +12,8 @@ export class TestClient {
     ws.on('close', (code) => (this.closeCode = code));
   }
 
-  static async connect(port: number): Promise<TestClient> {
-    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+  static async connect(port: number, origin?: string, headers?: Record<string, string>): Promise<TestClient> {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`, { ...(origin === undefined ? {} : { origin }), ...(headers ? { headers } : {}) });
     await new Promise<void>((resolve, reject) => {
       ws.once('open', () => resolve());
       ws.once('error', reject);

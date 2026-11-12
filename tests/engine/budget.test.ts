@@ -141,3 +141,121 @@ describe('cost cap', () => {
     expect(summaryLine(log)).toContain('no winner | cost_cap');
   });
 });
+
+/** What a real-model player does on one call: report a cost, report none, report a bad number, or fail (a timeout or an HTTP error). */
+type Behaviour = { kind: 'cost'; usd: number } | { kind: 'none' } | { kind: 'bad'; value: number } | { kind: 'fail'; message: string };
+
+/** Mock players that declare themselves metered (real models), behaving as `behave(callIndex)` says. */
+function meteredPlayers(seed: number, behave: (call: number) => Behaviour): Record<string, Player> {
+  const base = createMockPlayers(MOCK_CAST, seed);
+  let call = 0;
+  return Object.fromEntries(
+    Object.entries(base).map(([name, p]) => [
+      name,
+      {
+        metered: true,
+        async respond(req) {
+          const b = behave(call++);
+          if (b.kind === 'fail') throw new Error(b.message);
+          const text = (await p.respond(req)) as string;
+          if (b.kind === 'cost') return { text, usage: { costUsd: b.usd } };
+          if (b.kind === 'bad') return { text, usage: { costUsd: b.value } };
+          return { text };
+        },
+      } satisfies Player,
+    ]),
+  );
+}
+
+const attemptsOf = (log: Awaited<ReturnType<typeof run>>) => log.turns.flatMap((t) => t.attempts);
+const runWithFloor = (players: Record<string, Player>, maxCostUsd: number, costFloorUsd?: number) =>
+  runGame({
+    cast: MOCK_CAST,
+    settings: DEFAULT_SETTINGS,
+    seed: 1,
+    players,
+    buildPrompt,
+    systemPrompt: SYSTEM_PROMPT,
+    maxCostUsd,
+    ...(costFloorUsd !== undefined ? { costFloorUsd } : {}),
+  });
+
+describe('cost cap: a real-model call with no usable cost counts as an estimate', () => {
+  it('counts the floor (0.01) for each call while no real cost has been seen, so the cap still stops the game, and logs the estimate', async () => {
+    const log = await run(meteredPlayers(1, () => ({ kind: 'none' })), 0.05);
+    const attempts = attemptsOf(log);
+    expect(log.result).toMatchObject({ reason: 'cost_cap', winner: null, costCap: { maxUsd: 0.05, spentUsd: 0.05 } });
+    expect(attempts).toHaveLength(5);
+    for (const a of attempts) expect(a.costEstimatedUsd).toBe(0.01);
+  });
+
+  it('uses a floor you set', async () => {
+    const log = await runWithFloor(meteredPlayers(1, () => ({ kind: 'none' })), 0.5, 0.1);
+    expect(attemptsOf(log)).toHaveLength(5);
+    expect(attemptsOf(log).every((a) => a.costEstimatedUsd === 0.1)).toBe(true);
+    expect(log.result.costCap?.spentUsd).toBe(0.5);
+  });
+
+  it('counts the largest cost seen so far once there is one, not the floor and not the latest', async () => {
+    // Costs 0.1, then 0.4, then nothing is ever reported: from then on each call counts 0.4.
+    const log = await run(meteredPlayers(1, (n) => (n === 0 ? { kind: 'cost', usd: 0.1 } : n === 1 ? { kind: 'cost', usd: 0.4 } : { kind: 'none' })), 2);
+    const attempts = attemptsOf(log);
+    expect(attempts[0]?.costEstimatedUsd).toBeUndefined(); // a real cost is not marked
+    expect(attempts[1]?.costEstimatedUsd).toBeUndefined();
+    for (const a of attempts.slice(2)) expect(a.costEstimatedUsd).toBe(0.4);
+    // 0.1 + 0.4, then 0.4 each: the check before a call stops when spend plus 0.4 would pass 2.
+    expect(log.result.costCap?.spentUsd).toBeLessThanOrEqual(2 + 1e-9);
+    expect(log.result.costCap?.spentUsd).toBeGreaterThan(1.5);
+    expect(log.result.reason).toBe('cost_cap');
+  });
+
+  it('counts failed and timed-out calls the same way, and the game goes on with fallbacks until the cap', async () => {
+    const log = await run(meteredPlayers(1, () => ({ kind: 'fail', message: 'request timed out after 60000ms' })), 0.04);
+    const attempts = attemptsOf(log);
+    expect(log.result.reason).toBe('cost_cap');
+    expect(attempts).toHaveLength(4);
+    for (const a of attempts) {
+      expect(a.error).toBe('request timed out after 60000ms');
+      expect(a.costEstimatedUsd).toBe(0.01);
+    }
+    expect(log.turns.some((t) => t.fallback)).toBe(true); // a turn whose calls both failed uses its fallback
+  });
+
+  it('treats a cost that is not a finite non-negative number as no cost', async () => {
+    for (const value of [Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+      const log = await run(meteredPlayers(1, () => ({ kind: 'bad', value })), 0.03);
+      expect(attemptsOf(log).every((a) => a.costEstimatedUsd === 0.01), String(value)).toBe(true);
+      expect(log.result.costCap?.spentUsd, String(value)).toBe(0.03);
+    }
+  });
+
+  it('does not count a free player (mock or human): no estimate, and the game plays to the end under a cap', async () => {
+    const log = await run(createMockPlayers(MOCK_CAST, 1), 0.01);
+    expect(log.result.reason).not.toBe('cost_cap');
+    expect(attemptsOf(log).some((a) => a.costEstimatedUsd !== undefined)).toBe(false);
+  });
+
+  it('records no estimate when there is no cap', async () => {
+    const log = await run(meteredPlayers(1, () => ({ kind: 'none' })));
+    expect(log.result.reason).not.toBe('cost_cap');
+    expect(attemptsOf(log).some((a) => a.costEstimatedUsd !== undefined)).toBe(false);
+  });
+
+  it('refuses a floor that is not a positive number', async () => {
+    for (const bad of [0, -0.01, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await expect(runWithFloor(createMockPlayers(MOCK_CAST, 1), 1, bad), String(bad)).rejects.toThrow('costFloorUsd must be a positive number');
+    }
+  });
+});
+
+describe('replaying a capped game whose calls were estimated', () => {
+  it('stops in the same place, with the same estimates, when given the same cap and floor', async () => {
+    // Each call fails, except that a few report a real cost, so the log mixes real costs and estimates.
+    const behave = (n: number): Behaviour => (n % 4 === 1 ? { kind: 'cost', usd: 0.06 } : { kind: 'fail', message: 'request timed out after 60000ms' });
+    const original = await runWithFloor(meteredPlayers(1, behave), 0.5, 0.02);
+    expect(original.result.reason).toBe('cost_cap');
+    expect(attemptsOf(original).some((a) => a.costEstimatedUsd !== undefined)).toBe(true);
+    const replayed = await runWithFloor(createReplayPlayers(original), 0.5, 0.02);
+    expect(replayed).toEqual(original);
+  });
+});

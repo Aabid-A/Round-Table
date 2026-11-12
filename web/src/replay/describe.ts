@@ -161,6 +161,7 @@ const REASONS: Record<GameLog['result']['reason'], string> = {
   endgame_vote: 'The survivors voted to end the game.',
   max_rounds: 'The last round was played.',
   cost_cap: 'The game was stopped early by a cost cap.',
+  call_limit: 'The game was stopped early by its limit on calls to players.',
 };
 
 export function describeStep(step: Step, log: GameLog): StepView {

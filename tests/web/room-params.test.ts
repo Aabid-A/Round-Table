@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inviteLink, isRoomMode, replayLink, roomCodeFromSearch, roomSeedFromSearch, roomServerUrl } from '../../web/src/rooms/params.js';
+import { inviteLink, isRoomMode, replayLink, roomCodeFromSearch, roomSeedFromSearch, roomServerHost, roomServerUrl } from '../../web/src/rooms/params.js';
 
 describe('isRoomMode and roomCodeFromSearch', () => {
   it('opens the rooms page for ?mode=room or a valid invite code', () => {
@@ -48,5 +48,16 @@ describe('roomSeedFromSearch', () => {
 describe('replayLink', () => {
   it('opens the replay page on the room\'s saved log', () => {
     expect(replayLink({ origin: 'https://play.example.org', pathname: '/table/' }, 'AB2CD', 42)).toBe('https://play.example.org/table/?log=room-AB2CD-seed-42');
+  });
+});
+
+describe('roomServerHost', () => {
+  it('is the host and port of the room server, to tell a host where their key goes', () => {
+    expect(roomServerHost('ws://localhost:8788')).toBe('localhost:8788');
+    expect(roomServerHost('wss://rooms.example.org')).toBe('rooms.example.org');
+    expect(roomServerHost('wss://rooms.example.org:8443/play')).toBe('rooms.example.org:8443');
+  });
+  it('falls back to the address itself when it cannot be read', () => {
+    expect(roomServerHost('not an address')).toBe('not an address');
   });
 });

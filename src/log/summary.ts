@@ -27,7 +27,12 @@ export function totalCostUsd(log: GameLog): number | null {
   return seen ? total : null;
 }
 
-/** Attempts with no usable cost (none, NaN, negative or infinite). A cost cap counts these as free. */
+/** Attempts the spend cap counted as an estimate: a real-model call that came back with no usable cost. */
+export function countEstimatedAttempts(log: GameLog): number {
+  return log.turns.flatMap((t) => t.attempts).filter((a) => a.costEstimatedUsd !== undefined).length;
+}
+
+/** Attempts with no usable cost (none, NaN, negative or infinite). */
 export function countUncostedAttempts(log: GameLog): number {
   return log.turns.flatMap((t) => t.attempts).filter((a) => !isUsableCost(a.usage?.costUsd)).length;
 }

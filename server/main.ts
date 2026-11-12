@@ -1,4 +1,4 @@
-import { countFromEnv, msFromEnv } from './config.js';
+import { countFromEnv, msFromEnv, parseOrigins, positiveFromEnv } from './config.js';
 import { startServer } from './server.js';
 
 let port: number;
@@ -15,11 +15,15 @@ let turnMs: number;
 let abandonMs: number;
 let maxRooms: number;
 let maxConnections: number;
+let allowedOrigins: string[] | undefined;
+let costFloorUsd: number | undefined;
 try {
   turnMs = msFromEnv(process.env, 'TURN_MS', 90_000);
   abandonMs = msFromEnv(process.env, 'ABANDON_MS', 2 * 60_000);
   maxRooms = countFromEnv(process.env, 'MAX_ROOMS_PER_ADDRESS', 3);
   maxConnections = countFromEnv(process.env, 'MAX_CONNECTIONS_PER_ADDRESS', 20);
+  allowedOrigins = parseOrigins(process.env);
+  costFloorUsd = positiveFromEnv(process.env, 'COST_FLOOR_USD', undefined);
 } catch (e) {
   console.error(e instanceof Error ? e.message : String(e));
   process.exit(1);
@@ -32,8 +36,9 @@ const trustProxy = process.env.TRUST_PROXY === '1';
 // Finished games are saved here as normal logs (replay, highlights, cards and stats read them). LOG_DIR=none turns saving off.
 const logDir = process.env.LOG_DIR === 'none' ? undefined : (process.env.LOG_DIR ?? 'games');
 
-const server = await startServer({ port, turnMs, abandonMs, maxRoomsPerAddress: maxRooms, maxConnectionsPerAddress: maxConnections, ...(allowSeed ? { allowSeed } : {}), ...(trustProxy ? { trustProxy } : {}), ...(logDir !== undefined ? { logDir } : {}), ...(host ? { host } : {}) });
+const server = await startServer({ port, turnMs, abandonMs, maxRoomsPerAddress: maxRooms, maxConnectionsPerAddress: maxConnections, ...(allowSeed ? { allowSeed } : {}), ...(trustProxy ? { trustProxy } : {}), ...(allowedOrigins ? { allowedOrigins } : {}), ...(costFloorUsd !== undefined ? { costFloorUsd } : {}), ...(logDir !== undefined ? { logDir } : {}), ...(host ? { host } : {}) });
 console.log(`Round Table rooms: listening on port ${server.port}${host ? ` (${host})` : ''}. Rooms live in memory and end when this stops.`);
+console.log(allowedOrigins ? `Only these origins may connect: ${allowedOrigins.join(', ')}.` : 'Any origin may connect (set ALLOWED_ORIGINS to restrict this).');
 console.log(logDir === undefined ? 'Game logs are not saved (LOG_DIR=none).' : `Finished games are saved as logs in ${logDir}/.`);
 
 const stop = (): void => {

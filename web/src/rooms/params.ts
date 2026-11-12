@@ -39,3 +39,12 @@ export function inviteLink(loc: { origin: string; pathname: string }, code: stri
 export function replayLink(loc: { origin: string; pathname: string }, code: string, seed: number): string {
   return `${loc.origin}${loc.pathname}?log=${roomLogName(code, seed)}`;
 }
+
+/** The host (and port) of the room server's address, to tell a host where their key is going. If it cannot be read, the address itself. */
+export function roomServerHost(url: string): string {
+  try {
+    return new URL(url).host || url;
+  } catch {
+    return url;
+  }
+}

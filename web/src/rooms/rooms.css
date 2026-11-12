@@ -81,3 +81,7 @@
 .copy-row {
   margin-top: var(--space-3);
 }
+/* A choice whose label wraps (the alias option on a phone) keeps room above and below its text. */
+.room-section .choice {
+  padding-block: var(--space-2);
+}

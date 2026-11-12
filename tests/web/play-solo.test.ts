@@ -236,3 +236,18 @@ describe('notesAbout', () => {
     expect(notesAbout(log, 'Nobody')).toEqual([]);
   });
 });
+
+describe('runSolo spend cap with a provider that fails', () => {
+  it('counts each failed AI call as an estimate, so the cap stops the game (the abort wrapper keeps the metered flag)', async () => {
+    let calls = 0;
+    const down = (async () => {
+      calls++;
+      return new Response('{"error":"down"}', { status: 500 });
+    }) as unknown as typeof fetch;
+    const models = Array.from({ length: 7 }, (_, i) => `vendor/model-${i + 1}`);
+    const log = await runSolo({ humanName: 'Sam', seed: 5, ai: { kind: 'openrouter', apiKey: 'sk-test-cap', models }, maxCostUsd: 0.05, fetchImpl: down }, autoAnswer, new AbortController().signal);
+    expect(log.result).toMatchObject({ reason: 'cost_cap', winner: null });
+    expect(log.turns.flatMap((t) => t.attempts).filter((a) => a.costEstimatedUsd !== undefined).length).toBeGreaterThan(0);
+    expect(calls).toBeLessThanOrEqual(5);
+  });
+});

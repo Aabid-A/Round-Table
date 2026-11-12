@@ -140,6 +140,21 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     command that produces each.
   - Done when the runbook works end to end on a mock game.
 
+- [x] **M13a. Hardening: spend and rooms.** A small milestone before the next feature.
+  - Spend cap: a real-model call that returns no usable cost counts as the
+    largest cost seen so far in that game (or a configurable floor if none
+    yet), and the log records that the cost was estimated. Timed-out and failed
+    calls count the same way. Check OpenRouter's current docs for whether the
+    cost must be requested in the request body, and request it if so.
+  - A hard stop on the number of model calls per game, derived from seats and
+    `maxRounds`, independent of cost.
+  - Room server: with `TRUST_PROXY=1`, refuse a `create` with mode
+    `openrouter` unless `X-Forwarded-Proto` is `https`. `ALLOWED_ORIGINS`
+    (comma-separated): when set, reject connections from other origins.
+  - The create-room form and `docs/DEPLOY.md` say the key is sent to this room
+    server, and recommend a dedicated OpenRouter key with a credit limit.
+  - Tests for each.
+
 ## Final version
 
 The project is ready when every milestone above is `[x]`. What is left then

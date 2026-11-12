@@ -10,9 +10,9 @@ function server(turnMs = 1000, allowSeed = true, saveLog?: (name: string, log: u
   const registry = new Registry();
   const runtimes = new Map<string, Runtime>();
   const logged: string[] = [];
-  const open = () => {
+  const open = (secure = true) => {
     const conn = new FakeConn();
-    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, ...(saveLog ? { saveLog } : {}), log: (l) => logged.push(l) } });
+    const session = new Session(conn, { registry, runtimes, options: { turnMs, abandonMs: 5000, allowSeed, ...(saveLog ? { saveLog } : {}), log: (l) => logged.push(l) } }, null, secure);
     const send = (m: unknown) => session.handle(JSON.stringify(m));
     /** Answer every turn at once, as a patient person would. */
     const autoplay = () => {
@@ -51,6 +51,25 @@ describe('Session: creating, joining and rejoining', () => {
     const plain = s.open();
     plain.send({ t: 'create', name: 'Rae', mode: 'mock' });
     expect(plain.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: false });
+  });
+
+  it('refuses a real-model room on a connection that is not secure, without making a room or repeating the key, and still allows practice rooms', () => {
+    const s = server();
+    const insecure = s.open(false);
+    insecure.send({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-never-echoed-9', models: ['a/b'], maxCostUsd: 1 });
+    expect(insecure.conn.sent).toHaveLength(1);
+    const reply = insecure.conn.sent[0] as { t: string; message: string };
+    expect(reply.t).toBe('error');
+    expect(reply.message).toContain('cannot tell is https');
+    expect(reply.message).not.toContain('sk-never');
+    expect(s.registry.size).toBe(0);
+    expect(JSON.stringify(s.logged)).not.toContain('sk-never');
+    insecure.send({ t: 'create', name: 'Quinn', mode: 'mock' }); // the same connection can still make a practice room
+    expect(joinedOf(insecure.conn)).toMatchObject({ you: 'Quinn' });
+    // A secure connection takes the key as before.
+    const secure = s.open();
+    secure.send({ t: 'create', name: 'Rae', mode: 'openrouter', key: 'sk-test-secure', models: ['a/b'], maxCostUsd: 1 });
+    expect(joinedOf(secure.conn)).toMatchObject({ you: 'Rae' });
   });
 
   it('lets friends join by code in any case and tells everyone', () => {

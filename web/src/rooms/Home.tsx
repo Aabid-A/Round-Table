@@ -2,6 +2,8 @@ import { useId, useState } from 'react';
 import { checkCreate, checkJoin, MAX_COST_USD, type CreateMessage } from './forms.js';
 
 interface Props {
+  /** Where the room server is (host and port): the place a host's OpenRouter key is sent. */
+  serverHost: string;
   /** The code from an invite link, if the person arrived through one. */
   inviteCode: string | null;
   /** What the server last refused, or that the connection is down. */
@@ -13,7 +15,7 @@ interface Props {
 }
 
 /** Make a room, or join one by code. An invite link opens on the join form with the code filled in. */
-export function Home({ inviteCode, serverError, offline, onDismissError, onCreate, onJoin }: Props) {
+export function Home({ serverHost, inviteCode, serverError, offline, onDismissError, onCreate, onJoin }: Props) {
   const id = useId();
   const [problem, setProblem] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(inviteCode === null);
@@ -132,14 +134,18 @@ export function Home({ inviteCode, serverError, offline, onDismissError, onCreat
             </label>
             {real && (
               <>
+                <div className="notice" data-testid="key-note">
+                  <strong>
+                    Your key is sent to this room server, <span data-testid="key-server">{serverHost}</span>.
+                  </strong>{' '}
+                  It is held in memory for this room only and used for the AI seats. It is never shown to other players, never put in the game
+                  log, and forgotten when the game ends. Only continue if you trust whoever runs that server. Use a dedicated OpenRouter key with a
+                  credit limit (you set the limit when you create the key on OpenRouter), not your main key.
+                </div>
                 <label className="field">
                   Your OpenRouter key
                   <input type="password" value={key} autoComplete="new-password" spellCheck={false} onChange={(e) => (setKey(e.target.value), clear())} />
                 </label>
-                <p className="hint" data-testid="key-note">
-                  The key goes to the room server and is held in memory for this room only. It is never shown to other players, never put in the
-                  game log, and forgotten when the game ends.
-                </p>
                 <label className="field">
                   Model IDs, one per line, 1 to 7 (the AI seats take them in turn)
                   <textarea rows={5} value={models} spellCheck={false} onChange={(e) => (setModels(e.target.value), clear())} />

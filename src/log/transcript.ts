@@ -113,6 +113,7 @@ export function renderTranscript(log: GameLog): string {
   const outcome = r.winner === null ? 'No winner' : `The ${r.winner}s win`;
   out.push('', `=== Result: ${outcome} (${r.reason.replace(/_/g, ' ')}, round ${r.rounds}) ===`);
   if (r.costCap) out.push(`Stopped early: the next call could pass the $${r.costCap.maxUsd} cost cap ($${r.costCap.spentUsd} spent).`);
+  if (r.callLimit) out.push(`Stopped early: the game reached its limit of ${r.callLimit.maxCalls} calls to players.`);
   out.push(`Survivors: ${r.survivors.map((s) => `${s.name} (${s.role})`).join(', ')}`);
   return `${out.join('\n')}\n`;
 }

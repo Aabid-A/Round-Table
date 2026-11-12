@@ -6,12 +6,16 @@ export type EndReason =
   | 'two_remaining'
   | 'endgame_vote'
   | 'max_rounds'
-  | 'cost_cap';
+  | 'cost_cap'
+  | 'call_limit';
 
 export interface GameSettings {
   maxRounds: number;
   traitors: number;
 }
+
+/** What the spend cap counts for a real-model call with no usable cost, until a real cost has been seen in the game (USD). */
+export const DEFAULT_COST_FLOOR_USD = 0.01;
 
 export const DEFAULT_SETTINGS: GameSettings = { maxRounds: 6, traitors: 2 };
 
@@ -53,6 +57,11 @@ export interface TurnAttempt {
   extracted?: true;
   /** Token counts and cost the provider reported for this attempt, if any. */
   usage?: Usage;
+  /**
+   * Present when this call was to a real model under a spend cap and no usable cost came back (it timed out, failed, or reported
+   * none): the amount the cap counted for it. The largest cost seen so far in the game, or the floor if none had been seen.
+   */
+  costEstimatedUsd?: number;
 }
 
 export interface Turn {
@@ -135,13 +144,15 @@ export type PhaseRequest =
 // ---- Log ----
 
 export interface GameResult {
-  /** Null only when the game was stopped early (`cost_cap`). */
+  /** Null only when the game was stopped early (`cost_cap` or `call_limit`). */
   winner: Role | null;
   reason: EndReason;
   rounds: number;
   survivors: { name: string; role: Role }[];
   /** Present only when reason is `cost_cap`. */
   costCap?: { maxUsd: number; spentUsd: number };
+  /** Present only when reason is `call_limit`: the limit on calls to players, and how many had been made when the game stopped. */
+  callLimit?: { maxCalls: number; calls: number };
 }
 
 export interface GameLog {

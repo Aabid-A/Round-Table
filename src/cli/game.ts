@@ -1,7 +1,8 @@
 import { parseArgs } from 'node:util';
 import { DEFAULT_TIMEOUT_MS } from '../players/openrouter.js';
-import { countUncostedAttempts, totalCostUsd } from '../log/summary.js';
+import { countEstimatedAttempts, totalCostUsd } from '../log/summary.js';
 import { ensureWritableDir, writeGameLog } from '../log/writer.js';
+import { costNotice } from './costNotice.js';
 import { playGame, prepareSetup } from './setup.js';
 
 async function main(): Promise<void> {
@@ -13,6 +14,7 @@ async function main(): Promise<void> {
       out: { type: 'string', default: 'games' },
       config: { type: 'string', default: 'config/game.json' },
       'max-cost-usd': { type: 'string' },
+      'cost-floor-usd': { type: 'string' },
       'timeout-ms': { type: 'string', default: String(DEFAULT_TIMEOUT_MS) },
     },
   });
@@ -24,15 +26,12 @@ async function main(): Promise<void> {
     config: values.config as string,
     timeoutMs: values['timeout-ms'],
     maxCostUsd: values['max-cost-usd'],
+    costFloorUsd: values['cost-floor-usd'],
   });
   ensureWritableDir(values.out as string);
   const log = await playGame(setup, seed);
-  if (setup.maxCostUsd !== undefined) {
-    if (totalCostUsd(log) === null) console.error('warning: no cost was reported, so --max-cost-usd could not apply.');
-    else if (countUncostedAttempts(log) > 0) {
-      console.error(`warning: ${countUncostedAttempts(log)} attempts reported no cost; --max-cost-usd counted them as free.`);
-    }
-  }
+  const facts = { capped: setup.maxCostUsd !== undefined, floorUsd: setup.costFloorUsd, estimated: countEstimatedAttempts(log), sawCost: totalCostUsd(log) !== null };
+  for (const line of costNotice(facts)) console.error(line);
   console.log(writeGameLog(log, values.out as string, setup.gameName(seed)));
 }
 

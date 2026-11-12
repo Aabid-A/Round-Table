@@ -21,7 +21,8 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 | `ALLOW_SEED` | server | Set to `1` to let a page choose a room's seed with `?seed=N`. For tests and replays only: the seed decides every role, so anyone who can pick it can work the roles out with the public engine code. Off by default; the server then picks a random seed and ignores the page's. |
 | `MAX_ROOMS_PER_ADDRESS` | server | Open rooms one network address may have. Default 3 (finished rooms do not count). |
 | `MAX_CONNECTIONS_PER_ADDRESS` | server | Connections one network address may hold. Default 20. |
-| `TRUST_PROXY` | server | Set to `1` only behind exactly one reverse proxy that you run: the address is then the last `X-Forwarded-For` entry, the one your proxy added (earlier entries are whatever the client sent). Without it, every client behind the proxy looks like one address and shares these limits. |
+| `TRUST_PROXY` | server | Set to `1` only behind exactly one reverse proxy that you run: the address is then the last `X-Forwarded-For` entry, the one your proxy added (earlier entries are whatever the client sent). Without it, every client behind the proxy looks like one address and shares these limits. With it, a room with real models is also refused unless the last `X-Forwarded-Proto` is `https`. |
+| `ALLOWED_ORIGINS` | server | Comma-separated origins (`scheme://host[:port]`, no path, no `*`; leave out the port when it is the default for the scheme, as browsers do) allowed to connect. When set, a connection from any other origin, or with no `Origin` header, is refused with a 403 at the handshake. Default: any origin. |
 | `LOG_DIR` | server | Folder where each finished game's log is saved. Default `games/`; `LOG_DIR=none` turns saving off. See "Saved logs". |
 | `VITE_ROOM_SERVER` | web page, when it is served or built | The room server's address, such as `wss://rooms.example.org`. Default: port 8787 on the page's own host. |
 
@@ -84,11 +85,15 @@ until you choose what to publish.
 
 - **Practice AIs** need no key.
 - **Real models** use the host's OpenRouter key, one to seven model IDs (the AI seats take them in
-  turn), and a spend cap in US dollars, at most 25. The game stops before a call that could pass it.
+  turn), and a spend cap in US dollars, at most 25. The game stops before a call that could pass it. A call that comes
+  back with no cost (it failed, timed out, or reported none) counts as an estimate: the largest cost seen so far in the
+  game, or 0.01 dollars if none yet. Every game also has a hard limit on calls to players, whatever they cost.
 
 ### The host's key
 
-The key is sent once, when the room is made. The server keeps it in a private field of that room, in
+The key is sent once, when the room is made, to the room server, and the page says so (naming the server) before the host
+pastes it. **Use a dedicated OpenRouter key with a credit limit**, not your main key: the person running the server runs the
+code that receives it ([DEPLOY.md](DEPLOY.md#the-hosts-key)). The server keeps it in a private field of that room, in
 memory only, and uses it to call OpenRouter. It is:
 
 - never written to a log, an error message or the game log. What a provider sends back is scrubbed as it

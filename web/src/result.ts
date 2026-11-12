@@ -8,4 +8,5 @@ export const END_REASONS: Record<string, string> = {
   two_remaining: 'Two players remain.',
   endgame_vote: 'The survivors voted to end the game.',
   max_rounds: 'The last round was played.',
+  call_limit: 'The game was stopped by its limit on calls to players.',
 };
