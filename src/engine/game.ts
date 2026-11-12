@@ -2,7 +2,8 @@ import type { Player } from '../players/player.js';
 import type { CastMember } from '../types.js';
 import { createRng } from './rng.js';
 import { assignRoles, aliveNames, checkEnd, createState, getPlayer, winnerOf } from './state.js';
-import { CostCapReached, roundUsd, type EngineContext } from './turn.js';
+import { maxModelCalls } from './limits.js';
+import { CallLimitReached, CostCapReached, roundUsd, type EngineContext } from './turn.js';
 import {
   runBanishment,
   runBreakfast,
@@ -28,6 +29,11 @@ export interface RunGameInput {
    * After that it counts the largest cost seen so far. Default 0.01.
    */
   costFloorUsd?: number;
+  /**
+   * Hard limit on calls to players in the whole game, whatever they cost. Default: the most a game can need for these seats and
+   * rounds (see maxModelCalls), which a normal game never reaches. Lower it only to test, or to be stricter.
+   */
+  maxModelCalls?: number;
 }
 
 /**
@@ -43,6 +49,9 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
   if (input.maxCostUsd !== undefined && !(Number.isFinite(input.maxCostUsd) && input.maxCostUsd > 0)) {
     throw new Error('maxCostUsd must be a positive number');
   }
+  if (input.maxModelCalls !== undefined && !(Number.isInteger(input.maxModelCalls) && input.maxModelCalls > 0)) {
+    throw new Error('maxModelCalls must be a positive whole number');
+  }
   if (input.costFloorUsd !== undefined && !(Number.isFinite(input.costFloorUsd) && input.costFloorUsd > 0)) {
     throw new Error('costFloorUsd must be a positive number');
   }
@@ -55,6 +64,7 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     players: input.players,
     buildPrompt: input.buildPrompt,
     systemPrompt: input.systemPrompt,
+    calls: { max: input.maxModelCalls ?? maxModelCalls(settings, cast.length), made: 0 },
     ...(input.maxCostUsd !== undefined ? { budget: { maxUsd: input.maxCostUsd, spentUsd: 0, maxCallUsd: 0, floorUsd: input.costFloorUsd ?? DEFAULT_COST_FLOOR_USD } } : {}),
   };
 
@@ -78,8 +88,9 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     }
     reason ??= 'max_rounds';
   } catch (e) {
-    if (!(e instanceof CostCapReached)) throw e;
-    reason = 'cost_cap';
+    if (e instanceof CostCapReached) reason = 'cost_cap';
+    else if (e instanceof CallLimitReached) reason = 'call_limit';
+    else throw e;
   }
 
   return {
@@ -92,10 +103,11 @@ export async function runGame(input: RunGameInput): Promise<GameLog> {
     turns: state.turns,
     events: state.events,
     result: {
-      winner: reason === 'cost_cap' ? null : winnerOf(state),
+      winner: reason === 'cost_cap' || reason === 'call_limit' ? null : winnerOf(state),
       reason,
       rounds: state.round,
       survivors: aliveNames(state).map((name) => ({ name, role: getPlayer(state, name).role })),
+      ...(reason === 'call_limit' && ctx.calls ? { callLimit: { maxCalls: ctx.calls.max, calls: ctx.calls.made } } : {}),
       ...(reason === 'cost_cap' && ctx.budget ? { costCap: { maxUsd: ctx.budget.maxUsd, spentUsd: roundUsd(ctx.budget.spentUsd) } } : {}),
     },
   };

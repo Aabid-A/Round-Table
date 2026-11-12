@@ -12,6 +12,8 @@ export interface EngineContext {
   systemPrompt: string;
   /** Optional spend cap. Updated as attempts report their cost. */
   budget?: Budget;
+  /** Hard limit on calls to players, whatever they cost. `made` goes up with every attempt. */
+  calls?: { max: number; made: number };
 }
 
 export interface Budget {
@@ -22,6 +24,16 @@ export interface Budget {
   /** What a real-model call with no usable cost counts for until a real cost has been seen. */
   floorUsd: number;
 }
+
+/** Thrown before a call to a player when the game has already made as many as it is allowed. */
+export class CallLimitReached extends Error {
+  constructor() {
+    super('call limit reached');
+  }
+}
+
+/** Attempts a turn gets: the first, and one retry with the error included. */
+export const MAX_ATTEMPTS = 2;
 
 /** Thrown before a model call when the next call could pass the cost cap. */
 export class CostCapReached extends Error {
@@ -71,13 +83,20 @@ export async function takeTurn(ctx: EngineContext, request: PhaseRequest): Promi
   const metered = ctx.players[player]?.metered === true;
   let accepted: { speech: string; private_notes: string; action: Action } | null = null;
 
-  for (let i = 0; i < 2 && !accepted; i++) {
+  for (let i = 0; i < MAX_ATTEMPTS && !accepted; i++) {
+    // The hard limit on calls comes first and does not depend on cost. Before the first attempt it stops the game; before the
+    // retry the turn is settled with its fallback, and the next turn stops the game (as with the cost cap).
+    if (ctx.calls && ctx.calls.made >= ctx.calls.max) {
+      if (i === 0) throw new CallLimitReached();
+      break;
+    }
     if (ctx.budget && wouldPassCap(ctx.budget)) {
       // Before the first attempt, stop the game. Before the retry, settle this turn with its fallback;
       // the next turn then stops the game.
       if (i === 0) throw new CostCapReached();
       break;
     }
+    if (ctx.calls) ctx.calls.made++;
     let raw: string | null = null;
     let error: string | null = null;
     let extracted = false;

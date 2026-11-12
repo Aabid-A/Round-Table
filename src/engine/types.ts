@@ -6,7 +6,8 @@ export type EndReason =
   | 'two_remaining'
   | 'endgame_vote'
   | 'max_rounds'
-  | 'cost_cap';
+  | 'cost_cap'
+  | 'call_limit';
 
 export interface GameSettings {
   maxRounds: number;
@@ -143,13 +144,15 @@ export type PhaseRequest =
 // ---- Log ----
 
 export interface GameResult {
-  /** Null only when the game was stopped early (`cost_cap`). */
+  /** Null only when the game was stopped early (`cost_cap` or `call_limit`). */
   winner: Role | null;
   reason: EndReason;
   rounds: number;
   survivors: { name: string; role: Role }[];
   /** Present only when reason is `cost_cap`. */
   costCap?: { maxUsd: number; spentUsd: number };
+  /** Present only when reason is `call_limit`: the limit on calls to players, and how many had been made when the game stopped. */
+  callLimit?: { maxCalls: number; calls: number };
 }
 
 export interface GameLog {
