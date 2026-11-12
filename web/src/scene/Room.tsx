@@ -128,7 +128,8 @@ export function Room({ view, onSit, onPick, label = 'The room' }: Props) {
             })}
           </ul>
           <div className="room-links" aria-hidden="true">
-            {view.whispers.map((w) => {
+            {/* From your own chair a whisper to you is the sender leaning in, not a line across the table. */}
+            {(first ? [] : view.whispers).map((w) => {
               const a = view.seats.findIndex((x) => x.name === w.from);
               const b = view.seats.findIndex((x) => x.name === w.to);
               if (a < 0 || b < 0) return null;

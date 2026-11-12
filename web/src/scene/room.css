@@ -74,7 +74,7 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--room-r) * var(--room-pull) * -1)) translateY(14cqmin) rotateX(calc(var(--room-tilt) * -1)) rotateY(calc(var(--turn) * -1));
+  transform: scale(var(--room-scale, 1)) translateZ(calc(var(--room-r) * var(--room-pull) * -1)) translateY(14cqmin) rotateX(calc(var(--room-tilt) * -1)) rotateY(calc(var(--turn) * -1));
   transition: transform 700ms ease;
 }
 .room-table {
@@ -296,6 +296,7 @@
 @container (max-aspect-ratio: 1 / 1) {
   .room-camera {
     --room-tilt: 30deg;
+    --room-scale: 1.05; /* a phone is narrow: the first-person ring must not run off the sides */
   }
 }
 @container (max-width: 480px) {
@@ -398,8 +399,20 @@
 
 /* First person: the camera sits in your chair, behind where it would be, looking across the table. */
 .room[data-pov='first'] {
-  --room-tilt: 9deg;
-  --room-pull: 1.2;
+  --room-scale: 1.45;
+  --room-r: 46cqmin;
+  --room-tilt: 11deg;
+  --room-pull: 1.18;
+}
+.room[data-pov='first'] .room-chair {
+  font-size: max(13px, 2.6cqmin);
+}
+/* A traitor's night is dim, not black: everything is still readable. */
+.room[data-pov='first'][data-night='true'] .room-light {
+  opacity: 0.55;
+}
+.room[data-pov='first'][data-night='true'] .room-chair:disabled:not([data-empty='true']) {
+  opacity: 0.8;
 }
 .room-seat .room-stand {
   transition: transform 500ms ease;
