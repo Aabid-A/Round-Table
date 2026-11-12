@@ -259,4 +259,3 @@ describe('replaying a capped game whose calls were estimated', () => {
     expect(replayed).toEqual(original);
   });
 });
-
