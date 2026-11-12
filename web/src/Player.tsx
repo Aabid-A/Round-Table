@@ -114,9 +114,10 @@ export function Player({ log, onReload }: Props) {
         {perspective.kind === 'table' && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
       <section className="sit" aria-label="Seat">
-        <label>
-          View
+        <div className="sit-row">
+          <label htmlFor="view-select">View</label>
           <select
+            id="view-select"
             value={seat ?? (spectating ? '@all' : '')}
             onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
           >
@@ -128,7 +129,7 @@ export function Player({ log, onReload }: Props) {
               </option>
             ))}
           </select>
-        </label>
+        </div>
         <p className="hint">
           {seat !== null
             ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
