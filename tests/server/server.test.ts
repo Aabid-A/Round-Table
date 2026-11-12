@@ -222,3 +222,43 @@ describe('ALLOWED_ORIGINS', () => {
     expect(probe, 'the server should be gone').toBe(false);
   }, 30_000);
 });
+
+describe('real-model rooms behind a proxy (TRUST_PROXY)', () => {
+  let proxied: RunningServer;
+  afterEach(async () => {
+    await proxied?.close();
+  });
+
+  const createReal = async (port: number, headers?: Record<string, string>) => {
+    const c = await TestClient.connect(port, undefined, headers);
+    c.send({ t: 'create', name: 'Quinn', mode: 'openrouter', key: 'sk-test-proxy-1', models: ['a/b'], maxCostUsd: 1 });
+    await waitFor(() => c.messages.some((m) => m.t === 'joined' || m.t === 'error'));
+    const first = c.messages.find((m) => m.t === 'joined' || m.t === 'error')!;
+    c.close();
+    return first;
+  };
+
+  it('takes the key when the proxy says https, and refuses it for http, a made-up first entry, or no header', async () => {
+    proxied = await startServer({ port: 0, log: () => undefined, trustProxy: true });
+    expect((await createReal(proxied.port, { 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': '203.0.113.1' })).t).toBe('joined');
+    for (const headers of [{ 'X-Forwarded-Proto': 'http' }, { 'X-Forwarded-Proto': 'https, http' }, {}] as Record<string, string>[]) {
+      const reply = await createReal(proxied.port, headers);
+      expect(reply.t, JSON.stringify(headers)).toBe('error');
+      expect((reply as { message: string }).message).toContain('cannot tell is https');
+    }
+  });
+
+  it('still lets a practice room be made over http behind the proxy', async () => {
+    proxied = await startServer({ port: 0, log: () => undefined, trustProxy: true });
+    const c = await TestClient.connect(proxied.port, undefined, { 'X-Forwarded-Proto': 'http' });
+    c.send({ t: 'create', name: 'Quinn', mode: 'mock' });
+    expect(await c.next('joined')).toMatchObject({ you: 'Quinn' });
+    c.close();
+  });
+
+  it('does not look at the header at all without TRUST_PROXY (a person running it on their own machine)', async () => {
+    proxied = await startServer({ port: 0, log: () => undefined });
+    expect((await createReal(proxied.port, { 'X-Forwarded-Proto': 'http' })).t).toBe('joined');
+    expect((await createReal(proxied.port)).t).toBe('joined');
+  });
+});

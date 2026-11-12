@@ -58,6 +58,8 @@ export class Session {
     private readonly deps: SessionDeps,
     /** The network address this connection came from, if known. */
     private readonly owner: string | null = null,
+    /** False when a trusted proxy did not say the client used https: then this connection may not carry an OpenRouter key. */
+    private readonly secure: boolean = true,
   ) {
     this.limiter = new RateLimiter(LIMITS.messagesPerWindow, LIMITS.windowMs, deps.options.now);
   }
@@ -146,6 +148,12 @@ export class Session {
 
   private create(msg: Extract<ClientMessage, { t: 'create' }>): void {
     if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
+    if (msg.mode === 'openrouter' && !this.secure) {
+      return this.tell({
+        t: 'error',
+        message: 'This server will not take an OpenRouter key over a connection it cannot tell is https. Open the page over https, or ask whoever runs this server to, or use practice AIs.',
+      });
+    }
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
     const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner, msg.aliases === true);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });

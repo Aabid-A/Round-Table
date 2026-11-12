@@ -1,6 +1,6 @@
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { GameLog } from '../src/engine/types.js';
-import { addressOf } from './address.js';
+import { addressOf, connectionIsSecure } from './address.js';
 import { originAllowed } from './config.js';
 import { LIMITS, type ServerMessage } from './protocol.js';
 import { Registry } from './registry.js';
@@ -100,6 +100,7 @@ export function startServer(opts: ServerOptions = {}): Promise<RunningServer> {
         },
       },
       address,
+      connectionIsSecure(req.headers, opts.trustProxy ?? false),
     );
     let alive = true;
     ws.on('pong', () => (alive = true));
