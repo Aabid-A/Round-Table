@@ -2,8 +2,9 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import './play.css';
 import type { GameLog } from '../../../src/engine/types.js';
 import type { PromptRequest } from '../../../src/players/player.js';
+import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import { finalRoles } from '../replay/timeline.js';
-import { HumanForm } from './HumanForm.js';
+import { LiveSeat } from '../live/LiveSeat.js';
 import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
 import { aiFallbacks, notesAbout, type NoteAboutYou } from './notes.js';
@@ -32,6 +33,7 @@ const REASONS: Record<string, string> = { ...END_REASONS, cost_cap: 'The game wa
 export function PlayPage() {
   const [screen, setScreen] = useState<Screen>({ kind: 'setup', error: null });
   const [pending, setPending] = useState<Pending | null>(null);
+  const [phase, setPhase] = useState<PublicPhase | null>(null);
   const run = useRef(0);
   const asked = useRef(0);
   const abort = useRef<AbortController | null>(null);
@@ -49,7 +51,10 @@ export function PlayPage() {
       new Promise((resolve) => {
         if (run.current === id) setPending({ turn: ++asked.current, request, resolve: (a) => (setPending(null), resolve(a)) });
       });
-    runSolo(setup, ask, controller.signal).then(
+    setPhase(null);
+    runSolo(setup, ask, controller.signal, (p) => {
+      if (run.current === id) setPhase(p);
+    }).then(
       (log) => {
         if (run.current === id) setScreen({ kind: 'done', human: setup.humanName, log });
       },
@@ -101,11 +106,17 @@ export function PlayPage() {
         <h1>Take a seat</h1>
         <span className="muted">You are {screen.human}</span>
       </header>
-      {pending ? (
-        <HumanForm key={pending.turn} request={pending.request} turn={pending.turn} onSubmit={pending.resolve} />
-      ) : (
-        <Thinking />
-      )}
+      <LiveSeat
+        turn={
+          pending
+            ? { id: pending.turn, phase: pending.request.phase, options: pending.request.options, user: pending.request.user, timeoutMs: null }
+            : null
+        }
+        publicPhase={pending ? publicPhase(pending.request.phase) : phase}
+        onSubmit={(_, answer) => pending?.resolve(answer)}
+      >
+        {pending ? null : <Thinking />}
+      </LiveSeat>
       <p>
         <button type="button" className="btn" onClick={quit}>
           Quit this game

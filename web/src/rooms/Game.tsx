@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HumanAnswer } from '../../../src/players/human.js';
 import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
-import { HumanForm } from '../play/HumanForm.js';
+import { LiveSeat } from '../live/LiveSeat.js';
 import type { Identity, TurnInfo } from './state.js';
 import { Clock } from './Clock.js';
 
@@ -65,27 +65,27 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
         </p>
       )}
 
-      {open && turn ? (
-        <>
-          <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
-          {turn.error && (
-            <p className="notice notice-error" role="alert">
-              {turn.error}
-            </p>
-          )}
-          <HumanForm
-            key={`form-${turn.id}`}
-            request={{ system: '', user: turn.user, phase: turn.phase, player: me.you, options: turn.options }}
-            turn={turn.id}
-            onSubmit={(answer) => {
-              setSent(turn);
-              onAnswer(turn.id, answer);
-            }}
-          />
-        </>
-      ) : (
-        <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? publicPhase(turn.phase) : phase} />
-      )}
+      <LiveSeat
+        turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}
+        publicPhase={turn ? publicPhase(turn.phase) : phase}
+        onSubmit={(t, answer) => {
+          if (turn) setSent(turn);
+          onAnswer(t.id, answer);
+        }}
+      >
+        {open && turn ? (
+          <>
+            <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
+            {turn.error && (
+              <p className="notice notice-error" role="alert">
+                {turn.error}
+              </p>
+            )}
+          </>
+        ) : (
+          <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? publicPhase(turn.phase) : phase} />
+        )}
+      </LiveSeat>
 
       <div className="controls-row room-actions">
         {confirmLeave ? (
