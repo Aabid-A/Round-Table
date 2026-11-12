@@ -247,3 +247,16 @@ describe('cost cap: a real-model call with no usable cost counts as an estimate'
     }
   });
 });
+
+describe('replaying a capped game whose calls were estimated', () => {
+  it('stops in the same place, with the same estimates, when given the same cap and floor', async () => {
+    // Each call fails, except that a few report a real cost, so the log mixes real costs and estimates.
+    const behave = (n: number): Behaviour => (n % 4 === 1 ? { kind: 'cost', usd: 0.06 } : { kind: 'fail', message: 'request timed out after 60000ms' });
+    const original = await runWithFloor(meteredPlayers(1, behave), 0.5, 0.02);
+    expect(original.result.reason).toBe('cost_cap');
+    expect(attemptsOf(original).some((a) => a.costEstimatedUsd !== undefined)).toBe(true);
+    const replayed = await runWithFloor(createReplayPlayers(original), 0.5, 0.02);
+    expect(replayed).toEqual(original);
+  });
+});
+
