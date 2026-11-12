@@ -37,6 +37,16 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
             {view.seats.map((seat, i) => {
               const speaking = i === speakerIndex;
               const role = roleText(seat);
+              const chair = (
+                <>
+                  <span className="room-name">{seat.name}</span>
+                  <span className="room-model">{seat.model}</span>
+                  {seat.mark === 'self' && <span className="room-tag">You</span>}
+                  {seat.mark === 'fellow' && <span className="room-tag" data-role="traitor">Fellow traitor</span>}
+                  {role && seat.mark !== 'fellow' && <span className="room-tag" data-role={seat.role}>{role}</span>}
+                  {seat.status !== 'alive' && <span className="room-tag" data-out="true">{seat.status === 'murdered' ? 'Murdered' : 'Banished'}</span>}
+                </>
+              );
               return (
                 <li
                   key={seat.name}
@@ -48,21 +58,21 @@ export function Room({ view, onSit, label = 'The room' }: Props) {
                   data-speaking={speaking}
                   style={{ '--angle': `${degrees(i, n)}deg` } as CSSProperties}
                 >
-                  <button
-                    type="button"
-                    className="room-chair"
-                    disabled={!onSit}
-                    aria-pressed={seat.name === view.viewer}
-                    aria-label={`${seat.mark === 'self' ? 'You are ' : 'Sit at '}${seat.name}${seat.status === 'alive' ? '' : `, ${seat.status}`}`}
-                    onClick={() => onSit?.(seat.name)}
-                  >
-                    <span className="room-name">{seat.name}</span>
-                    <span className="room-model">{seat.model}</span>
-                    {seat.mark === 'self' && <span className="room-tag">You</span>}
-                    {seat.mark === 'fellow' && <span className="room-tag" data-role="traitor">Fellow traitor</span>}
-                    {role && seat.mark !== 'fellow' && <span className="room-tag" data-role={seat.role}>{role}</span>}
-                    {seat.status !== 'alive' && <span className="room-tag" data-out="true">{seat.status === 'murdered' ? 'Murdered' : 'Banished'}</span>}
-                  </button>
+                  {onSit ? (
+                    <button
+                      type="button"
+                      className="room-chair"
+                      aria-pressed={seat.name === view.viewer}
+                      aria-label={`${seat.mark === 'self' ? 'You are ' : 'Sit at '}${seat.name}${seat.status === 'alive' ? '' : `, ${seat.status}`}`}
+                      onClick={() => onSit(seat.name)}
+                    >
+                      {chair}
+                    </button>
+                  ) : (
+                    <div className="room-chair" data-self={seat.mark === 'self'}>
+                      {chair}
+                    </div>
+                  )}
                   {speaking && view.moment.text && (
                     <p className="room-bubble" data-kind={view.moment.kind}>
                       {view.moment.text}

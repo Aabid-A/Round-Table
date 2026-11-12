@@ -169,3 +169,56 @@
   border: 2px dashed var(--hidden-border);
   background: var(--hidden-bg);
 }
+
+/* Seat views: one room, or two side by side (16:9) or one above the other (9:16), always at the same moment. */
+.rec-stage[data-mode='seats'] {
+  padding: 0;
+  gap: 0.6cqmin;
+  align-content: stretch;
+  align-items: stretch;
+}
+.rec[data-aspect='16x9'] .rec-stage[data-mode='seats'] {
+  grid-template-columns: repeat(var(--rec-seats, 1), 1fr);
+  grid-template-rows: 1fr;
+  align-items: stretch;
+}
+.rec[data-aspect='9x16'] .rec-stage[data-mode='seats'] {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(var(--rec-seats, 1), 1fr);
+}
+.rec-stage[data-mode='seats'][data-count='2'] {
+  --rec-seats: 2;
+}
+.rec-seat-view {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.rec-seat-view .room {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  border-radius: 0;
+}
+.rec[data-aspect='16x9'] .rec-stage[data-mode='seats'] {
+  height: min(100vh, calc(100vw * 9 / 16));
+}
+.rec[data-aspect='9x16'] .rec-stage[data-mode='seats'] {
+  height: min(100vh, calc(100vw * 16 / 9));
+}
+.rec-seat-label {
+  position: absolute;
+  top: 1.4cqmin;
+  left: 1.6cqmin;
+  z-index: 5;
+  margin: 0;
+  padding: 0.4cqmin 1.6cqmin;
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  font-size: max(13px, 2.4cqmin);
+}

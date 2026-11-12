@@ -133,7 +133,8 @@
   outline-offset: 2px;
 }
 .room-seat[data-mark='self'] .room-chair,
-.room-chair[aria-pressed='true'] {
+.room-chair[aria-pressed='true'],
+.room-chair[data-self='true'] {
   border-color: var(--accent);
   border-width: 0.6cqmin;
 }

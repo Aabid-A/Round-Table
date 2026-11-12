@@ -3,6 +3,8 @@ import './record.css';
 import type { GameLog } from '../../../src/engine/types.js';
 import { describeStep, stepDurationMs } from '../replay/describe.js';
 import { buildSteps, seatsAt } from '../replay/timeline.js';
+import { seatView } from '../perspective/seatView.js';
+import { Room } from '../scene/Room.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
 import { Faces } from './Faces.js';
@@ -46,11 +48,37 @@ export function RecordView({ log, params }: Props) {
     );
   }
 
+  const unknownSeat = params.seats?.find((name) => !log.cast.some((c) => c.name === name));
+  if (unknownSeat !== undefined) {
+    return (
+      <p className="rec-error" role="alert">
+        There is no seat called {unknownSeat}. The seats are {log.cast.map((c) => c.name).join(', ')}.
+      </p>
+    );
+  }
+
   const step = clip[index] as (typeof clip)[number];
   const view = views[index]!;
   const seats = seatsAt(log, steps, steps.indexOf(step));
   const done = !playing && index === clip.length - 1;
   const turnId = step.kind === 'turn' ? step.turn.id : '';
+
+  if (params.seats) {
+    // One shared step for every seat, so a split view always shows the same moment.
+    const at = steps.indexOf(step);
+    return (
+      <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId}>
+        <div className="rec-stage" data-testid="stage" data-mode="seats" data-count={params.seats.length} role="region" aria-label="Round Table clip">
+          {params.seats.map((name) => (
+            <div key={name} className="rec-seat-view" data-seat={name}>
+              <Room view={seatView(log, steps, at, name)} label={`The room from ${name}'s chair`} />
+              <p className="rec-seat-label">{name}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId}>
