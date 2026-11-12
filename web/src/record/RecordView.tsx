@@ -3,7 +3,9 @@ import './record.css';
 import type { GameLog } from '../../../src/engine/types.js';
 import { describeStep, stepDurationMs } from '../replay/describe.js';
 import { buildSteps, seatsAt } from '../replay/timeline.js';
+import { buildContext } from '../../../src/log/highlights/context.js';
 import { seatStepMs, seatTimeline, seatView } from '../perspective/seatView.js';
+import { spectatorView } from '../perspective/spectatorView.js';
 import { Room } from '../scene/Room.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
@@ -23,6 +25,7 @@ interface Props {
 export function RecordView({ log, params }: Props) {
   const steps = useMemo(() => buildSteps(log), [log]);
   const range = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
+  const ctx = useMemo(() => buildContext(log), [log]);
   const stepIndex = useMemo(() => new Map(steps.map((s, i) => [s, i] as const)), [steps]);
   const clip = useMemo(() => {
     if (!params.seats) return range;
@@ -83,6 +86,19 @@ export function RecordView({ log, params }: Props) {
   const seats = seatsAt(log, steps, stepIndex.get(step) ?? 0);
   const done = !playing && index === clip.length - 1;
   const turnId = step.kind === 'turn' ? step.turn.id : '';
+
+  if (params.spectator) {
+    // The all-seeing room, with the director's camera. Nothing is hidden, so every turn id may be shown.
+    return (
+      <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId} data-view="spectator">
+        <div className="rec-stage" data-testid="stage" data-mode="seats" data-count="1" role="region" aria-label="Round Table clip">
+          <div className="rec-seat-view">
+            <Room view={spectatorView(log, steps, stepIndex.get(step) ?? 0, ctx)} label="The room, seen by a spectator" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (params.seats) {
     // One shared step for every seat, so a split view always shows the same moment.
