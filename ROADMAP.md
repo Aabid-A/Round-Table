@@ -140,7 +140,7 @@ tested on mock games. Real games are run by the owner, not by unattended runs.
     command that produces each.
   - Done when the runbook works end to end on a mock game.
 
-- [ ] **M13a. Hardening: spend and rooms.** A small milestone before the next feature.
+- [x] **M13a. Hardening: spend and rooms.** A small milestone before the next feature.
   - Spend cap: a real-model call that returns no usable cost counts as the
     largest cost seen so far in that game (or a configurable floor if none
     yet), and the log records that the cost was estimated. Timed-out and failed
