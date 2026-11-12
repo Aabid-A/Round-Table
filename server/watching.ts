@@ -59,6 +59,11 @@ export class Watching {
     return this.gone.has(seat);
   }
 
+  /** The round being played now. */
+  get liveRound(): number {
+    return this.round;
+  }
+
   /** The newest round a spectator may see: the one before the round being played. */
   get visibleRound(): number {
     return Math.max(0, this.round - 1);
