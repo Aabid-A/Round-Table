@@ -123,6 +123,19 @@ A traitor sees their fellow traitor. Switching seats, or going back to the publi
 moment. The room is plain CSS 3D (no dependency); with `prefers-reduced-motion` it does not animate,
 and the 2D table is still the public view.
 
+### Playing from your own chair
+
+In a solo game (`?mode=play`) and in a room with friends (`?mode=room`) your turn is taken in a room: the
+camera sits in your chair, so your own seat is not in the picture, and the other players turn toward whoever
+speaks. Pick a seat for your vote, suspect, night choice or whisper by clicking it (or with the arrow keys,
+Enter to pick, Escape to clear), then press Confirm. The ordinary form under the room is still there and
+stays in step with it: pick in either. A faithful's screen goes dark for the night and they wake to the
+morning's news; a traitor stays awake in a dim room, sees the other traitor, and in a second night pass sees
+their proposals on the seats. A whisper to you arrives as its sender leaning in. A seat that has left the
+table stays as an empty chair. In a room the turn timer is drawn in the room as well as written beside it.
+Everything the room shows comes from what your own prompts already told you plus the public phase; nothing
+extra is sent to a player.
+
 ### The all-seeing room (spoilers)
 
 Choose "All-seeing room" under "View" (or open `?log=<name>&view=spectator`) to watch a finished game
