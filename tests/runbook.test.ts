@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { dirname, join } from 'node:path';
+import { afterAll, describe, expect, it } from 'vitest';
 import type { EpisodeIndex } from '../src/log/episodes.js';
 
 // The docs that name commands. If one names a command that is gone, or a link that goes nowhere, this fails.
@@ -55,8 +55,10 @@ describe('the runbook, on a mock game', () => {
     return r.stdout;
   };
 
+  const work = mkdtempSync(join(tmpdir(), 'rt-runbook-'));
+  afterAll(() => rmSync(work, { recursive: true, force: true }));
+
   it('runs games, prints a transcript, finds highlights, builds the episode list and the stats, as EPISODE.md says', () => {
-    const work = mkdtempSync(join(tmpdir(), 'rt-runbook-'));
     const games = join(work, 'games');
     const published = join(work, 'public-games');
     mkdirSync(published);
@@ -103,6 +105,5 @@ describe('the runbook, on a mock game', () => {
     const again = join(work, 'again');
     tsx('games', '--mock', '--seeds', '1', '--out', again);
     expect(read(join(again, 'mock-seed-1.json'))).toBe(read(join(games, 'mock-seed-1.json')));
-    expect(resolve(work)).toContain('rt-runbook-');
   }, SLOW);
 });

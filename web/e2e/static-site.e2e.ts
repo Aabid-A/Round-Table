@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, createReadStream, mkdirSync, mkdtempSync, statSync } from 'node:fs';
+import { copyFileSync, createReadStream, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
@@ -15,15 +15,19 @@ const FOLDER = '/shows/round-table/';
 
 let server: Server;
 let origin = '';
+let work = '';
 
 test.beforeAll(async () => {
-  const work = mkdtempSync(join(tmpdir(), 'rt-static-'));
+  work = mkdtempSync(join(tmpdir(), 'rt-static-'));
   const root = join(work, 'site');
   const site = join(root, FOLDER);
   const run = (...args: string[]) => execFileSync('npx', args, { stdio: 'pipe', env: { ...process.env, VITE_ROOM_SERVER: '' } });
 
   // npm run build:web, into a temporary folder
   run('vite', 'build', 'web', '--outDir', site, '--emptyOutDir');
+  // The build copies whatever is in web/public/ (logs and stats an owner has there). Start from none, so the test is the same on every machine.
+  rmSync(join(site, 'games'), { recursive: true, force: true });
+  rmSync(join(site, 'stats.json'), { force: true });
   // npm run games -- --mock --seeds 1-2, then the episodes and stats steps
   const games = join(work, 'games');
   run('tsx', 'src/cli/games.ts', '--mock', '--seeds', '1-2', '--out', games);
@@ -50,7 +54,10 @@ test.beforeAll(async () => {
   origin = `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}`;
 });
 
-test.afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+test.afterAll(async () => {
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  rmSync(work, { recursive: true, force: true });
+});
 
 /** Errors the page reports to its console, or throws (the missing favicon is not one). */
 function watchErrors(page: Page): string[] {
@@ -72,7 +79,11 @@ test('the episode list shows the two episodes', async ({ page }) => {
 test('the guess page plays an episode by number', async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto(`${origin}${FOLDER}?mode=guess&episode=1`);
-  await expect(page.getByText('Episode 1', { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Guess the traitor' })).toBeVisible();
+  await expect(page.locator('.topbar .muted')).toHaveText('Episode 1');
+  // The episode itself loaded: the first round table is on screen (an unreadable log shows an error instead).
+  await expect(page.getByTestId('section')).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
