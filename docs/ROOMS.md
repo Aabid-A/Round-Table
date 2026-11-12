@@ -14,7 +14,7 @@ That starts the room server on port 8787. In another terminal run `npm run web` 
 
 | Variable | Where | Meaning |
 |---|---|---|
-| `PORT` | server | Port to listen on. Default 8787. |
+| `PORT` | server | Port to listen on, 1 to 65535. Default 8787 (also when empty). |
 | `HOST` | server | Address to bind. Default: all addresses. |
 | `TURN_MS` | server | How long a person has for one turn. Default 90000 (90 seconds). |
 | `ABANDON_MS` | server | How long a running game may have nobody connected before its room closes. Default 120000. |

@@ -18,6 +18,31 @@ cp .env.example .env
 Then put your OpenRouter key in `.env` as `OPENROUTER_API_KEY`. `.env` is
 gitignored.
 
+## Every command
+
+| Command | What it does | More |
+|---|---|---|
+| `npm run game` | Play one game (`--mock` for no key, `--cast`, `--seed`, `--max-cost-usd`) | [Run a game](#run-a-game) |
+| `npm run games` | Play many games, one summary line each (`--seeds 1-20`) | [Run a game](#run-a-game) |
+| `npm run transcript` | Print a game as text: speech with the private notes under it | [Run a game](#run-a-game) |
+| `npm run highlights` | Rank the best moments of a game, with a clip URL for each | [Highlights](#highlights) |
+| `npm run card` | Save a quote card of one turn as PNGs | [Share cards](#share-cards) |
+| `npm run episodes` | Write the episode list the guess page reads | [Guess the traitor](#guess-the-traitor) |
+| `npm run stats` | Total a folder of logs per model (the Betrayal Index) | [Season stats](#season-stats-the-betrayal-index) |
+| `npm run web` | The web app (replay, clips, cards, guess game, stats, solo, rooms) at port 5173 | [Replay page](#replay-page) |
+| `npm run build:web` | Build the static site into `web/dist/` | [docs/DEPLOY.md](docs/DEPLOY.md) |
+| `npm run rooms` | The room server (port 8787) for play with friends | [Rooms](#play-with-friends-rooms), [docs/ROOMS.md](docs/ROOMS.md) |
+| `npm run typecheck` | Type-check the server code and the web app | |
+| `npm test` | Unit tests | |
+| `npm run test:e2e` | Browser tests (a page on port 5183 and a room server on 8788) | |
+
+## From a game to a post
+
+[docs/EPISODE.md](docs/EPISODE.md) is the runbook: set up the cast, run games, read them, find the best moments, record a
+clip, make a card, publish an episode for guessing, and post, with a rehearsal on a mock game that needs no key.
+[docs/POSTING.md](docs/POSTING.md) lists the post formats and the command that makes each, and
+[docs/DEPLOY.md](docs/DEPLOY.md) says how to host the static site and the room server. Nothing is deployed for you.
+
 ## Run a game
 
 Mock game, no network, no key needed:
