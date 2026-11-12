@@ -3,6 +3,8 @@ import type { Role } from '../../../src/types.js';
 
 /** What one player's prompt told them: the facts they are given at the start of a turn. */
 export interface Knowledge {
+  /** The seat this prompt was written for. */
+  name: string;
   role: Role;
   fellowTraitors: string[];
   round: number;
@@ -28,8 +30,10 @@ export function parsePrompt(prompt: string): Knowledge | null {
   const end = afterHeader.indexOf('\n\n');
   const historyText = end < 0 ? afterHeader : afterHeader.slice(0, end);
 
-  const role = /^You are .+?\. Your role: (traitor|faithful)\.$/.exec(situation[0] ?? '')?.[1] as Role | undefined;
-  if (!role) return null;
+  const who = /^You are (.+?)\. Your role: (traitor|faithful)\.$/.exec(situation[0] ?? '');
+  if (!who) return null;
+  const name = who[1] as string;
+  const role = who[2] as Role;
   let fellowTraitors: string[] = [];
   let round = 0;
   let alive: string[] = [];
@@ -48,6 +52,7 @@ export function parsePrompt(prompt: string): Knowledge | null {
     }
   }
   return {
+    name,
     role,
     fellowTraitors,
     round,

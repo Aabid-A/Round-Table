@@ -165,3 +165,14 @@ test('a clip from a seat carries no turn numbers, and a range with nothing for t
   await page.goto('/?mode=record&log=sample&seat=Aria&from=1&to=1'); // the second of two night turns: nothing for a faithful
   await expect(page.getByRole('alert')).toContainText('Nothing between turn 1 and turn 1 is shown to Aria');
 });
+
+test('the arrow keys still step the replay when a chair has the focus', async ({ page }) => {
+  await open(page, '&seat=Aria');
+  const before = await stepText(page);
+  await page.locator('[data-testid=room-seat] button.room-chair').first().focus();
+  await page.keyboard.press('ArrowRight');
+  expect(await stepText(page)).not.toBe(before);
+  const after = await stepText(page);
+  await page.keyboard.press('ArrowLeft');
+  expect(await stepText(page)).not.toBe(after);
+});

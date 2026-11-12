@@ -9,6 +9,7 @@ import { buildSystemPrompt } from '../../../src/prompts/system.js';
 import type { CastMember } from '../../../src/types.js';
 import { createHumanPlayer, type HumanAnswer } from './human.js';
 import type { PromptRequest } from '../../../src/players/player.js';
+import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 
 export { AI_SEATS, HUMAN_MODEL, nameProblem, parseModels };
 
@@ -43,6 +44,8 @@ export async function runSolo(
   ask: (req: PromptRequest) => Promise<HumanAnswer>,
   /** Aborting stops all network calls at once and lets the game wind down locally; the result is then not worth keeping. */
   signal?: AbortSignal,
+  /** Told the phase everyone at the table is told of, each time it changes: what a room would announce. Never who is acting. */
+  onPhase?: (phase: PublicPhase) => void,
 ): Promise<GameLog> {
   const problem = nameProblem(setup.humanName);
   if (problem) throw new Error(problem);
@@ -65,14 +68,17 @@ export async function runSolo(
           aiCast.map((c) => [c.name, createOpenRouterPlayer({ model: c.model, apiKey: (setup.ai as { apiKey: string }).apiKey.trim(), fetchImpl })]),
         );
   players[setup.humanName] = createHumanPlayer(ask);
-  if (signal) {
+  if (signal || onPhase) {
+    let announced: PublicPhase | null = null;
     // Once aborted, every turn fails at once without touching the network, so the game ends in a moment.
     for (const [name, inner] of Object.entries(players)) {
       players[name] = {
         // Keep the flag: it is what makes the spend cap count a real-model call that returns no cost.
         ...(inner.metered ? { metered: true } : {}),
         respond: async (req) => {
-          if (signal.aborted) throw new Error('The game was ended.');
+          if (signal?.aborted) throw new Error('The game was ended.');
+          const label = publicPhase(req.phase);
+          if (onPhase && label !== announced) onPhase((announced = label));
           return inner.respond(req);
         },
       };

@@ -201,7 +201,7 @@ Each milestone needs the one before it.
   - Works in recording mode by URL, 16:9 and 9:16.
   - No server changes.
 
-- [ ] **M16. First-person live seat (solo, then rooms).**
+- [x] **M16. First-person live seat (solo, then rooms).**
   - The camera sits in your chair. Other players face you and turn toward
     whoever speaks.
   - Night differs by role. A faithful's screen goes dark, then they wake to an
@@ -216,6 +216,12 @@ Each milestone needs the one before it.
     empty.
   - The view object for a live player is built from the per-seat data the
     server already sends. No new fields reach a living player's client.
+  - **Not built, owner to decide:** "other whispers show two heads together
+    and no text". The server never tells a living player that two other
+    players whispered (it tells them only the phase), so showing two heads
+    needs a new message, which this milestone forbids, and would reveal who
+    whispers to whom. Whispers to you lean the sender in; the rest is left
+    out.
 
 - [ ] **M17. Watching live rooms.**
   - Ghost view: a murdered or banished player may move between seats and see
