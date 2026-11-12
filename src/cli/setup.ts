@@ -20,6 +20,7 @@ export interface SetupOptions {
   config: string;
   timeoutMs: string | undefined;
   maxCostUsd?: string | undefined;
+  costFloorUsd?: string | undefined;
 }
 
 /** Everything that stays the same across games in one command. */
@@ -30,6 +31,8 @@ export interface Setup {
   gameName(seed: number): string;
   /** Stop each game before a call that would pass this many USD. */
   maxCostUsd?: number;
+  /** What a real-model call with no reported cost counts for until a real cost has been seen in the game (USD). */
+  costFloorUsd?: number;
 }
 
 export const USAGE = 'usage: use either --mock or --cast <path> (not both)';
@@ -41,10 +44,19 @@ export function parseMaxCost(value: string | undefined): number | undefined {
   return n;
 }
 
+export function parseCostFloor(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const n = Number(value);
+  if (value.trim() === '' || !Number.isFinite(n) || n <= 0) throw new Error('--cost-floor-usd must be a positive number');
+  return n;
+}
+
 export function prepareSetup(opts: SetupOptions): Setup {
   const setup = buildSetup(opts);
   const maxCostUsd = parseMaxCost(opts.maxCostUsd);
-  return maxCostUsd === undefined ? setup : { ...setup, maxCostUsd };
+  const costFloorUsd = parseCostFloor(opts.costFloorUsd);
+  if (costFloorUsd !== undefined && maxCostUsd === undefined) throw new Error('--cost-floor-usd only means something with --max-cost-usd');
+  return { ...setup, ...(maxCostUsd !== undefined ? { maxCostUsd } : {}), ...(costFloorUsd !== undefined ? { costFloorUsd } : {}) };
 }
 
 function buildSetup(opts: SetupOptions): Setup {
@@ -87,5 +99,6 @@ export function playGame(setup: Setup, seed: number): Promise<GameLog> {
     buildPrompt,
     systemPrompt: buildSystemPrompt({ players: cast.length, traitors: settings.traitors, maxRounds: settings.maxRounds }),
     ...(setup.maxCostUsd !== undefined ? { maxCostUsd: setup.maxCostUsd } : {}),
+    ...(setup.costFloorUsd !== undefined ? { costFloorUsd: setup.costFloorUsd } : {}),
   });
 }

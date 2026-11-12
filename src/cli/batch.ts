@@ -1,4 +1,4 @@
-import { countUncostedAttempts, summaryLine, totalCostUsd } from '../log/summary.js';
+import { countEstimatedAttempts, countUncostedAttempts, summaryLine, totalCostUsd } from '../log/summary.js';
 import { ensureWritableDir, writeGameLog } from '../log/writer.js';
 import { playGame, type Setup } from './setup.js';
 
@@ -9,6 +9,8 @@ export interface BatchResult {
   sawCost: boolean;
   /** Attempts across all games that reported no cost. */
   uncostedAttempts: number;
+  /** Attempts across all games that the spend cap counted as an estimate (a real-model call with no usable cost). */
+  estimatedAttempts: number;
 }
 
 /** Play one game per seed, write each log, and print one summary line per game. */
@@ -23,12 +25,14 @@ export async function runBatch(
   let failed = 0;
   let sawCost = false;
   let uncostedAttempts = 0;
+  let estimatedAttempts = 0;
   for (const seed of seeds) {
     let line: string;
     try {
       const log = await playGame(setup, seed);
       if (totalCostUsd(log) !== null) sawCost = true;
       uncostedAttempts += countUncostedAttempts(log);
+      estimatedAttempts += countEstimatedAttempts(log);
       line = `${summaryLine(log)} | ${writeGameLog(log, outDir, setup.gameName(seed))}`;
     } catch (e) {
       failed++;
@@ -37,5 +41,5 @@ export async function runBatch(
     lines.push(line);
     print(line);
   }
-  return { lines, failed, sawCost, uncostedAttempts };
+  return { lines, failed, sawCost, uncostedAttempts, estimatedAttempts };
 }
