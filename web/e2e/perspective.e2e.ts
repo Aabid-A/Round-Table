@@ -39,22 +39,34 @@ test('a faithful never sees a living traitor’s role, at any step', async ({ pa
   }
 });
 
+const stepAt = (page: Page): Promise<string | null> => page.locator('main').getAttribute('data-step');
+
 test('switching seats keeps the same moment, and a traitor sees their fellow traitor', async ({ page }) => {
   await open(page, '&seat=Aria');
-  await stepTo(page, 22);
-  const before = await stepText(page);
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  // Walk to a round-table speech: every seat sees those, so the same step is on every seat's list.
+  for (let i = 0; i < 60 && !(await page.getByTestId('section').innerText()).startsWith('Round table'); i++) await page.keyboard.press('ArrowRight');
+  const before = await stepAt(page);
   await page.getByLabel('Sit in a seat').selectOption('Bram');
-  expect(await stepText(page)).toBe(before);
+  expect(await stepAt(page)).toBe(before);
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Bram');
   await expect(page.locator('[data-name=Cleo] .room-tag', { hasText: 'Fellow traitor' })).toBeVisible();
   await page.locator('[data-name=Hugo] button').click(); // clicking a chair sits there
   await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Hugo');
-  expect(await stepText(page)).toBe(before);
+  expect(await stepAt(page)).toBe(before);
   expect(page.url()).toContain('seat=Hugo');
   await page.getByLabel('Sit in a seat').selectOption('');
   await expect(page.getByTestId('table')).toBeVisible();
   expect(page.url()).not.toContain('seat=');
-  expect(await stepText(page)).toBe(before);
+  expect(await stepAt(page)).toBe(before);
+});
+
+test('a step that is empty for the seat is stood on the nearest earlier one when switching, and the counter follows the seat', async ({ page }) => {
+  await open(page, '&seat=Aria');
+  const aria = Number(/of (\d+)/.exec(await stepText(page))![1]);
+  await page.getByLabel('Sit in a seat').selectOption('');
+  const publicTotal = Number(/of (\d+)/.exec(await stepText(page))![1]);
+  expect(aria).toBeLessThan(publicTotal); // the seat's list leaves out the traitors' night turns and other empty steps
 });
 
 test('the room keeps still under reduced motion', async ({ page }) => {

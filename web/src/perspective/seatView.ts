@@ -114,3 +114,6 @@ export function seatTimeline(log: GameLog, steps: Step[], seat: string): number[
   });
   return timeline;
 }
+
+/** How long a seated step stays up while playing: time to read what the seat is shown. */
+export const seatStepMs = (view: SceneView): number => Math.min(9000, 1800 + (view.moment.text?.length ?? 0) * 40);
