@@ -100,10 +100,10 @@ describe('what a seat is told, and when', () => {
       const lastOfRound = steps.filter((s) => s.kind === 'turn' && s.turn.phase === 'whispers' && s.turn.round === w.round).at(-1)!;
       const deliveredAt = steps.indexOf(lastOfRound);
       for (let i = 0; i < steps.length; i++) {
-        const shown = JSON.stringify(seatView(log, steps, i, to).moment).includes(message);
-        if (i < deliveredAt && i !== steps.findIndex((s) => s.kind === 'turn' && s.turn.id === w.id && w.player === to)) expect(shown, `whisper to ${to} shown at step ${i}, before ${deliveredAt}`).toBe(false);
+        const shown = JSON.stringify(seatView(log, steps, i, to)).includes(message); // the whole view, not just the moment
+        if (i < deliveredAt) expect(shown, `whisper to ${to} shown at step ${i}, before ${deliveredAt}`).toBe(false);
       }
-      expect(JSON.stringify(seatView(log, steps, deliveredAt, to).moment)).toContain(message);
+      expect(JSON.stringify(seatView(log, steps, deliveredAt, to))).toContain(message);
       expect(stepIndex).toBeLessThanOrEqual(deliveredAt);
       checked++;
     }
