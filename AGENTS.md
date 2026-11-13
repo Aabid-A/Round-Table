@@ -29,12 +29,13 @@ fallback it names, and say in the PR what you could not do.
    branch from `origin/main`. Never build on `main`.
 2. **Build.** Follow `/code-structure` and the repo's existing architecture.
    Reuse existing functions before writing new ones.
-   For any user-facing UI, also follow `/ui-design` (clean, calm, consistent;
-   tokens, all states, accessibility).
+   Flat UI (menus, forms, HUD) follows `/ui-design`. The 3D game world
+   follows `/art-direction`, `/scene-3d` and `/game-feel`.
 3. **Prove.** Run the repo checks. For changed runtime behavior run `/prove`:
    capture the failure before the fix and the success after it. For UI changes
    run `/design-review`: screenshots at mobile and desktop, light and dark,
-   across states, critiqued and fixed before shipping.
+   across states, critiqued and fixed before shipping. For the game world run
+   `/playtest`; a change to its look is never auto-merged (owner gate).
 4. **Ship.** Run `/ship`: commit, rebase, push, open the PR with evidence, then
    `/review-loop` until the gate passes. End by presenting the PR URL.
 

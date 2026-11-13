@@ -1,6 +1,6 @@
 ---
 name: ui-design
-description: Use when building or changing any user-facing UI (pages, components, forms, emails, dashboards). Sets the visual and UX standard - clean, calm, consistent - and requires design tokens, all UI states, and accessibility. EDIT the Taste section to match your own aesthetic.
+description: Use when building or changing flat user-facing UI - menus, forms, the HUD, stats and setup pages. Sets the visual and UX standard - clean, calm, consistent - and requires design tokens, all UI states, and accessibility. Not for the 3D game world, which follows art-direction.
 ---
 
 # UI Design
@@ -8,6 +8,13 @@ description: Use when building or changing any user-facing UI (pages, components
 The bar: a clean interface that looks deliberate. Calm, consistent, easy to scan.
 Follow the project's existing design system first. Only fall back to this file
 where the project has no convention.
+
+## Scope
+
+This covers flat UI only: menus, forms, the HUD over the game, stats and setup
+pages. The game world itself (room, characters, light, camera) follows
+`/art-direction`, `/scene-3d` and `/game-feel`, where shadows, depth and
+atmosphere are the point. The HUD stays quiet so the world can be loud.
 
 ## Taste (edit this to your preference)
 
