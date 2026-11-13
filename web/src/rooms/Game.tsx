@@ -70,7 +70,7 @@ export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLe
       )}
 
       {ghost ? (
-        <Ghost ghost={ghost} />
+        <Ghost ghost={ghost} phase={phase} />
       ) : (
         <LiveSeat
           turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}

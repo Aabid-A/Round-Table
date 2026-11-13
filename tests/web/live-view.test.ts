@@ -130,3 +130,13 @@ describe('liveView: the night, the options and the news', () => {
     expect(v.seats.find((s) => s.name === 'Aria')!.mark).toBe('self');
   });
 });
+
+describe('liveView for a ghost watching a seat', () => {
+  it('names the phase everyone is told of, and a ghost can override the sleep so a night is never a blackout', () => {
+    const k = { name: 'Aria', role: 'faithful' as const, fellowTraitors: [], round: 1, alive: ['Aria', 'Bram'], out: [], history: [] };
+    const asleep = liveView({ me: 'Aria', order: ['Aria', 'Bram'], knowledge: k, beat: null, turn: null, publicPhase: 'night', picked: null, timer: null });
+    expect(asleep.sleep).toBe(true); // what a player in that seat would see
+    expect(asleep.moment.title).toBe('Night');
+    expect({ ...asleep, sleep: false }.sleep).toBe(false); // the ghost view turns it off
+  });
+});

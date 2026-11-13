@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ServerMessage } from '../../../server/protocol.js';
+import type { PublicPhase } from '../../../src/publicPhase.js';
 import { liveView } from '../live/liveView.js';
 import { parsePrompt } from '../perspective/knowledge.js';
 import { Room } from '../scene/Room.js';
@@ -11,12 +12,13 @@ type GhostMessage = Extract<ServerMessage, { t: 'ghost' }>;
  * which is why the host had to turn ghosts on and the lobby said so. It is only ever built from a ghost message, which the server
  * sends to people who are out.
  */
-export function Ghost({ ghost }: { ghost: GhostMessage }) {
+export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhase | null }) {
   const [picked, setPicked] = useState<string | null>(null);
   const seat = ghost.seats.find((s) => s.name === picked) ?? ghost.seats.find((s) => s.name !== ghost.you && s.prompt !== null) ?? ghost.seats[0];
   const knowledge = seat?.prompt ? parsePrompt(seat.prompt) : null;
+  // The phase everyone is told of names the moment. A ghost is watching, not sleeping: the night is dim but never a blackout.
   const view = knowledge
-    ? liveView({ me: knowledge.name, order: ghost.seats.map((s) => s.name), knowledge, beat: null, turn: null, publicPhase: null, picked: null, timer: null })
+    ? { ...liveView({ me: knowledge.name, order: ghost.seats.map((s) => s.name), knowledge, beat: null, turn: null, publicPhase: phase, picked: null, timer: null }), sleep: false }
     : null;
 
   return (

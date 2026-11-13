@@ -172,8 +172,10 @@
   font-size: 0.8em;
 }
 .room-tag {
+  max-width: 100%;
+  text-align: center;
   padding: 0 0.8cqmin;
-  border-radius: 99px;
+  border-radius: 1.4cqmin; /* a long tag ("Fellow traitor") may take two lines in a narrow chair */
   border: 1px solid var(--border);
   font-size: 0.8em;
   font-weight: 600;
@@ -551,4 +553,10 @@
 .ghost-seats .btn[aria-pressed='true'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* The watcher's note sits over the replay, in the same column. */
+.watch-note {
+  width: min(100% - 2 * var(--space-4), var(--w-app));
+  margin: var(--space-3) auto 0;
 }
