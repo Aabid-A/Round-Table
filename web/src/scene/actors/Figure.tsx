@@ -1,11 +1,13 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import * as THREE from 'three';
 import { cloakGeometry, HEAD_Y, HIP_Y, cuffBandGeometry, hoodGeometry, mantleGeometry, SHOULDER_Y, sleeveGeometry } from '../models/cloak.js';
 import { handGeometry } from '../models/hand.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { MASKS } from '../models/masks.js';
+import { approach, idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
+import { useResource } from '../resources.js';
 
 export interface FigureProps {
   index: number;
@@ -36,15 +38,17 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
   const arm = useRef<THREE.Group>(null);
   const mask = useRef<THREE.MeshStandardMaterial>(null);
   const pose = useRef({ gone: 0, yaw: 0, lean: 0, point: 0, pointVel: 0, pointYaw: 0, notice: 0 });
-  const cloak = useMemo(() => cloakGeometry(index, design.colour), [index, design.colour]);
-  const mantle = useMemo(() => mantleGeometry(index, design.colour), [index, design.colour]);
-  const hood = useMemo(() => hoodGeometry(index), [index]);
-  const sleeve = useMemo(() => sleeveGeometry(SLEEVE), []);
-  const band = useMemo(() => cuffBandGeometry(SLEEVE), []);
-  const hand = useMemo(() => handGeometry('point'), []);
+  const cloak = useResource(`cloak:${index}`, () => cloakGeometry(index, design.colour));
+  const mantle = useResource(`mantle:${index}`, () => mantleGeometry(index, design.colour));
+  const hood = useResource(`hood:${index}`, () => hoodGeometry(index));
+  const sleeve = useResource('sleeve:figure', () => sleeveGeometry(SLEEVE));
+  const band = useResource('cuff:figure', () => cuffBandGeometry(SLEEVE));
+  const hand = useResource('hand:point', () => handGeometry('point'));
+  const reduced = useReducedMotion();
   useFrame(({ clock }, dt) => {
-    const k = 1 - Math.exp(-dt * 4);
-    const t = clock.elapsedTime + index * 1.7;
+    const k = approach(dt, 4, reduced);
+    // With motion reduced a figure does not breathe or shift; it changes pose in a cut.
+    const t = reduced ? 0 : clock.elapsedTime + index * 1.7;
     const p = pose.current;
     p.yaw += (lookYaw - p.yaw) * k;
     p.lean += ((speaking ? 0.13 : 0) - p.lean) * k;
@@ -53,10 +57,11 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
     const step = Math.min(dt, 0.05);
     p.pointVel += ((target - p.point) * 70 - p.pointVel * 11) * step;
     p.point += p.pointVel * step;
+    if (reduced) [p.point, p.pointVel] = [target, 0];
     if (pointYaw !== null) p.pointYaw += (pointYaw - p.pointYaw) * k;
-    p.gone += (leaving - p.gone) * (1 - Math.exp(-dt * 1.6));
-    p.notice += ((hovered || selected ? 1 : 0) - p.notice) * (1 - Math.exp(-dt * 9));
-    const breath = Math.sin(t * 1.2);
+    p.gone += (leaving - p.gone) * approach(dt, 1.6, reduced);
+    p.notice += ((hovered || selected ? 1 : 0) - p.notice) * approach(dt, 9, reduced);
+    const breath = Math.sin(t * 1.2) * idle(reduced);
     if (body.current) {
       // Leaning from the hips, with a slow shift of weight from side to side.
       body.current.rotation.x = p.lean + breath * 0.008 - p.notice * 0.03;
@@ -68,8 +73,9 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
       upper.current.position.y = breath * 0.004;
     }
     if (head.current) {
-      head.current.rotation.y = p.yaw * 0.78 + Math.sin(t * 0.5) * 0.025;
-      head.current.rotation.x = Math.sin(t * 0.8) * 0.015 + (speaking ? -0.04 + Math.sin(t * 5.2) * 0.012 : 0) - p.notice * 0.05;
+      // The shoulders may turn further to point; the head gives that back, so the mask keeps to its limit.
+      head.current.rotation.y = p.yaw * 0.78 - p.point * p.pointYaw * 0.12 + Math.sin(t * 0.5) * 0.025;
+      head.current.rotation.x = Math.sin(t * 0.8) * 0.015 + (speaking ? -0.04 + Math.sin(t * 5.2) * 0.012 * idle(reduced) : 0) - p.notice * 0.05;
       head.current.rotation.z = Math.sin(t * 0.31 + 1) * 0.02;
     }
     // The mask warms in its own colour while the player's eye is on it.

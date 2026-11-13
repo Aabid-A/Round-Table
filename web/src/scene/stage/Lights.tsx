@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { chairPose, tablePoint } from '../layout.js';
 import { CLUSTER_LIGHTS } from '../models/candles.js';
@@ -34,6 +35,8 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
   const shaft = useRef<THREE.SpotLight>(null);
   const fill = useRef<THREE.DirectionalLight>(null);
   const level = useRef({ fire: FIRE.day as number });
+  // With motion reduced the light is steady; it still fades between day, night and dawn.
+  const flicker = idle(useReducedMotion());
   // The shaft is aimed between the empty chair and the mask left on the table.
   const aim = useMemo(() => {
     const o = new THREE.Object3D();
@@ -51,10 +54,10 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
       if (!l) return;
       // The two candles of a cluster: how lit the pair is.
       const lit = Math.min(1, Math.max(0, litCount - c * 2) / 2) * 0.5 + Math.min(1, Math.max(0, litCount - c * 2 - 1)) * 0.5;
-      l.intensity = lit * (3.4 + Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3);
+      l.intensity = lit * (3.4 + (Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3) * flicker);
     });
     level.current.fire += (FIRE[mood] - level.current.fire) * k;
-    if (fire.current) fire.current.intensity = level.current.fire * (1 + Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06);
+    if (fire.current) fire.current.intensity = level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);
     if (shaft.current) shaft.current.intensity += ((mood === 'dawn' && dawnSeat !== null ? 420 : 0) - shaft.current.intensity) * k;
     if (fill.current) fill.current.intensity += (FILL[mood] - fill.current.intensity) * k;
   });

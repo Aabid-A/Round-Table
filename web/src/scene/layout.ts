@@ -59,7 +59,7 @@ export function yawBetween(from: number, to: number): number {
 }
 
 /** How far a mask may be turned away from the viewer: beyond this it starts to be seen edge-on. */
-export const MASK_MAX_OFF = 0.85;
+export const MASK_MAX_OFF = 0.7;
 /** How far a head turns on its shoulders. */
 export const NECK_MAX = 1.35;
 

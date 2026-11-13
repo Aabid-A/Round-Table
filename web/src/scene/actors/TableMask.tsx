@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Role } from '../../../../src/types.js';
 import { figurePose, tablePoint } from '../layout.js';
 import { MaskMesh } from '../models/MaskMesh.js';
+import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 
 const SCALE = 0.2;
@@ -17,11 +18,12 @@ const TILT = 0.75;
 export function TableMask({ seat, role, viewer }: { seat: number; role: Role | null; viewer: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
+  const reduced = useReducedMotion();
   // Nearer the middle than the name plate, so from the player's seat neither hides the other.
   const p = tablePoint(seat, 0.7);
   const [vx, , vz] = figurePose(viewer).position;
   useFrame((_, dt) => {
-    flip.current += ((role === null ? 0 : 1) - flip.current) * (1 - Math.exp(-dt * 2.2));
+    flip.current += ((role === null ? 0 : 1) - flip.current) * approach(dt, 2.2, reduced);
     if (!turn.current) return;
     // Lifted off the table as it goes over, and set down again.
     turn.current.rotation.y = flip.current * Math.PI;

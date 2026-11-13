@@ -1,5 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
+import { approach, idle, useReducedMotion } from '../motion.js';
+import { useResource } from '../resources.js';
 import * as THREE from 'three';
 import { figurePose } from '../layout.js';
 import { HEAD_Y } from '../models/cloak.js';
@@ -33,10 +35,11 @@ function Arm({ side, pointAt, accent }: ArmProps) {
   const rest = useRef<THREE.Mesh>(null);
   const point = useRef<THREE.Mesh>(null);
   const s = useRef({ up: 0, vel: 0 });
-  const cloth = useMemo(() => sleeveGeometry(1, 0.046), []);
-  const band = useMemo(() => cuffBandGeometry(1, 0.046), []);
-  const lying = useMemo(() => handGeometry('rest'), []);
-  const pointing = useMemo(() => handGeometry('point'), []);
+  const cloth = useResource('sleeve:yours', () => sleeveGeometry(1, 0.046));
+  const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.046));
+  const lying = useResource('hand:rest', () => handGeometry('rest'));
+  const pointing = useResource('hand:point', () => handGeometry('point'));
+  const reduced = useReducedMotion();
   const tmp = useMemo(() => ({ wrist: new THREE.Vector3(), elbow: new THREE.Vector3(), dir: new THREE.Vector3(), aim: new THREE.Vector3(0, 0, 1), q: new THREE.Quaternion(), rest: new THREE.Quaternion(), raised: new THREE.Quaternion(), roll: new THREE.Quaternion(), e: new THREE.Euler() }), []);
   useFrame(({ clock }, dt) => {
     const p = s.current;
@@ -44,8 +47,9 @@ function Arm({ side, pointAt, accent }: ArmProps) {
     // A spring, so the hand overshoots a little as it comes up and settles when it is set down.
     p.vel += (((pointAt !== null ? 1 : 0) - p.up) * 80 - p.vel * 12) * step;
     p.up += p.vel * step;
+    if (reduced) [p.up, p.vel] = [pointAt !== null ? 1 : 0, 0];
     const up = Math.max(0, Math.min(1.1, p.up));
-    const t = clock.elapsedTime + side;
+    const t = (clock.elapsedTime + side) * idle(reduced);
     tmp.wrist.lerpVectors(REST.wrist, RAISED.wrist, up);
     tmp.elbow.lerpVectors(REST.elbow, RAISED.elbow, up);
     tmp.wrist.x *= side;
@@ -56,7 +60,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
       // The finger aims at the mask of the seat pointed at (in this seat's own space, which looks across the table).
       const [x, , z] = figurePose(pointAt).position;
       tmp.dir.set(-x, HEAD_Y, TABLE_R - z).sub(tmp.wrist).normalize();
-      tmp.aim.lerp(tmp.dir, 1 - Math.exp(-dt * 6)).normalize();
+      tmp.aim.lerp(tmp.dir, approach(dt, 6, reduced)).normalize();
     }
     if (hand.current) {
       tmp.rest.setFromEuler(tmp.e.set(0.07, REST.yaw * side + Math.sin(t * 0.21) * 0.03, 0, 'YXZ'));

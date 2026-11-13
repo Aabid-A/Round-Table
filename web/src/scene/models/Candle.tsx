@@ -1,7 +1,9 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import * as THREE from 'three';
+import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
+import { useResource } from '../resources.js';
 
 interface Props {
   height: number;
@@ -14,23 +16,25 @@ interface Props {
 export function Candle({ height, lit, seed }: Props) {
   const flame = useRef<THREE.Mesh>(null);
   const smoke = useRef<THREE.Mesh>(null);
-  const stick = useMemo(() => new THREE.LatheGeometry([[0.05, 0], [0.045, 0.02], [0.02, 0.05], [0.014, 0.12], [0.03, 0.14], [0.034, 0.15]].map(([x, y]) => new THREE.Vector2(x, y)), 14), []);
-  const wax = useMemo(() => new THREE.LatheGeometry([[0.026, 0], [0.03, 0.02], [0.027, 0.5], [0.022, 0.52]].map(([x, y]) => new THREE.Vector2(x, y)), 14), []);
+  const stick = useResource('candle:stick', () => new THREE.LatheGeometry([[0.05, 0], [0.045, 0.02], [0.02, 0.05], [0.014, 0.12], [0.03, 0.14], [0.034, 0.15]].map(([x, y]) => new THREE.Vector2(x, y)), 14));
+  const wax = useResource('candle:wax', () => new THREE.LatheGeometry([[0.026, 0], [0.03, 0.02], [0.027, 0.5], [0.022, 0.52]].map(([x, y]) => new THREE.Vector2(x, y)), 14));
+  const moving = idle(useReducedMotion());
   const was = useRef(lit);
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime * 7 + seed * 13;
-    const flicker = 0.88 + Math.sin(t) * 0.07 + Math.sin(t * 2.7 + seed) * 0.05;
+    // With motion reduced the flame burns steady and upright.
+    const flicker = 0.88 + (Math.sin(t) * 0.07 + Math.sin(t * 2.7 + seed) * 0.05) * moving;
     if (flame.current) {
       flame.current.scale.set(0.02 * lit * flicker, 0.05 * lit * (0.9 + flicker * 0.2), 0.02 * lit * flicker);
       flame.current.visible = lit > 0.02;
-      flame.current.rotation.z = Math.sin(t * 0.7) * 0.12 * lit;
+      flame.current.rotation.z = Math.sin(t * 0.7) * 0.12 * lit * moving;
     }
     if (smoke.current) {
       // A thin wisp rises for a moment when the flame has just gone out.
       const fresh = was.current > 0.05 && lit < 0.05 ? 1 : 0;
       smoke.current.userData.age = fresh ? 0 : ((smoke.current.userData.age as number | undefined) ?? 9) + dt;
       const age = smoke.current.userData.age as number;
-      smoke.current.visible = age < 3;
+      smoke.current.visible = age < 3 && moving === 1;
       smoke.current.position.y = height + 0.18 + age * 0.16;
       smoke.current.scale.setScalar(0.5 + age * 0.9);
       (smoke.current.material as THREE.MeshStandardMaterial).opacity = Math.max(0, 0.22 - age * 0.075);

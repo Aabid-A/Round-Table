@@ -102,6 +102,32 @@ test('you accuse by looking at a figure in the room and selecting it, twice to c
   await expect(page.locator('.slice-caption')).toContainText('You point at Dax');
 });
 
+test('honours reduced motion: the room still draws and plays, and says so', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/?mode=slice&quality=low');
+  await expect(page.getByTestId('slice').locator('canvas')).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-motion', 'reduced');
+  await page.waitForTimeout(1500);
+  expect((await page.getByTestId('slice').locator('canvas').screenshot()).length).toBeGreaterThan(20_000);
+  await toNextChoice(page);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-motion', 'full');
+});
+
+test('the room reports what a frame costs, and stays inside its budget', async ({ page }) => {
+  await page.goto('/?mode=slice&quality=low');
+  const canvas = page.getByTestId('slice').locator('canvas');
+  await expect(canvas).toBeVisible({ timeout: 60_000 });
+  await expect(canvas).toHaveAttribute('data-calls', /\d+/, { timeout: 30_000 });
+  await page.waitForTimeout(1500);
+  // At low quality there is one pass and no shadows, so this is the scene itself: under 150 draw calls and 200k triangles (/scene-3d).
+  expect(Number(await canvas.getAttribute('data-calls'))).toBeLessThan(150);
+  expect(Number(await canvas.getAttribute('data-triangles'))).toBeLessThan(200_000);
+});
+
 test('the plain version (no WebGL) plays the same round, with the list and a live region', async ({ page }) => {
   await page.goto('/?mode=slice&fallback=1');
   await expect(page.getByTestId('slice-fallback')).toBeVisible();

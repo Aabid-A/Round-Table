@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { runGame } from '../../../src/engine/game.js';
 import { DEFAULT_SETTINGS } from '../../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../../src/players/mock.js';
@@ -44,6 +44,20 @@ class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
+/** Whether the viewer has asked their system for reduced motion, kept up to date if they change it. */
+function usePrefersReducedMotion(): boolean {
+  const query = '(prefers-reduced-motion: reduce)';
+  const [reduced, setReduced] = useState(() => typeof window.matchMedia === 'function' && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const m = window.matchMedia(query);
+    const on = (): void => setReduced(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+  return reduced;
+}
+
 function hasWebGl2(): boolean {
   try {
     return document.createElement('canvas').getContext('webgl2') !== null;
@@ -65,6 +79,9 @@ function Slice({ script }: { script: SliceScript }) {
     if (frames.current.length === 45) setQuality(chooseQuality(frames.current.slice(5)));
   };
   const noGl = useMemo(() => new URLSearchParams(window.location.search).get('fallback') === '1' || !hasWebGl2(), []);
+  const reducedMotion = usePrefersReducedMotion();
+  const [lost, setLost] = useState(false);
+  const onLost = useCallback(() => setLost(true), []);
   const pace = useMemo(() => paceFromSearch(window.location.search), []);
   const sound = useRef<Sound | null>(null);
   const [muted, setMuted] = useState(readMuted);
@@ -93,18 +110,20 @@ function Slice({ script }: { script: SliceScript }) {
     return () => clearTimeout(t);
   }, [state.stage]);
   return (
-    <main className="slice" data-testid="slice" onPointerDown={startSound} onKeyDown={startSound} data-quality={quality} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind} data-selected={state.selected ?? ''}>
-      {noGl ? (
+    <main className="slice" data-testid="slice" onPointerDown={startSound} onKeyDown={startSound} data-quality={quality} data-motion={reducedMotion ? 'reduced' : 'full'} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind} data-selected={state.selected ?? ''}>
+      {lost ? (
+        <SliceFallback view={view} reason="The 3D room stopped (the graphics context was lost), so this is the plain version. Reload the page to try the room again." />
+      ) : noGl ? (
         <SliceFallback view={view} reason="This is the plain version of the round table. The 3D room needs WebGL." />
       ) : (
       <SceneBoundary fallback={<SliceFallback view={view} reason="The 3D room could not start, so this is the plain version." />}>
       <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
-        <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'pick', seat })} />
+        <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'pick', seat })} reducedMotion={reducedMotion} onLost={onLost} />
       </Suspense>
       </SceneBoundary>
       )}
-      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl} />
-      <p className={view.speech && !noGl ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
+      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl || lost} />
+      <p className={view.speech && !noGl && !lost ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
 }

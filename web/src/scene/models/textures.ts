@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { together, type Disposable } from '../resources.js';
+
+export type Maps = { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } & Disposable;
 
 /** A small seeded random number generator, so a texture is the same every time. */
 function rng(seed: number): () => number {
@@ -28,7 +31,7 @@ function finish(c: HTMLCanvasElement, repeat: number, colour: boolean): THREE.Ca
 }
 
 /** Block stone: mortar lines and mottled blocks. Returns a colour map and a bump map made from the same blocks. */
-export function stoneMaps(base: string, repeat = 3): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
+export function stoneMaps(base: string, repeat = 3): Maps {
   const size = 512;
   const [c, g] = canvas(size);
   const [b, bg] = canvas(size);
@@ -59,11 +62,11 @@ export function stoneMaps(base: string, repeat = 3): { map: THREE.CanvasTexture;
     bg.fillStyle = `rgba(${r() > 0.5 ? 255 : 0},${r() > 0.5 ? 255 : 0},${r() > 0.5 ? 255 : 0},0.1)`;
     bg.fillRect(x, y, 2, 2);
   }
-  return { map: finish(c, repeat, true), bump: finish(b, repeat, false) };
+  return together({ map: finish(c, repeat, true), bump: finish(b, repeat, false) });
 }
 
 /** Wood grain: long streaks along one direction. */
-export function woodMaps(base: string, repeat = 2): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
+export function woodMaps(base: string, repeat = 2): Maps {
   const size = 512;
   const [c, g] = canvas(size);
   const [b, bg] = canvas(size);
@@ -89,7 +92,7 @@ export function woodMaps(base: string, repeat = 2): { map: THREE.CanvasTexture; 
     for (let x = 0; x <= size; x += 32) bg.lineTo(x, y + Math.sin(x / 70 + i) * wob);
     bg.stroke();
   }
-  return { map: finish(c, repeat, true), bump: finish(b, repeat, false) };
+  return together({ map: finish(c, repeat, true), bump: finish(b, repeat, false) });
 }
 
 /** The shape of a name plate's face, in metres. */

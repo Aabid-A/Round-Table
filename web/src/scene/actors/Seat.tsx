@@ -1,11 +1,13 @@
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { chairPose, figurePose, headYaw, platePose, yawBetween } from '../layout.js';
 import { Chair } from '../models/Chair.js';
 import { MASKS } from '../models/masks.js';
 import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
+import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
+import { useResource } from '../resources.js';
 import type { SliceFigure } from '../sliceView.js';
 import { Figure } from './Figure.js';
 
@@ -33,7 +35,8 @@ export function Seat(p: SeatProps) {
   const { index } = p.figure;
   const chair = useRef<THREE.Group>(null);
   const push = useRef(0);
-  const plate = useMemo(() => plateTexture(p.figure.name, MASKS[index]!.colour), [p.figure.name, index]);
+  const plate = useResource(`plate:${index}:${p.figure.name}`, () => plateTexture(p.figure.name, MASKS[index]!.colour));
+  const reduced = useReducedMotion();
   // A seat that can no longer be chosen gives the pointer back.
   useEffect(() => {
     if (!p.choosable) return;
@@ -43,7 +46,7 @@ export function Seat(p: SeatProps) {
   const fig = figurePose(index);
   const plateP = platePose(index, p.viewer);
   useFrame((_, dt) => {
-    push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * (1 - Math.exp(-dt * 3));
+    push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * approach(dt, 3, reduced);
     if (chair.current) chair.current.position.z = push.current;
   });
   // A figure the player's eye is on looks back at the player.
