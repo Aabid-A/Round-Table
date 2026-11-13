@@ -38,12 +38,14 @@ test('plays the whole slice by keyboard and the choice form: accuse, vote, banis
   await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeHidden();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByTestId('slice')).toHaveAttribute('data-selected', '1');
-  await page.keyboard.press('Enter');
+  // Once opened, the list stays open for the next choice.
+  await page.getByText('Choose from a list').click();
+  await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
   await expect(page.locator('.slice-caption')).toContainText('You point at');
   await toNextChoice(page);
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'vote');
-  await page.getByText('Choose from a list').click();
   await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm' })).toBeDisabled();
   await page.getByRole('radio').nth(1).check();

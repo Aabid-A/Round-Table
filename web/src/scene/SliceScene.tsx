@@ -2,7 +2,7 @@ import './three-jsx.js';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { FirstPerson } from './camera/FirstPerson.js';
+import { EYE, FirstPerson } from './camera/FirstPerson.js';
 import { Html } from '@react-three/drei';
 import { figurePose, yawToSeat } from './layout.js';
 import { Seat } from './actors/Seat.js';
@@ -122,7 +122,7 @@ export default function SliceScene({ view, quality, onFrame, onHover = () => {},
       key={quality}
       shadows={q.shadows ? { type: THREE.PCFSoftShadowMap } : false}
       dpr={q.dpr}
-      camera={{ fov: 58, near: 0.05, far: 40, position: [0, 1.22, 2.62] }}
+      camera={{ fov: 58, near: 0.05, far: 40, position: EYE }}
       gl={{ antialias: q.antialias, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => gl.setClearColor('#06070b')}
     >

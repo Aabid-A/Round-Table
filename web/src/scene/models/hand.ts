@@ -11,7 +11,7 @@ interface Finger {
   curl: Record<HandPose, number[]>;
 }
 
-// A right hand, life size in metres: the wrist at the origin, fingers along +z, the palm facing down (-y), the thumb toward -x.
+// A left hand, life size in metres (a right hand is its mirror image): the wrist at the origin, fingers along +z, the palm facing down (-y), the thumb toward -x.
 const FINGERS: Finger[] = [
   { base: [-0.027, 0, 0.088], spread: -0.14, lengths: [0.04, 0.025, 0.02], radius: 0.0088, curl: { rest: [0.14, 0.24, 0.2], point: [0, 0.04, 0.04] } },
   { base: [-0.009, 0.001, 0.092], spread: -0.03, lengths: [0.044, 0.028, 0.021], radius: 0.009, curl: { rest: [0.16, 0.26, 0.2], point: [1.35, 1.6, 1.1] } },

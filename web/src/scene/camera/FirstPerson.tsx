@@ -28,6 +28,7 @@ export function FirstPerson({ toward, free }: Props) {
   const pitch = useRef(-0.18);
   const reduced = useReducedMotion();
   const was = useRef<number | null>(null);
+  const wasFree = useRef(free);
   const arc = yawArcFor(size.width / size.height);
   useEffect(() => {
     const el = gl.domElement;
@@ -49,9 +50,10 @@ export function FirstPerson({ toward, free }: Props) {
     const t = clock.elapsedTime * idle(reduced);
     const wantYaw = (toward !== null ? Math.max(-0.85, Math.min(0.85, toward * 0.6)) : 0) + (free ? pointer.current.x * arc : pointer.current.x * arc * 0.35);
     const wantPitch = restPitchFor(size.width / size.height) + (free ? -pointer.current.y * PITCH_ARC : 0);
-    // Reduced motion: whenever the camera's subject changes (a speaker begins or ends) it cuts; it never pans by itself.
-    const cut = reduced && toward !== was.current;
+    // Reduced motion: whenever the camera's subject changes (a speaker begins or ends, a choice opens or is made) it cuts; it never pans by itself.
+    const cut = reduced && (toward !== was.current || free !== wasFree.current);
     was.current = toward;
+    wasFree.current = free;
     const k = approach(dt, 2.6, cut);
     yaw.current += (wantYaw - yaw.current) * k;
     pitch.current += (wantPitch - pitch.current) * k;
