@@ -5,7 +5,12 @@ import { createMockPlayers, MOCK_CAST } from '../../../src/players/mock.js';
 import { buildPrompt } from '../../../src/prompts/phases.js';
 import { SYSTEM_PROMPT } from '../../../src/prompts/system.js';
 import { chooseQuality, qualityFromSearch, type Quality } from '../scene/stage/quality.js';
+import { cueForStage } from './cues.js';
+import { paceFromSearch } from './params.js';
 import { initial, reduce, stageMs, viewOf } from './machine.js';
+import { SliceFallback } from './SliceFallback.js';
+import { SliceHud } from './SliceHud.js';
+import { readMuted, Sound, writeMuted } from './sound.js';
 import { scriptFromLog, SLICE_SEED, type SliceScript } from './script.js';
 
 const SliceScene = lazy(() => import('../scene/SliceScene.js'));
@@ -20,6 +25,14 @@ export function SlicePage() {
   return script ? <Slice script={script} /> : <p className="notice" role="status">Setting the table…</p>;
 }
 
+function hasWebGl2(): boolean {
+  try {
+    return document.createElement('canvas').getContext('webgl2') !== null;
+  } catch {
+    return false;
+  }
+}
+
 function Slice({ script }: { script: SliceScript }) {
   const [state, dispatch] = useReducer((s: ReturnType<typeof initial>, a: Parameters<typeof reduce>[1]) => reduce(s, a, script), undefined, initial);
   const view = useMemo(() => viewOf(state, script), [state, script]);
@@ -31,18 +44,42 @@ function Slice({ script }: { script: SliceScript }) {
     frames.current.push(ms);
     if (frames.current.length === 45) setQuality(chooseQuality(frames.current.slice(5)));
   };
+  const noGl = useMemo(() => new URLSearchParams(window.location.search).get('fallback') === '1' || !hasWebGl2(), []);
+  const pace = useMemo(() => paceFromSearch(window.location.search), []);
+  const sound = useRef<Sound | null>(null);
+  const [muted, setMuted] = useState(readMuted);
+  const startSound = (): void => {
+    sound.current ??= new Sound(muted);
+    sound.current.start();
+  };
+  useEffect(() => {
+    const cue = cueForStage(state.stage);
+    if (cue) sound.current?.play(cue);
+  }, [state.stage]);
+  const toggleMute = (): void => {
+    startSound();
+    const m = !muted;
+    setMuted(m);
+    writeMuted(m);
+    sound.current?.setMuted(m);
+  };
   useEffect(() => {
     const ms = stageMs(state.stage);
     if (ms === null) return;
-    const t = setTimeout(() => dispatch({ t: 'advance' }), ms);
+    const t = setTimeout(() => dispatch({ t: 'advance' }), ms * pace);
     return () => clearTimeout(t);
   }, [state.stage]);
   return (
-    <main className="slice" data-testid="slice" data-quality={quality} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind}>
+    <main className="slice" data-testid="slice" onPointerDown={startSound} onKeyDown={startSound} data-quality={quality} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind}>
+      {noGl ? (
+        <SliceFallback view={view} reason="This is the plain version of the round table. The 3D room needs WebGL." />
+      ) : (
       <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
-        <SliceScene view={view} quality={quality} onFrame={onFrame} />
+        <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'select', seat })} />
       </Suspense>
-      <p className="slice-caption" role="status">{view.announce}</p>
+      )}
+      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} />
+      <p className="slice-caption" role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
 }
