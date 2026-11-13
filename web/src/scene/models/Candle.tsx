@@ -17,7 +17,7 @@ export function Candle({ height, lit, seed }: Props) {
   const stick = useMemo(() => new THREE.LatheGeometry([[0.05, 0], [0.045, 0.02], [0.02, 0.05], [0.014, 0.12], [0.03, 0.14], [0.034, 0.15]].map(([x, y]) => new THREE.Vector2(x, y)), 14), []);
   const wax = useMemo(() => new THREE.LatheGeometry([[0.026, 0], [0.03, 0.02], [0.027, 0.5], [0.022, 0.52]].map(([x, y]) => new THREE.Vector2(x, y)), 14), []);
   const was = useRef(lit);
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime * 7 + seed * 13;
     const flicker = 0.88 + Math.sin(t) * 0.07 + Math.sin(t * 2.7 + seed) * 0.05;
     if (flame.current) {
@@ -28,7 +28,7 @@ export function Candle({ height, lit, seed }: Props) {
     if (smoke.current) {
       // A thin wisp rises for a moment when the flame has just gone out.
       const fresh = was.current > 0.05 && lit < 0.05 ? 1 : 0;
-      smoke.current.userData.age = fresh ? 0 : ((smoke.current.userData.age as number | undefined) ?? 9) + 0.016;
+      smoke.current.userData.age = fresh ? 0 : ((smoke.current.userData.age as number | undefined) ?? 9) + dt;
       const age = smoke.current.userData.age as number;
       smoke.current.visible = age < 3;
       smoke.current.position.y = height + 0.18 + age * 0.16;
