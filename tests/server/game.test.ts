@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { runRoomGame } from '../../server/game.js';
 import { AI_NAMES } from '../../src/cast.js';
-import { autoRoom } from './helpers.js';
+import { autoRoom, FakeConn } from './helpers.js';
 
 describe('runRoomGame', () => {
   it('plays a whole game with people and mock AIs and returns a normal log', async () => {
@@ -140,5 +140,85 @@ describe('runRoomGame', () => {
     const aiAttempts = log.turns.filter((t) => t.player !== 'Quinn').flatMap((t) => t.attempts);
     expect(aiAttempts.every((a) => a.costEstimatedUsd === 0.1)).toBe(true);
     expect(log.result.costCap?.spentUsd).toBe(0.5);
+  });
+});
+
+describe('runRoomGame with ghosts and spectators', () => {
+  const WATCH_SEED = 4;
+
+  it('tells a person about every seat only after they are out, and never a person who is still playing', async () => {
+    const { room, conns, seatPlayers } = autoRoom(['Quinn', 'Rae', 'Sam', 'Tia'], { mode: 'mock' }, WATCH_SEED);
+    room.ghosts = true;
+    const log = await runRoomGame(room, { seatPlayers });
+    const outAt = (name: string): number => log.events.findIndex((e) => (e.type === 'breakfast' && e.victim === name) || (e.type === 'banishment' && e.player === name));
+    let ghosts = 0;
+    for (const name of ['Quinn', 'Rae', 'Sam', 'Tia']) {
+      const sent = conns.get(name)!.sent;
+      const ghost = sent.flatMap((m, i) => (m.t === 'ghost' ? [{ m, i }] : []));
+      if (outAt(name) === -1) {
+        expect(ghost, `${name} never left the game and must not be a ghost`).toEqual([]);
+        continue;
+      }
+      ghosts++;
+      expect(ghost.length).toBeGreaterThan(0);
+      // Nothing for a ghost before their own exit: after the first ghost message they get no more turns, and every turn they were
+      // ever asked for came first.
+      const firstGhost = ghost[0]!.i;
+      expect(sent.slice(firstGhost).some((m) => m.t === 'turn')).toBe(false);
+      for (const { m } of ghost) {
+        if (m.t !== 'ghost') continue;
+        expect(m.seats.find((s) => s.name === name)!.status).not.toBe('alive');
+        expect(m.seats).toHaveLength(8);
+      }
+    }
+    expect(ghosts).toBeGreaterThan(0);
+  });
+
+  it('sends a ghost the other seats’ own prompts, which hold what they were told and nothing else', async () => {
+    const { room, conns, seatPlayers } = autoRoom(['Quinn', 'Rae', 'Sam', 'Tia'], { mode: 'mock' }, WATCH_SEED);
+    room.ghosts = true;
+    const log = await runRoomGame(room, { seatPlayers });
+    const roles = log.roles;
+    const prompts = new Set(log.turns.flatMap((t) => t.attempts.map((a) => a.prompt)));
+    for (const name of ['Quinn', 'Rae', 'Sam', 'Tia']) {
+      for (const m of conns.get(name)!.sent) {
+        if (m.t !== 'ghost') continue;
+        for (const s of m.seats) {
+          if (s.prompt === null) continue;
+          expect(prompts.has(s.prompt) || [...prompts].some((p) => s.prompt!.startsWith(p)), `${s.name}'s prompt is a real prompt`).toBe(true);
+          expect(s.prompt).toContain(`You are ${s.name}. Your role: ${roles[s.name]}`);
+          expect(s.prompt).not.toContain('MOCKNOTE');
+        }
+      }
+    }
+  });
+
+  it('has no ghost and keeps nothing without the option', async () => {
+    const { room, conns, seatPlayers } = autoRoom(['Quinn', 'Rae', 'Sam', 'Tia'], { mode: 'mock' }, WATCH_SEED);
+    await runRoomGame(room, { seatPlayers });
+    expect(room.watching).toBeNull();
+    for (const c of conns.values()) expect(c.sent.some((m) => m.t === 'ghost' || m.t === 'spectate')).toBe(false);
+  });
+
+  it('shows a spectator each full round once, never the round being played, and never to a player', async () => {
+    const { room, conns, seatPlayers } = autoRoom(['Quinn', 'Rae', 'Sam', 'Tia'], { mode: 'mock' }, WATCH_SEED);
+    room.enableSpectators();
+    const watcher = new FakeConn();
+    expect(room.addWatcher(watcher).ok).toBe(true);
+    const log = await runRoomGame(room, { seatPlayers });
+    const spec = watcher.sent.filter((m) => m.t === 'spectate');
+    expect(spec.length).toBeGreaterThan(1);
+    let last = -1;
+    for (const m of spec) {
+      if (m.t !== 'spectate') continue;
+      expect(m.complete).toBe(false);
+      const rounds = Math.max(0, ...(m.log?.turns.map((t) => t.round) ?? [0]));
+      expect(rounds).toBeGreaterThan(last); // each message adds a round
+      last = rounds;
+      expect(m.log!.result).toBeNull();
+      expect(m.log!.turns).toEqual(log.turns.filter((t) => t.round <= rounds));
+    }
+    expect(last).toBeLessThan(log.result.rounds); // never the last round, until the game is over
+    for (const c of conns.values()) expect(c.sent.some((m) => m.t === 'spectate')).toBe(false);
   });
 });

@@ -87,3 +87,13 @@ describe('seatsAt', () => {
     expect(seatsAt(recruitLog, s, s.length - 1).find((x) => x.name === target)?.revealedRole).toBe('traitor');
   });
 });
+
+describe('buildSteps for a game still being played', () => {
+  it('has no result step, and is otherwise the same steps', () => {
+    const full = buildSteps(log);
+    const partial = buildSteps(log, { partial: true });
+    expect(full.at(-1)!.kind).toBe('result');
+    expect(partial.some((s) => s.kind === 'result')).toBe(false);
+    expect(partial).toEqual(full.slice(0, -1));
+  });
+});

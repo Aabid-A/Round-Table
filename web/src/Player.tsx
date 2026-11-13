@@ -17,7 +17,11 @@ import { usePlayback } from './usePlayback.js';
 
 interface Props {
   log: GameLog;
-  onReload: () => void;
+  onReload?: () => void;
+  /** The game is still being played and `log` is as much of it as this watcher may see: no result step, and the replay follows new steps as they arrive. */
+  live?: boolean;
+  /** What to show when the address does not say (a watcher opens in the all-seeing room). */
+  initial?: Perspective;
 }
 
 const announcement = (view: StepView): string =>
@@ -37,12 +41,15 @@ const roomAnnouncement = (view: SceneView): string => {
 };
 
 /** Plays one game log like an episode. */
-export function Player({ log, onReload }: Props) {
-  const steps = useMemo(() => buildSteps(log), [log]);
+export function Player({ log, onReload, live = false, initial }: Props) {
+  const steps = useMemo(() => buildSteps(log, { partial: live }), [log, live]);
   const views = useMemo(() => steps.map((s) => describeStep(s, log)), [steps, log]);
   const [showNotes, setShowNotes] = useState(false);
   // The seat the viewer sits in, or null for the public table.
-  const [perspective, setPerspective] = useState<Perspective>(() => perspectiveFromSearch(window.location.search, log.cast));
+  const [perspective, setPerspective] = useState<Perspective>(() => {
+    const fromAddress = perspectiveFromSearch(window.location.search, log.cast);
+    return fromAddress.kind === 'table' && initial ? initial : fromAddress;
+  });
   const seat = perspective.kind === 'seat' ? perspective.name : null;
   const spectating = perspective.kind === 'spectator';
   const ctx = useMemo(() => buildContext(log), [log]);
@@ -55,6 +62,14 @@ export function Player({ log, onReload }: Props) {
   const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
   const at = Math.min(pos, timeline.length - 1);
   const index = timeline[at] ?? 0;
+  // A live watcher who was at the newest step stays there as more of the game arrives.
+  const seen = useRef({ length: timeline.length, atEnd: pos >= timeline.length - 1 });
+  useEffect(() => {
+    const grew = timeline.length > seen.current.length;
+    const follow = live && grew && seen.current.atEnd;
+    if (follow) seek(timeline.length - 1);
+    seen.current = { length: timeline.length, atEnd: follow || pos >= timeline.length - 1 };
+  }, [live, timeline.length, pos, seek]);
   // The step the viewer last chose themselves. Switching seats stands on the nearest step at or before it in the new list, and
   // going back lands on it again, so a round trip does not drift when the step is empty for the seat.
   const anchor = useRef(0);
@@ -97,7 +112,7 @@ export function Player({ log, onReload }: Props) {
       <header className="topbar">
         <h1>Round Table</h1>
         <span className="muted">
-          seed {log.seed} · {log.cast.length} players
+          {live ? '' : `seed ${log.seed} · `}{log.cast.length} players
         </span>
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
@@ -156,7 +171,7 @@ export function Player({ log, onReload }: Props) {
         onToggle={toggle}
         onSeek={seek}
         onNotes={setShowNotes}
-        onReload={onReload}
+        {...(onReload ? { onReload } : {})}
       />
     </main>
   );

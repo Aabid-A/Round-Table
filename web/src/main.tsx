@@ -11,7 +11,8 @@ import { isEpisodesPage, isGuessMode } from './guess/params.js';
 import { PlayPage } from './play/PlayPage.js';
 import { isPlayMode } from './play/params.js';
 import { RoomPage } from './rooms/RoomPage.js';
-import { isRoomMode } from './rooms/params.js';
+import { isRoomMode, isWatchMode } from './rooms/params.js';
+import { WatchPage } from './rooms/WatchPage.js';
 
 const search = window.location.search;
 const page = isCardPage(search) ? (
@@ -20,6 +21,8 @@ const page = isCardPage(search) ? (
   <GuessPage />
 ) : isPlayMode(search) ? (
   <PlayPage />
+) : isWatchMode(search) ? (
+  <WatchPage />
 ) : isRoomMode(search) ? (
   <RoomPage />
 ) : isEpisodesPage(search) ? (

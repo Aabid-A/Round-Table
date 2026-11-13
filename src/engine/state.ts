@@ -35,8 +35,19 @@ export function getPlayer(s: GameState, name: string): PlayerState {
   return p;
 }
 
+/** Run an observer's callback; whatever it does, the game goes on. */
+export function notify(s: GameState, fn: (o: NonNullable<GameState['observer']>) => void): void {
+  if (!s.observer) return;
+  try {
+    fn(s.observer);
+  } catch {
+    // An observer must not be able to stop or change a game.
+  }
+}
+
 export function addEvent(s: GameState, event: GameEvent): void {
   s.events.push(event);
+  notify(s, (o) => o.event?.(event));
 }
 
 export function eventBase(s: GameState, visibleTo: Visibility): { round: number; afterTurn: number; visibleTo: Visibility } {

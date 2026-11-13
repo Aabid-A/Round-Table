@@ -223,7 +223,7 @@ Each milestone needs the one before it.
     whispers to whom. Whispers to you lean the sender in; the rest is left
     out.
 
-- [ ] **M17. Watching live rooms.**
+- [x] **M17. Watching live rooms.**
   - Ghost view: a murdered or banished player may move between seats and see
     each seat's limited view. Off by default. The host turns it on when
     creating the room, beside a line saying ghosts can see hidden information.

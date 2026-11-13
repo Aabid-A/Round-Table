@@ -291,6 +291,12 @@ is ever sent another person's role, notes or whispers before the game ends. For 
 OpenRouter key is held in memory for that room only and never logged or sent to anyone. Settings, limits
 and the key rules: [docs/ROOMS.md](docs/ROOMS.md).
 
+Two more options when making a room, both off unless ticked: **ghosts** (a person who is murdered or banished can
+keep watching, moving between seats and seeing what each one knows, hidden information included) and a **read-only
+watch link** (`?mode=watch&room=CODE&k=TOKEN`, given to the host to share), which shows the all-seeing room one full
+round behind the live game and the whole game when it ends. A living player is sent nothing extra whichever options are
+on; see "Ghosts and the watch link" in [docs/ROOMS.md](docs/ROOMS.md).
+
 Tick **Human or AI?** when making a room and everyone plays under an alias, so nobody knows which seats are friends and which
 are models. At the end each person guesses which seats were AIs before the reveal, and the end screen shows who fooled whom, a
 result card ("3 of 4 humans trusted the AI traitor") and a spoiler-free line to share with the replay link. Every finished game

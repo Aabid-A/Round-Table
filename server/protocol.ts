@@ -41,6 +41,8 @@ export const LIMITS = {
   guessMs: 60_000,
   /** How long a person has for one turn. */
   turnMs: 90_000,
+  /** Read-only watchers one room may have at once. */
+  watchersPerRoom: 20,
 } as const;
 
 export { CODE_ALPHABET, CODE_LENGTH, normalizeCode } from '../src/roomCode.js';
@@ -52,7 +54,10 @@ export const MAX_HUMANS = 8;
 export type AiSetup = { mode: 'mock' } | { mode: 'openrouter'; key: string; models: string[]; maxCostUsd: number };
 
 export type ClientMessage =
-  | ({ t: 'create'; name: string; seed?: number; aliases?: true } & AiSetup)
+  /** `ghosts`: players who are out may watch every seat's view. `spectators`: a read-only link, one full round behind. Both off unless asked for. */
+  | ({ t: 'create'; name: string; seed?: number; aliases?: true; ghosts?: true; spectators?: true } & AiSetup)
+  /** A read-only watcher, who holds the room's watch token (given only to the host, to share). */
+  | { t: 'watch'; code: string; token: string }
   | { t: 'join'; code: string; name: string }
   | { t: 'rejoin'; code: string; token: string }
   | { t: 'start' }
@@ -91,7 +96,15 @@ export function parseClientMessage(text: string): Parsed {
       const seed = raw.seed;
       if (seed !== undefined && !(typeof seed === 'number' && Number.isInteger(seed) && seed >= 0 && seed < 2 ** 31)) return fail('The seed must be a whole number.');
       if (raw.aliases !== undefined && typeof raw.aliases !== 'boolean') return fail('Aliases must be on or off.');
-      const seedPart = { ...(seed === undefined ? {} : { seed: seed as number }), ...(raw.aliases === true ? { aliases: true as const } : {}) };
+      for (const [key, what] of [['ghosts', 'Ghosts'], ['spectators', 'Spectators']] as const) {
+        if (raw[key] !== undefined && typeof raw[key] !== 'boolean') return fail(`${what} must be on or off.`);
+      }
+      const seedPart = {
+        ...(seed === undefined ? {} : { seed: seed as number }),
+        ...(raw.aliases === true ? { aliases: true as const } : {}),
+        ...(raw.ghosts === true ? { ghosts: true as const } : {}),
+        ...(raw.spectators === true ? { spectators: true as const } : {}),
+      };
       if (raw.mode === 'mock') return { ok: true, msg: { t: 'create', name: n, mode: 'mock', ...seedPart } };
       if (raw.mode !== 'openrouter') return fail('Choose practice AIs or real models.');
       const key = typeof raw.key === 'string' ? raw.key.trim() : '';
@@ -109,6 +122,12 @@ export function parseClientMessage(text: string): Parsed {
       if (!code) return fail('That room code does not look right.');
       const n = name();
       return typeof n === 'string' ? { ok: true, msg: { t: 'join', code, name: n } } : fail(n.error);
+    }
+    case 'watch': {
+      const code = normalizeCode(raw.code);
+      if (!code) return fail('That room code does not look right.');
+      if (typeof raw.token !== 'string' || !/^[0-9a-f-]{36}$/.test(raw.token)) return fail('That watch link does not look right.');
+      return { ok: true, msg: { t: 'watch', code, token: raw.token } };
     }
     case 'rejoin': {
       const code = normalizeCode(raw.code);
@@ -147,9 +166,24 @@ export interface SeatInfo {
   host: boolean;
 }
 
+/** One seat as a ghost sees it: what that seat was last told (its own prompt), which is everything it knows. Null before its first turn. */
+export interface GhostSeat {
+  name: string;
+  status: 'alive' | 'murdered' | 'banished';
+  prompt: string | null;
+}
+
+/** The game so far as a spectator may see it. `result` is null until the game is over. */
+export type SpectatorLog = Omit<GameLog, 'result'> & { result: GameLog['result'] | null };
+
 export type ServerMessage =
-  | { t: 'joined'; code: string; token: string; you: string; host: boolean }
-  | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; aliases: boolean; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
+  /** `watch` is the token for the read-only link, only for the host and only when the room has one. */
+  | { t: 'joined'; code: string; token: string; you: string; host: boolean; watch?: string }
+  | { t: 'lobby'; code: string; mode: 'mock' | 'openrouter'; aliases: boolean; ghosts?: boolean; spectators?: boolean; seats: SeatInfo[]; aiSeats: number; maxHumans: number }
+  /** Private to a person who is out of the game, in a room that allows ghosts: every seat's view, as of now. Never sent to a living player. */
+  | { t: 'ghost'; you: string; seats: GhostSeat[] }
+  /** To a watcher only: the game so far, one full round behind, or all of it when `complete`. `log` is null before the game starts. */
+  | { t: 'spectate'; log: SpectatorLog | null; complete: boolean }
   /** Private to one seat, when the game starts in alias mode: the name this person plays under. */
   | { t: 'alias'; alias: string }
   /** After the game in alias mode: guess which seats were AIs. `seats` are all the aliases; `you` is this person's own. */

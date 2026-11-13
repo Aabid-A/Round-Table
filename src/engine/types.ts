@@ -108,7 +108,19 @@ export interface PlayerState extends CastMember {
   status: PlayerStatus;
 }
 
+/**
+ * Told about the game as it happens, for a server that shows it to people who are not playing. It sees what the log will hold, in
+ * the same order, and cannot change the game: an observer that throws is ignored.
+ */
+export interface GameObserver {
+  /** The roles, once drawn, before the first turn. */
+  start?(info: { roles: Record<string, Role> }): void;
+  turn?(turn: Turn): void;
+  event?(event: GameEvent): void;
+}
+
 export interface GameState {
+  observer?: GameObserver;
   round: number;
   players: PlayerState[];
   events: GameEvent[];

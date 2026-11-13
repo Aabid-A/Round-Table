@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inviteLink, isRoomMode, replayLink, roomCodeFromSearch, roomSeedFromSearch, roomServerHost, roomServerUrl } from '../../web/src/rooms/params.js';
+import { inviteLink, isRoomMode, isWatchMode, watchFromSearch, watchLink, replayLink, roomCodeFromSearch, roomSeedFromSearch, roomServerHost, roomServerUrl } from '../../web/src/rooms/params.js';
 
 describe('isRoomMode and roomCodeFromSearch', () => {
   it('opens the rooms page for ?mode=room or a valid invite code', () => {
@@ -59,5 +59,19 @@ describe('roomServerHost', () => {
   });
   it('falls back to the address itself when it cannot be read', () => {
     expect(roomServerHost('not an address')).toBe('not an address');
+  });
+});
+
+describe('the watch link', () => {
+  const token = '3f2c9a1e-8b4d-4c7a-9e1f-0a2b3c4d5e6f';
+  it('is built and read back, and needs a good room code and token', () => {
+    const link = watchLink({ origin: 'https://x.test', pathname: '/' }, 'AB2CD', token);
+    expect(link).toBe(`https://x.test/?mode=watch&room=AB2CD&k=${token}`);
+    expect(isWatchMode(new URL(link).search)).toBe(true);
+    expect(watchFromSearch(new URL(link).search)).toEqual({ code: 'AB2CD', token });
+    expect(watchFromSearch('?mode=watch&room=AB2CD&k=nope')).toBeNull();
+    expect(watchFromSearch(`?mode=watch&room=zz&k=${token}`)).toBeNull();
+    expect(watchFromSearch('?mode=watch')).toBeNull();
+    expect(isWatchMode('?mode=room')).toBe(false);
   });
 });

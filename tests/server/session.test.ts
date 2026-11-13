@@ -53,6 +53,39 @@ describe('Session: creating, joining and rejoining', () => {
     expect(plain.conn.sent.at(-1)).toMatchObject({ t: 'lobby', aliases: false });
   });
 
+  it('makes ghosts and a read-only link only when asked, tells the host alone the link’s token, and keeps it out of JSON', () => {
+    const s = server();
+    const plain = s.open();
+    plain.send({ t: 'create', name: 'Quinn', mode: 'mock' });
+    const plainRoom = s.registry.get(joinedOf(plain.conn).code)!;
+    expect([plainRoom.ghosts, plainRoom.spectators]).toEqual([false, false]);
+    expect(joinedOf(plain.conn).watch).toBeUndefined();
+    expect(plain.conn.sent.at(-1)).toMatchObject({ t: 'lobby', ghosts: false, spectators: false });
+
+    const host = s.open();
+    host.send({ t: 'create', name: 'Rae', mode: 'mock', ghosts: true, spectators: true });
+    const code = joinedOf(host.conn).code;
+    const room = s.registry.get(code)!;
+    expect([room.ghosts, room.spectators]).toEqual([true, true]);
+    const token = joinedOf(host.conn).watch!;
+    expect(token).toMatch(/^[0-9a-f-]{36}$/);
+    expect(host.conn.sent.at(-1)).toMatchObject({ t: 'lobby', ghosts: true, spectators: true });
+    expect(room.isWatchToken(token)).toBe(true);
+    expect(room.isWatchToken(token.replace(/.$/, token.endsWith('0') ? '1' : '0'))).toBe(false);
+    expect(room.isWatchToken('')).toBe(false);
+
+    // A friend who joins is not given it, and it is not in anything the room prints.
+    const friend = s.open();
+    friend.send({ t: 'join', code, name: 'Sam' });
+    expect(joinedOf(friend.conn).watch).toBeUndefined();
+    expect(JSON.stringify(room)).not.toContain(token);
+    expect(JSON.stringify(friend.conn.sent)).not.toContain(token);
+    // The host gets it again on rejoining.
+    const again = s.open();
+    again.send({ t: 'rejoin', code, token: joinedOf(host.conn).token });
+    expect(joinedOf(again.conn).watch).toBe(token);
+  });
+
   it('refuses a real-model room on a connection that is not secure, without making a room or repeating the key, and still allows practice rooms', () => {
     const s = server();
     const insecure = s.open(false);

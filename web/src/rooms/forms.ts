@@ -16,12 +16,22 @@ export interface CreateForm {
   cap: string;
   /** Everyone plays under an alias, so nobody knows which seats are friends and which are AIs. */
   aliases: boolean;
+  /** People who are out of the game may watch every seat's view, hidden information included. */
+  ghosts?: boolean;
+  /** A read-only link that shows the game one full round behind. */
+  spectators?: boolean;
 }
 
 /** What the page sends to make a room. The server checks it all again. */
 export type CreateMessage =
-  | { t: 'create'; name: string; mode: 'mock'; aliases?: true }
-  | { t: 'create'; name: string; mode: 'openrouter'; key: string; models: string[]; maxCostUsd: number; aliases?: true };
+  | ({ t: 'create'; name: string; mode: 'mock' } & CreateOptions)
+  | ({ t: 'create'; name: string; mode: 'openrouter'; key: string; models: string[]; maxCostUsd: number } & CreateOptions);
+
+interface CreateOptions {
+  aliases?: true;
+  ghosts?: true;
+  spectators?: true;
+}
 
 /** One to seven model IDs, one per line or comma separated. The AI seats use them in turn. */
 export function parseModelIds(text: string): Checked<string[]> {
@@ -34,7 +44,11 @@ export function parseModelIds(text: string): Checked<string[]> {
 export function checkCreate(f: CreateForm): Checked<CreateMessage> {
   const problem = nameProblem(f.name);
   if (problem) return bad(problem);
-  const aliases = f.aliases ? { aliases: true as const } : {};
+  const aliases = {
+    ...(f.aliases ? { aliases: true as const } : {}),
+    ...(f.ghosts ? { ghosts: true as const } : {}),
+    ...(f.spectators ? { spectators: true as const } : {}),
+  };
   if (!f.real) return { ok: true, value: { t: 'create', name: f.name, mode: 'mock', ...aliases } };
   const key = f.key.trim();
   if (key === '' || /\s/.test(key)) return bad('Paste your OpenRouter key.');

@@ -27,6 +27,8 @@ export function Home({ serverHost, inviteCode, serverError, offline, onDismissEr
   const [models, setModels] = useState('');
   const [cap, setCap] = useState('1.00');
   const [aliases, setAliases] = useState(false);
+  const [ghosts, setGhosts] = useState(false);
+  const [spectators, setSpectators] = useState(false);
 
   // One primary button on the page: joining when the person came from an invite, making a room otherwise.
   const joinIsPrimary = inviteCode !== null;
@@ -43,7 +45,7 @@ export function Home({ serverHost, inviteCode, serverError, offline, onDismissEr
     onJoin(checked.value);
   };
   const create = (): void => {
-    const checked = checkCreate({ name, real, key, models, cap, aliases });
+    const checked = checkCreate({ name, real, key, models, cap, aliases, ghosts, spectators });
     if (!checked.ok) return setProblem(checked.message);
     clear();
     setKey(''); // the key leaves this page with the message; the page keeps no copy
@@ -132,6 +134,22 @@ export function Home({ serverHost, inviteCode, serverError, offline, onDismissEr
               <input type="checkbox" checked={aliases} onChange={(e) => (setAliases(e.target.checked), clear())} />
               Human or AI? Everyone plays under an alias, so nobody knows who is a friend and who is an AI
             </label>
+            <label className="choice" data-on={ghosts}>
+              <input type="checkbox" checked={ghosts} onChange={(e) => (setGhosts(e.target.checked), clear())} data-testid="ghosts-option" />
+              Let players who are out watch the rest of the game as ghosts
+            </label>
+            <p className="hint" data-testid="ghosts-note">
+              A ghost can move between seats and see what each one knows, which includes hidden information: who the traitors are, and every note
+              a seat was told. It starts only once they are out. Off unless you tick it.
+            </p>
+            <label className="choice" data-on={spectators}>
+              <input type="checkbox" checked={spectators} onChange={(e) => (setSpectators(e.target.checked), clear())} data-testid="spectators-option" />
+              Make a read-only watch link that shows the game one full round behind
+            </label>
+            <p className="hint" data-testid="spectators-note">
+              Anyone with the link sees every role, note and whisper of rounds that are over, and the whole game when it ends. Share it only with
+              people who are not playing. Off unless you tick it.
+            </p>
             {real && (
               <>
                 <div className="notice" data-testid="key-note">

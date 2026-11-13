@@ -120,6 +120,32 @@ people over several seeds and checks it.
 One thing is not hidden: AI calls and people take different amounts of time, so someone watching how long turns take
 could guess which seats are people.
 
+## Ghosts and the watch link
+
+Two options, both **off unless the host ticks them** when making the room, each with a warning beside it. They exist
+because the people in a game who are not playing any more, or never were, may want to see what is going on.
+
+- **Ghosts.** A person who is murdered or banished is sent, from that moment, every seat's view: what each seat was
+  last told (its own prompt), which includes its role, who its fellow traitors are, and everything it was shown.
+  They can move between seats in the page. It says so on the create form and in the lobby, because it is hidden
+  information. A person is a ghost only from their own exit: someone who left while playing and comes back after they
+  were out is sent the views when they rejoin, and was sent nothing while away.
+- **The watch link** (`?mode=watch&room=CODE&k=TOKEN`). The room makes a secret token and gives it to the host alone, to
+  share. Anyone with the link can connect read-only and sees the all-seeing view (every role, note and whisper) **one full
+  round behind** the live game: round 1 appears when round 2 begins, and so on, and the whole game, with its result, when
+  everyone playing has it. A watcher can do nothing but watch (any other message gets an error), up to 20 per room, and a
+  wrong token, a made-up code and a room without the option all get the same reply. In an alias game the models are
+  blank in what a watcher is sent until the end.
+
+What a **living player** is sent does not change with either option: no ghost message, no watch token (except the host's
+own, for sharing), no roles, notes or whispers. The server keeps what it needs for the two options only when one is on, and
+sends it only to the people described above.
+[The watching test](../tests/server/watching-rooms.test.ts) plays whole games over a real server with four people and two
+watchers and checks, message by message: living players got only player messages and nothing hidden, ghosts nothing before
+their exit, and every spectator message was one full round behind the live round at the moment it was made (it reads the
+live round from the room as each message is built). It also covers watchers that connect mid-game or reconnect, a person
+who rejoins as a ghost, and alias rooms.
+
 ## Limits
 
 | Limit | Value |
@@ -133,6 +159,7 @@ could guess which seats are people.
 | Guessing after an alias game | 60 seconds |
 | Empty lobby | closed after 10 minutes with nobody connected (leaving on purpose frees it at once) |
 | People per room | 8 |
+| Watchers per room | 20 |
 | Text | names 20 characters; speech 600; a message or a note 300 |
 
 All text from a person is flattened to one line (no line breaks, so nobody can fake a game line in
@@ -145,7 +172,8 @@ JSON text over a WebSocket. The types are in [`server/protocol.ts`](../server/pr
 
 | From the page | Meaning |
 |---|---|
-| `create` | Make a room (name, practice or real models, optional aliases, optional seed) |
+| `create` | Make a room (name, practice or real models, optional aliases, optional ghosts, optional watch link, optional seed) |
+| `watch` | Watch a room read-only, with the room code and the watch token |
 | `join` | Take a seat by room code and name |
 | `rejoin` | Take a seat back by room code and seat token |
 | `start` | Host only: start the game |
@@ -155,17 +183,18 @@ JSON text over a WebSocket. The types are in [`server/protocol.ts`](../server/pr
 
 | From the server | Meaning |
 |---|---|
-| `joined` | Your seat and your token |
+| `joined` | Your seat and your token (the host also gets the watch token, if the room has a link) |
 | `lobby` | Who is in the room, and whether it plays under aliases |
 | `alias` | Your alias, when an alias game starts (you only) |
 | `guess` | Ask for a guess: the seats, your own seat, the time left (you only) |
 | `status` | The phase (everyone) |
 | `turn` / `turn_over` | Your turn, and that it timed out (you only) |
+| `ghost` | A person who is out, in a room with ghosts: every seat's last prompt (you only) |
+| `spectate` | A watcher only: the game one full round behind, or all of it when over |
 | `finished` | The log and the outcome (everyone, at the end) |
 | `error` / `closed` | A refusal, or that the room is gone |
 
 ## Not in the box
 
-Rooms live in memory: stopping the server ends them. Only finished games' logs are saved (see "Saved logs"). There is no spectator
-view (a person who is out of the game waits until the end), no way to remove an offline seat, and no
+Rooms live in memory: stopping the server ends them. Only finished games' logs are saved (see "Saved logs"). There is no way to remove an offline seat, and no
 accounts. Deploying it is up to you.

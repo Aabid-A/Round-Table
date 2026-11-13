@@ -1,7 +1,9 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { AI_NAMES } from '../src/cast.js';
 import type { PublicPhase } from '../src/publicPhase.js';
-import { MAX_HUMANS, type AiSetup, type SeatInfo, type ServerMessage } from './protocol.js';
+import { LIMITS, MAX_HUMANS, type AiSetup, type SeatInfo, type ServerMessage } from './protocol.js';
+import type { GameLog } from '../src/engine/types.js';
+import type { Watching } from './watching.js';
 
 /** One open connection, as the room sees it. Tests use fakes; the server wraps a WebSocket. */
 export interface Conn {
@@ -31,6 +33,19 @@ export class Room {
   aliases = false;
   /** Alias to real name, kept private until the game is over. Empty without aliases. */
   people: Record<string, string> = {};
+  /** People who are out of the game may watch every seat's view. Off unless the host asked for it. */
+  ghosts = false;
+  /** A read-only link shows the game one full round behind. Off unless the host asked for it. */
+  spectators = false;
+  /** What the room knows about its game as it happens, while a ghost or spectator option makes that worth keeping. */
+  watching: Watching | null = null;
+  /** People (by seat name) who are out of the game. They are told what a ghost may see, if the room allows ghosts. */
+  readonly outPeople = new Set<string>();
+  private readonly watchers: Conn[] = [];
+  /** The newest round a spectator has been sent, so each new round is sent once. */
+  private spectatorRound = -1;
+  /** Proves a read-only watcher holds the link the host shared. Private, so it is not in JSON or console output. */
+  #watchToken: string | null = null;
   /** Who made the room (a network address), for the per-address room limit. */
   owner: string | null = null;
   /** When the game ended, for expiry. */
@@ -63,6 +78,71 @@ export class Room {
   /** Forget the key. Called when the game ends or the room closes; later calls to takeSetup get a mock setup. */
   dropKey(): void {
     this.#setup = { mode: 'mock' };
+  }
+
+  /** Give the room a read-only link. Called once, when the host asks for one. */
+  enableSpectators(): void {
+    this.spectators = true;
+    this.#watchToken ??= randomUUID();
+  }
+
+  /** The watch token, for the host to share. Nobody else is told it. */
+  watchTokenFor(seat: Seat): string | undefined {
+    return seat.host && this.spectators ? (this.#watchToken ?? undefined) : undefined;
+  }
+
+  isWatchToken(token: string): boolean {
+    if (!this.spectators || this.#watchToken === null) return false;
+    const a = Buffer.from(token);
+    const b = Buffer.from(this.#watchToken);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }
+
+  /** Add a read-only watcher. */
+  addWatcher(conn: Conn): Result<true> {
+    if (this.phase === 'closed') return refuse('That room has closed.');
+    if (this.watchers.length >= LIMITS.watchersPerRoom) return refuse('That room has as many watchers as it can take.');
+    this.watchers.push(conn);
+    return { ok: true, value: true };
+  }
+
+  removeWatcher(conn: Conn): void {
+    const i = this.watchers.indexOf(conn);
+    if (i !== -1) this.watchers.splice(i, 1);
+  }
+
+  get watcherCount(): number {
+    return this.watchers.length;
+  }
+
+  /** What a watcher is shown now: nothing before the game, the game one round behind while it runs, all of it when it is over. */
+  spectateMessage(finished: GameLog | null): ServerMessage {
+    return finished ? { t: 'spectate', log: finished, complete: true } : { t: 'spectate', log: this.watching?.spectatorLog() ?? null, complete: false };
+  }
+
+  /** Tell the watchers when a new full round has become visible (or the game is over). */
+  publishSpectators(finished: GameLog | null = null): void {
+    if (!this.spectators) return;
+    const round = finished ? Number.POSITIVE_INFINITY : (this.watching?.visibleRound ?? 0);
+    if (round <= this.spectatorRound) return;
+    this.spectatorRound = round;
+    if (this.watchers.length === 0) return; // anyone who connects later is sent the game as it stands then
+    const message = this.spectateMessage(finished);
+    for (const w of this.watchers) w.send(message);
+  }
+
+  /** A ghost's view of every seat, for a person who is out. Null when the room does not allow ghosts or this person is still playing. */
+  ghostMessage(person: string): ServerMessage | null {
+    if (!this.ghosts || !this.outPeople.has(person) || !this.watching) return null;
+    return { t: 'ghost', you: this.aliasOf(person) ?? person, seats: this.watching.ghostSeats() };
+  }
+
+  /** Send every ghost the views as they are now. Only people who are out are ever in the list. */
+  publishGhosts(): void {
+    for (const person of this.outPeople) {
+      const message = this.ghostMessage(person);
+      if (message) this.sendTo(person, message);
+    }
   }
 
   toJSON(): unknown {
@@ -123,7 +203,7 @@ export class Room {
   }
 
   lobbyMessage(): ServerMessage {
-    return { t: 'lobby', code: this.code, mode: this.mode, aliases: this.aliases, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
+    return { t: 'lobby', code: this.code, mode: this.mode, aliases: this.aliases, ghosts: this.ghosts, spectators: this.spectators, seats: this.seatInfo(), aiSeats: this.aiSeats, maxHumans: MAX_HUMANS };
   }
 
   broadcast(message: ServerMessage): void {
@@ -161,6 +241,10 @@ export class Room {
     this.dropKey();
     for (const fn of this.closers.splice(0)) fn();
     this.broadcast({ t: 'closed', reason });
+    for (const w of this.watchers.splice(0)) {
+      w.send({ t: 'closed', reason });
+      w.close();
+    }
     for (const s of this.seats) {
       s.conn?.close();
       s.conn = null;

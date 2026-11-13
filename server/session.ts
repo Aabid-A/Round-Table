@@ -52,6 +52,8 @@ export interface SessionDeps {
 export class Session {
   private room: Room | null = null;
   private seat: Seat | null = null;
+  /** The room this connection only watches, if it holds a watch link. A watcher has no seat and cannot act. */
+  private watching: Room | null = null;
   private readonly limiter: RateLimiter;
 
   constructor(
@@ -82,6 +84,8 @@ export class Session {
 
   /** The connection closed. The seat stays, so the person can come back. */
   disconnect(): void {
+    this.watching?.removeWatcher(this.conn);
+    this.watching = null;
     const { room } = this;
     if (!room) return;
     room.detach(this.conn);
@@ -105,6 +109,8 @@ export class Session {
         return this.create(msg);
       case 'join':
         return this.join(msg.code, msg.name);
+      case 'watch':
+        return this.watch(msg.code, msg.token);
       case 'rejoin':
         return this.rejoin(msg.code, msg.token);
       case 'start':
@@ -135,6 +141,12 @@ export class Session {
     return rt;
   }
 
+  /** The reply to a seat being taken: the host alone is also given the token of the read-only link, if the room has one. */
+  private joinedMessage(room: Room, seat: Seat): ServerMessage {
+    const watch = room.watchTokenFor(seat);
+    return { t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host, ...(watch ? { watch } : {}) };
+  }
+
   private sit(room: Room, name: string): Result {
     const joined = room.join(name, this.conn);
     if (!joined.ok) return joined;
@@ -142,13 +154,13 @@ export class Session {
     this.runtime(room).seatPlayers.set(name, new SeatPlayer({ timeoutMs: this.deps.options.turnMs, send: (m) => room.sendTo(name, m) }));
     this.room = room;
     this.seat = seat;
-    this.tell({ t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host });
+    this.tell(this.joinedMessage(room, seat));
     room.broadcast(room.lobbyMessage());
     return joined;
   }
 
   private create(msg: Extract<ClientMessage, { t: 'create' }>): void {
-    if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
+    if (this.room || this.watching) return this.tell({ t: 'error', message: 'You already have a seat.' });
     if (msg.mode === 'openrouter' && !this.secure) {
       return this.tell({
         t: 'error',
@@ -158,16 +170,31 @@ export class Session {
     const setup: AiSetup = msg.mode === 'mock' ? { mode: 'mock' } : { mode: 'openrouter', key: msg.key, models: msg.models, maxCostUsd: msg.maxCostUsd };
     const made = this.deps.registry.create(setup, this.deps.options.allowSeed ? msg.seed : undefined, this.owner, msg.aliases === true);
     if (!made.ok) return this.tell({ t: 'error', message: made.error });
+    if (msg.ghosts) made.value.ghosts = true;
+    if (msg.spectators) made.value.enableSpectators();
     const sat = this.sit(made.value, msg.name);
     if (!sat.ok) made.value.close(sat.error);
   }
 
   private join(code: string, name: string): void {
-    if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
+    if (this.room || this.watching) return this.tell({ t: 'error', message: 'You already have a seat.' });
     const room = this.deps.registry.get(code);
     if (!room) return this.tell({ t: 'error', message: 'No room has that code. Check it and try again.' });
     const sat = this.sit(room, name);
     if (!sat.ok) this.tell({ t: 'error', message: sat.error });
+  }
+
+  /** A read-only watcher. Every way of failing says the same thing, so a room's existence is not given away. */
+  private watch(code: string, token: string): void {
+    if (this.room || this.watching) return this.tell({ t: 'error', message: 'You already have a seat.' });
+    const room = this.deps.registry.get(code);
+    if (!room || !room.isWatchToken(token)) return this.tell({ t: 'error', message: 'That watch link does not work.' });
+    const added = room.addWatcher(this.conn);
+    if (!added.ok) return this.tell({ t: 'error', message: added.error });
+    this.watching = room;
+    // The game as it stands now: nothing before it starts, a round behind while it runs, all of it once it is over.
+    const rt = this.deps.runtimes.get(room.code);
+    this.tell(room.spectateMessage(room.phase === 'finished' ? (rt?.log ?? null) : null));
   }
 
   private start(): void {
@@ -217,6 +244,7 @@ export class Session {
     room.phase = 'finished';
     room.finishedAt = (this.deps.options.now ?? Date.now)();
     for (const s of room.seats) room.sendTo(s.name, { t: 'finished', log, you: s.name, outcome: rt.outcome });
+    room.publishSpectators(log); // the whole game, now that everyone playing has it
   }
 
   /** Leave on purpose. In the lobby the seat goes (and the room, if it is the host's); in a game the seat stays and plays on with fallbacks. */
@@ -247,7 +275,7 @@ export class Session {
   }
 
   private rejoin(code: string, token: string): void {
-    if (this.room) return this.tell({ t: 'error', message: 'You already have a seat.' });
+    if (this.room || this.watching) return this.tell({ t: 'error', message: 'You already have a seat.' });
     const room = this.deps.registry.get(code);
     if (!room) return this.tell({ t: 'error', message: 'That room has closed.' });
     const back = room.rejoin(token, this.conn);
@@ -255,7 +283,7 @@ export class Session {
     const seat = back.value;
     this.room = room;
     this.seat = seat;
-    this.tell({ t: 'joined', code: room.code, token: seat.token, you: seat.name, host: seat.host });
+    this.tell(this.joinedMessage(room, seat));
     const rt = this.deps.runtimes.get(room.code);
     if (rt?.abandonTimer) {
       clearTimeout(rt.abandonTimer);
@@ -272,6 +300,9 @@ export class Session {
       if (alias !== null) this.tell({ t: 'alias', alias });
       this.tell({ t: 'status', phase: room.status });
       rt?.seatPlayers.get(seat.name)?.resend();
+      // A person who left while still playing and came back after they were out is a ghost from here.
+      const ghost = room.ghostMessage(seat.name);
+      if (ghost) this.tell(ghost);
     }
   }
 }

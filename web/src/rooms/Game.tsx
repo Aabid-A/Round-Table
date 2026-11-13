@@ -4,6 +4,8 @@ import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import { LiveSeat } from '../live/LiveSeat.js';
 import type { Identity, TurnInfo } from './state.js';
 import { Clock } from './Clock.js';
+import { Ghost } from './Ghost.js';
+import type { ServerMessage } from '../../../server/protocol.js';
 
 /** What is happening, in words that say nothing about who is acting. */
 const PHASE_LINE: Record<PublicPhase, string> = {
@@ -23,6 +25,8 @@ interface Props {
   phase: PublicPhase | null;
   turn: TurnInfo | null;
   timedOut: boolean;
+  /** What a person who is out may watch, in a room with ghosts. */
+  ghost: Extract<ServerMessage, { t: 'ghost' }> | null;
   offline: boolean;
   onAnswer: (turn: number, answer: HumanAnswer) => void;
   onLeave: () => void;
@@ -40,7 +44,7 @@ function Waiting({ phase }: { phase: PublicPhase | null }) {
 }
 
 /** A person's seat during the game: the form on their turn, a status line otherwise. */
-export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: Props) {
+export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLeave }: Props) {
   // After sending, the form is replaced by a waiting note until the server moves on. A turn the server sends again
   // (after a reconnect, when it never got the answer) is a new object, so the form opens again.
   const [sent, setSent] = useState<TurnInfo | null>(null);
@@ -65,27 +69,31 @@ export function Game({ me, phase, turn, timedOut, offline, onAnswer, onLeave }: 
         </p>
       )}
 
-      <LiveSeat
-        turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}
-        publicPhase={turn ? publicPhase(turn.phase) : phase}
-        onSubmit={(t, answer) => {
-          if (turn) setSent(turn);
-          onAnswer(t.id, answer);
-        }}
-      >
-        {open && turn ? (
-          <>
-            <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
-            {turn.error && (
-              <p className="notice notice-error" role="alert">
-                {turn.error}
-              </p>
-            )}
-          </>
-        ) : (
-          <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? publicPhase(turn.phase) : phase} />
-        )}
-      </LiveSeat>
+      {ghost ? (
+        <Ghost ghost={ghost} phase={phase} />
+      ) : (
+        <LiveSeat
+          turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}
+          publicPhase={turn ? publicPhase(turn.phase) : phase}
+          onSubmit={(t, answer) => {
+            if (turn) setSent(turn);
+            onAnswer(t.id, answer);
+          }}
+        >
+          {open && turn ? (
+            <>
+              <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
+              {turn.error && (
+                <p className="notice notice-error" role="alert">
+                  {turn.error}
+                </p>
+              )}
+            </>
+          ) : (
+            <Waiting key={turn ? `sent-${turn.id}` : phase ?? 'start'} phase={turn ? publicPhase(turn.phase) : phase} />
+          )}
+        </LiveSeat>
+      )}
 
       <div className="controls-row room-actions">
         {confirmLeave ? (
