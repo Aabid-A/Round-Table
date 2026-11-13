@@ -73,6 +73,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
             key={f.index}
             figure={f}
             look={view.looks[f.index] ?? null}
+            viewer={view.you}
             speaking={view.speaker === f.index}
             pointAt={view.pointing?.from === f.index ? view.pointing.at : null}
             hovered={view.hovered === f.index}
@@ -91,7 +92,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       {view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} /> : null}
       {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} /> : null}
       {view.speech && view.speech.speaker !== view.you ? (
-        <Html position={[figurePose(view.speech.speaker).position[0], 1.6, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} calculatePosition={keepOnScreen} style={{ pointerEvents: 'none' }}>
+        <Html position={[figurePose(view.speech.speaker).position[0], 1.86, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} calculatePosition={keepOnScreen} style={{ pointerEvents: 'none' }}>
           <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
         </Html>
       ) : null}

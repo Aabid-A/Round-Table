@@ -23,6 +23,8 @@ export const PALETTE = {
   traitor: '#b3201e',
   faithful: '#d8b45a',
   robe: '#3b3445',
+  /** The short cape over a figure's shoulders: the same cloth, a shade lighter, so the layers read. */
+  mantle: '#4a4257',
   robeDeep: '#0d0c10',
   skin: '#7a5a48',
 } as const;

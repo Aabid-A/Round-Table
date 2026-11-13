@@ -40,3 +40,29 @@ export function yawToSeat(i: number): number {
   const [, , z0] = chairPose(0).position;
   return Math.atan2(x, z0 - z);
 }
+
+const wrap = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
+
+/** The turn about the up axis, relative to the figure at seat `from`'s own facing, that points it at seat `to`. */
+export function yawBetween(from: number, to: number): number {
+  const a = figurePose(from);
+  const [tx, , tz] = figurePose(to).position;
+  return wrap(Math.atan2(tx - a.position[0], tz - a.position[2]) - a.facing);
+}
+
+/** How far a mask may be turned away from the viewer: beyond this it starts to be seen edge-on. */
+export const MASK_MAX_OFF = 0.85;
+/** How far a head turns on its shoulders. */
+export const NECK_MAX = 1.35;
+
+/**
+ * Where the head at seat `seat` turns (relative to its own facing) to look at seat `look`, or at the middle of the table for null.
+ * It turns toward its target but never so far from the viewer's seat that its mask is seen edge-on, and never past its own shoulders.
+ */
+export function headYaw(seat: number, look: number | null, viewer: number): number {
+  const want = look === null || look === seat ? 0 : yawBetween(seat, look);
+  if (seat === viewer) return Math.max(-NECK_MAX, Math.min(NECK_MAX, want));
+  const toViewer = yawBetween(seat, viewer);
+  const off = Math.max(-MASK_MAX_OFF, Math.min(MASK_MAX_OFF, wrap(want - toViewer)));
+  return Math.max(-NECK_MAX, Math.min(NECK_MAX, wrap(toViewer + off)));
+}

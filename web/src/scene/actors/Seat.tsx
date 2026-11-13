@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { chairPose, figurePose, platePose, yawToSeat } from '../layout.js';
+import { chairPose, figurePose, headYaw, platePose, yawBetween } from '../layout.js';
 import { Chair } from '../models/Chair.js';
 import { MASKS } from '../models/masks.js';
 import { plateTexture } from '../models/textures.js';
@@ -13,6 +13,8 @@ export interface SeatProps {
   figure: SliceFigure;
   /** Look toward this seat (or null). */
   look: number | null;
+  /** The seat the picture is seen from, which no mask turns its edge to. */
+  viewer: number;
   speaking: boolean;
   /** The seat this figure points at, or null. */
   pointAt: number | null;
@@ -25,8 +27,6 @@ export interface SeatProps {
   onHover: (seat: number | null) => void;
   onPick: (seat: number) => void;
 }
-
-const wrap = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
 
 /** One place at the table: a chair, a figure, a name plate, and a hit area when the player may choose it. */
 export function Seat(p: SeatProps) {
@@ -41,14 +41,8 @@ export function Seat(p: SeatProps) {
     push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * (1 - Math.exp(-dt * 3));
     if (chair.current) chair.current.position.z = push.current;
   });
-  // Yaw of a seat as seen from this figure, relative to its own facing.
-  const relYaw = (to: number): number => {
-    const [tx, , tz] = figurePose(to).position;
-    const dx = tx - fig.position[0];
-    const dz = tz - fig.position[2];
-    return wrap(Math.atan2(dx, dz) - fig.facing) * -1;
-  };
-  void yawToSeat;
+  // A figure the player's eye is on looks back at the player.
+  const look = p.hovered || p.selected ? p.viewer : p.look;
   return (
     <>
       <group position={pose.position} rotation-y={pose.facing}>
@@ -57,7 +51,7 @@ export function Seat(p: SeatProps) {
         </group>
       </group>
       <group position={fig.position} rotation-y={fig.facing}>
-        <Figure index={index} lookYaw={p.look === null ? null : relYaw(p.look)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : relYaw(p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
+        <Figure index={index} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
       <group position={[plateP.position[0], plateP.position[1], plateP.position[2]]} rotation-y={plateP.facing}>
         <mesh position={[0, 0.1, 0]} rotation-x={-0.55} receiveShadow castShadow>
