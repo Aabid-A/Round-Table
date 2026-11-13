@@ -95,6 +95,8 @@ describe('ghosts and spectators over a real server', { timeout: 60_000 }, () => 
         const playing = beforeGhost(msgs);
         for (const m of playing) {
           expect(['joined', 'lobby', 'status', 'turn', 'turn_over', 'alias'], `${label} got a ${m.t}`).toContain(m.t);
+          // The lobby only ever says who is seated, the mode, and which options the host chose.
+          if (m.t === 'lobby') expect(Object.keys(m).sort(), label).toEqual(['aiSeats', 'aliases', 'code', 'ghosts', 'maxHumans', 'mode', 'seats', 'spectators', 't']);
         }
         // (The host's own `joined` carries the watch token: that is who it is for.)
         const text = textOf(playing.filter((m) => m.t !== 'joined'));
@@ -133,6 +135,13 @@ describe('ghosts and spectators over a real server', { timeout: 60_000 }, () => 
           expect(maxRound(m.log)).toBeLessThan(log.result.rounds);
         }
         expect(w.messages.every((m) => m.t === 'spectate'), 'a watcher is sent only the game, never a turn or a status').toBe(true);
+        // Not the seed (it decides every role), and no roles before a full round is over.
+        for (const m of specs.slice(0, -1)) {
+          if (!m.log) continue;
+          expect(m.log.seed).toBe(0);
+          if (maxRound(m.log) < 1) expect(m.log.roles).toEqual({});
+        }
+        expect(specs.at(-1)!.log!.seed).toBe(log.seed);
       }
     }
     expect(seen.ghosts).toBeGreaterThan(0);
@@ -252,6 +261,12 @@ describe('ghosts and spectators over a real server', { timeout: 60_000 }, () => 
       const specs = w.messages.filter((m): m is Spectate => m.t === 'spectate');
       for (const m of specs.filter((s) => !s.complete && s.log)) {
         expect(m.log!.cast.every((c) => c.model === '')).toBe(true);
+        expect(m.log!.seed, 'the seed would give away who is human').toBe(0);
+        for (const t of m.log!.turns) {
+          expect(t.attempts).toHaveLength(1);
+          expect(t.attempts[0]).toMatchObject({ raw: '', error: null });
+          expect(t.fallback).toBe(false);
+        }
         for (const name of NAMES) expect(JSON.stringify(m.log), `a spectator is shown the real name ${name}`).not.toContain(`"${name}"`);
       }
     }

@@ -112,7 +112,7 @@ export function Player({ log, onReload, live = false, initial }: Props) {
       <header className="topbar">
         <h1>Round Table</h1>
         <span className="muted">
-          seed {log.seed} · {log.cast.length} players
+          {live ? '' : `seed ${log.seed} · `}{log.cast.length} players
         </span>
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}

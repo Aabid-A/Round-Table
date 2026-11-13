@@ -1,4 +1,4 @@
-import type { GameEvent, GameSettings, Turn } from '../src/engine/types.js';
+import type { GameEvent, GameSettings, Turn, TurnAttempt } from '../src/engine/types.js';
 import type { CastMember, Role } from '../src/types.js';
 import type { GhostSeat, SpectatorLog } from './protocol.js';
 
@@ -69,18 +69,23 @@ export class Watching {
     return Math.max(0, this.round - 1);
   }
 
-  /** The game up to the last full round, or null before the game has started. */
+  /**
+   * The game up to the last full round, or null before the game has started. Nothing in it is newer than that round: not the seed
+   * (it decides every role, and in an alias room who is human), and not the roles until a full round is over. In an alias room it
+   * also carries nothing that tells a person from a model (see `plain`).
+   */
   spectatorLog(): SpectatorLog | null {
     if (this.roles === null) return null;
     const upTo = this.visibleRound;
+    const hide = this.meta.hideModels;
     return {
       schemaVersion: 1,
-      seed: this.meta.seed,
+      seed: 0,
       settings: this.meta.settings,
-      cast: this.meta.cast.map((c) => ({ name: c.name, model: this.meta.hideModels ? '' : c.model })),
-      roles: this.roles,
+      cast: this.meta.cast.map((c) => ({ name: c.name, model: hide ? '' : c.model })),
+      roles: upTo >= 1 ? this.roles : {},
       systemPrompt: this.meta.systemPrompt,
-      turns: this.turns.filter((t) => t.round <= upTo),
+      turns: this.turns.filter((t) => t.round <= upTo).map((t) => (hide ? plain(t) : t)),
       events: this.events.filter((e) => e.round <= upTo),
       result: null,
     };
@@ -90,4 +95,15 @@ export class Watching {
   ghostSeats(): GhostSeat[] {
     return this.meta.cast.map((c) => ({ name: c.name, status: this.gone.get(c.name) ?? 'alive', prompt: this.prompts.get(c.name) ?? null }));
   }
+}
+
+/**
+ * A turn with only what the replay draws, for an alias game before the end. A model's turn carries token counts and costs, a
+ * person's does not, a person who ran out of time has an error and a fallback, and a person's reply is not a model's: any of
+ * that would tell people from AIs before anyone has guessed. The prompt, speech, notes and action stay.
+ */
+function plain(t: Turn): Turn {
+  const first = t.attempts[0];
+  const attempt: TurnAttempt = { prompt: first?.prompt ?? '', raw: '', error: null };
+  return { ...t, attempts: [attempt], fallback: false };
 }

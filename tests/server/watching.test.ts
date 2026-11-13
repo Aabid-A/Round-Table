@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runGame } from '../../src/engine/game.js';
-import { DEFAULT_SETTINGS, type GameLog } from '../../src/engine/types.js';
+import { DEFAULT_SETTINGS, type GameLog, type Turn } from '../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../src/players/mock.js';
 import type { Player } from '../../src/players/player.js';
 import { buildPrompt } from '../../src/prompts/phases.js';
@@ -73,6 +73,58 @@ describe('Watching: what a spectator may see', () => {
     const alias = await watched(2, true);
     expect(alias.snaps.at(-1)!.spectator!.cast.every((c) => c.model === '')).toBe(true);
     expect(alias.snaps.at(-1)!.spectator!.cast.map((c) => c.name)).toEqual(MOCK_CAST.map((c) => c.name));
+  });
+});
+
+describe('Watching: nothing newer than the delay, in any field', () => {
+  it('leaves out the seed (which decides every role) and the roles until a full round is over, then shows the roles', async () => {
+    const { snaps, log } = await watched(4);
+    let withRoles = 0;
+    for (const s of snaps) {
+      const spec = s.spectator!;
+      expect(spec.seed).toBe(0);
+      expect(JSON.stringify(spec)).not.toContain(`"seed":${log.seed}`);
+      if (s.visibleRound < 1) expect(spec.roles, `round ${s.liveRound}`).toEqual({});
+      else (withRoles++, expect(spec.roles).toEqual(log.roles));
+    }
+    expect(withRoles).toBeGreaterThan(0);
+    expect(snaps.some((s) => s.visibleRound < 1)).toBe(true); // the first round is played with no roles sent
+  });
+
+  const crafted = (round: number): Turn => ({
+    id: 0,
+    round,
+    phase: 'round_table',
+    player: 'Aria',
+    attempts: [
+      { prompt: 'p1', raw: 'not json', error: 'bad', usage: { totalTokens: 9, costUsd: 0.01 }, costEstimatedUsd: 0.01, extracted: true },
+      { prompt: 'p2', raw: null, error: 'no answer in time' },
+    ],
+    speech: 'hello',
+    private_notes: 'my plan',
+    action: { suspect: 'Bram', reason: 'x' },
+    fallback: true,
+  });
+
+  it('in an alias game carries nothing that tells a person from a model: no usage, cost, errors, raw replies or fallback flags', () => {
+    const w = new Watching({ cast: MOCK_CAST, settings: DEFAULT_SETTINGS, seed: 9, systemPrompt: '', hideModels: true });
+    w.start({ Aria: 'faithful' });
+    w.turn(crafted(1));
+    w.turn({ ...crafted(2), id: 1 }); // makes round 1 visible
+    const turn = w.spectatorLog()!.turns[0]!;
+    expect(turn.attempts).toEqual([{ prompt: 'p1', raw: '', error: null }]);
+    expect(turn.fallback).toBe(false);
+    expect(JSON.stringify(turn)).not.toMatch(/usage|costEstimated|no answer in time|extracted/);
+    // What the replay draws is still there.
+    expect(turn).toMatchObject({ speech: 'hello', private_notes: 'my plan', player: 'Aria', action: { suspect: 'Bram' } });
+  });
+
+  it('in an ordinary room leaves the turns exactly as the log has them', () => {
+    const w = new Watching({ cast: MOCK_CAST, settings: DEFAULT_SETTINGS, seed: 9, systemPrompt: '', hideModels: false });
+    w.start({ Aria: 'faithful' });
+    w.turn(crafted(1));
+    w.turn({ ...crafted(2), id: 1 });
+    expect(w.spectatorLog()!.turns[0]).toEqual(crafted(1));
   });
 });
 
