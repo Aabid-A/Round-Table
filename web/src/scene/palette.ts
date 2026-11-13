@@ -22,6 +22,9 @@ export const PALETTE = {
   /** Reserved for a mask turned over to show a traitor. */
   traitor: '#b3201e',
   faithful: '#d8b45a',
+  robe: '#3b3445',
+  robeDeep: '#0d0c10',
+  skin: '#7a5a48',
 } as const;
 
 /** One accent per player. Chosen to stay apart in warm low light, so no two are close in hue and each differs in lightness from its neighbours. */

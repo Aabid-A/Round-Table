@@ -1,9 +1,10 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { fovFor } from './fov.js';
 
 /** The eye, at the height of a person seated at the table. */
-export const EYE: [number, number, number] = [0, 1.2, 2.5];
+export const EYE: [number, number, number] = [0, 1.22, 2.62];
 
 interface Props {
   /** The direction (radians, 0 straight across the table, positive to the right) the camera eases toward, or null. */
@@ -20,7 +21,7 @@ const PITCH_ARC = 0.2;
  * and breathes a little. It never snaps, and it can always be looked around (see /game-feel).
  */
 export function FirstPerson({ toward, free }: Props) {
-  const { camera, gl } = useThree();
+  const { camera, gl, size } = useThree();
   const pointer = useRef({ x: 0, y: 0 });
   const yaw = useRef(0);
   const pitch = useRef(-0.18);
@@ -33,9 +34,15 @@ export function FirstPerson({ toward, free }: Props) {
     el.addEventListener('pointermove', move);
     return () => el.removeEventListener('pointermove', move);
   }, [gl]);
+  useEffect(() => {
+    // Keep the same width of view in a tall window: the vertical angle grows as the window narrows, up to a limit.
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.fov = fovFor(size.width / size.height);
+    cam.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
-    const wantYaw = (toward !== null ? toward * 0.8 : 0) + (free ? pointer.current.x * YAW_ARC : pointer.current.x * YAW_ARC * 0.35);
+    const wantYaw = (toward !== null ? Math.max(-0.5, Math.min(0.5, toward * 0.3)) : 0) + (free ? pointer.current.x * YAW_ARC : pointer.current.x * YAW_ARC * 0.35);
     const wantPitch = -0.18 + (free ? -pointer.current.y * PITCH_ARC : 0);
     const k = 1 - Math.exp(-dt * 2.6);
     yaw.current += (wantYaw - yaw.current) * k;

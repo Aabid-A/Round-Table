@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { PALETTE } from '../palette.js';
+import { SEAT_R, TABLE_R, TABLE_Y } from './dimensions.js';
 import { woodMaps } from './textures.js';
 
-export const TABLE_R = 1.55;
-export const TABLE_Y = 0.78;
-/** How far from the middle the chairs stand. */
-export const SEAT_R = 2.35;
+export { SEAT_R, TABLE_R, TABLE_Y };
 
 /** The heavy round table: a thick top with a rounded edge, an inlaid ring, a skirt and a turned pedestal. */
 export function Table() {

@@ -28,11 +28,11 @@ export function Lights({ mood, litCount, quality }: Props) {
       if (!l) return;
       // The two candles of a cluster: how lit the pair is.
       const lit = Math.min(1, Math.max(0, litCount - c * 2) / 2) * 0.5 + Math.min(1, Math.max(0, litCount - c * 2 - 1)) * 0.5;
-      l.intensity = lit * (5.2 + Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3);
+      l.intensity = lit * (3.4 + Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3);
     });
     if (fire.current) fire.current.intensity = 62 + Math.sin(t * 6.1) * 7 + Math.sin(t * 17) * 4;
     if (dawn.current) dawn.current.intensity += ((mood === 'dawn' ? 0.9 : 0) - dawn.current.intensity) * 0.04;
-    if (fill.current) fill.current.intensity += ((mood === 'night' ? 0.07 : mood === 'dawn' ? 0.3 : 0.2) - fill.current.intensity) * 0.04;
+    if (fill.current) fill.current.intensity += ((mood === 'night' ? 0.12 : mood === 'dawn' ? 0.3 : 0.2) - fill.current.intensity) * 0.04;
   });
   const shadowSize = quality.shadowMapSize;
   return (

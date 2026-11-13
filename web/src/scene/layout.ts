@@ -1,4 +1,4 @@
-import { SEAT_R, TABLE_R, TABLE_Y } from './models/Table.js';
+import { SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
