@@ -120,11 +120,6 @@ export default function SliceScene({ view, quality, onFrame, onHover = () => {},
 }
 
 function Meter({ onFrame }: { onFrame: ((ms: number) => void) | undefined }) {
-  useFrame(({ gl }, dt) => {
-    onFrame?.(dt * 1000);
-    // What the last frame cost, for the playtest: draw calls and triangles do not depend on the machine.
-    gl.domElement.dataset.calls = String(gl.info.render.calls);
-    gl.domElement.dataset.triangles = String(gl.info.render.triangles);
-  });
+  useFrame((_, dt) => onFrame?.(dt * 1000));
   return null;
 }
