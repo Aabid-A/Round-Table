@@ -67,7 +67,7 @@ export function Seat(p: SeatProps) {
           </mesh>
           <mesh position={[0, 0, 0.0155]}>
             <planeGeometry args={[PLATE_W, PLATE_H]} />
-            <meshStandardMaterial map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.95 : 0.45} />
+            <meshStandardMaterial map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.9 : 0.3} />
           </mesh>
         </group>
       </group>

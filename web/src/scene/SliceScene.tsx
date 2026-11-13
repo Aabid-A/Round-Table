@@ -58,7 +58,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
     <>
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
-      <Lights mood={view.mood} litCount={litNow} quality={q} />
+      <Lights mood={view.mood} litCount={litNow} quality={q} dawnSeat={view.dawn?.victim ?? null} />
       <HoverLight hovered={view.hovered} selected={view.selected} />
       <Hall />
       <Fireplace />
