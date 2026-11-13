@@ -26,11 +26,18 @@ describe('the seats around the table', () => {
       expect(front[0]! * x + front[1]! * z).toBeLessThan(0);
     }
   });
-  it('lays a name plate on the table edge', () => {
+  it('stands a name plate on the table in front of each seat, turned to face the viewer', () => {
     for (let i = 0; i < SEATS; i++) {
-      const [x, y, z] = platePose(i).position;
+      const pose = platePose(i, 0);
+      const [x, y, z] = pose.position;
       expect(Math.hypot(x, z)).toBeLessThan(TABLE_R);
       expect(y).toBeGreaterThan(0.7);
+      if (i === 0) continue;
+      // The plate's face (its local +z turned by facing) looks at the viewer's chair.
+      const [vx, , vz] = chairPose(0).position;
+      const d = Math.hypot(vx - x, vz - z);
+      expect(Math.sin(pose.facing)).toBeCloseTo((vx - x) / d);
+      expect(Math.cos(pose.facing)).toBeCloseTo((vz - z) / d);
     }
     expect(tablePoint(2, 1)[0]).toBeCloseTo(1);
   });

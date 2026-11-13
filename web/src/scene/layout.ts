@@ -31,8 +31,16 @@ export function tablePoint(i: number, r: number): [number, number, number] {
   return [Math.sin(a) * r, TABLE_Y, Math.cos(a) * r];
 }
 
-/** Where a seat's name plate stands: at the table's edge, facing the middle, so it reads from across the table. */
-export const platePose = (i: number): Pose => ({ position: tablePoint(i, TABLE_R - 0.2), facing: seatAngle(i) + Math.PI });
+/**
+ * Where a seat's name plate stands: on the table in front of its seat, turned to face the viewer's seat, so every name reads from
+ * where the player sits (a plate that faced the middle would show the player its edge at the seats beside them).
+ */
+export function platePose(i: number, viewer: number): Pose {
+  const position = tablePoint(i, TABLE_R - 0.2);
+  if (i === viewer) return { position, facing: seatAngle(i) + Math.PI };
+  const [vx, , vz] = chairPose(viewer).position;
+  return { position, facing: Math.atan2(vx - position[0], vz - position[2]) };
+}
 
 /** The yaw (radians, 0 straight ahead, positive to the right) from the seat at 0 to seat `i`, for turning a head or a camera toward it. */
 export function yawToSeat(i: number): number {

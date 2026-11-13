@@ -92,20 +92,32 @@ export function woodMaps(base: string, repeat = 2): { map: THREE.CanvasTexture; 
   return { map: finish(c, repeat, true), bump: finish(b, repeat, false) };
 }
 
-/** A name plate: bone-white lettering on dark iron, large enough to read from across the table. */
+/** The shape of a name plate's face, in metres. */
+export const PLATE_W = 0.4;
+export const PLATE_H = 0.135;
+
+/**
+ * The face of a name plate: bone-white lettering on dark iron under a bar of the seat's colour. Drawn large (1024 across) with
+ * mipmaps and anisotropic filtering, so the letters stay crisp from across the table and at a slant.
+ */
 export function plateTexture(name: string, accent: string): THREE.CanvasTexture {
-  const [c, g] = canvas(256);
-  c.height = 96;
-  g.fillStyle = '#1b1c24';
-  g.fillRect(0, 0, 256, 96);
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = Math.round((1024 * PLATE_H) / PLATE_W);
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#16171d';
+  g.fillRect(0, 0, c.width, c.height);
   g.fillStyle = accent;
-  g.fillRect(0, 0, 256, 8);
-  g.fillStyle = '#efe6d2';
-  g.font = '600 46px system-ui, sans-serif';
+  g.fillRect(0, 0, c.width, 40);
+  g.fillStyle = '#f4ecd9';
+  g.font = '700 250px system-ui, "Segoe UI", Helvetica, Arial, sans-serif';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.fillText(name, 128, 54, 236);
+  g.fillText(name, c.width / 2, c.height / 2 + 28, c.width - 70);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
   return t;
 }

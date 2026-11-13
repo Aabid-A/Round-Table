@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { chairPose, figurePose, headYaw, platePose, yawBetween } from '../layout.js';
 import { Chair } from '../models/Chair.js';
 import { MASKS } from '../models/masks.js';
-import { plateTexture } from '../models/textures.js';
+import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
 import { PALETTE } from '../palette.js';
 import type { SliceFigure } from '../sliceView.js';
 import { Figure } from './Figure.js';
@@ -41,7 +41,7 @@ export function Seat(p: SeatProps) {
   }, [p.choosable]);
   const pose = chairPose(index);
   const fig = figurePose(index);
-  const plateP = platePose(index);
+  const plateP = platePose(index, p.viewer);
   useFrame((_, dt) => {
     push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * (1 - Math.exp(-dt * 3));
     if (chair.current) chair.current.position.z = push.current;
@@ -58,11 +58,18 @@ export function Seat(p: SeatProps) {
       <group position={fig.position} rotation-y={fig.facing}>
         <Figure index={index} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
-      <group position={[plateP.position[0], plateP.position[1], plateP.position[2]]} rotation-y={plateP.facing}>
-        <mesh position={[0, 0.1, 0]} rotation-x={-0.55} receiveShadow castShadow>
-          <planeGeometry args={[0.46, 0.17]} />
-          <meshStandardMaterial map={plate} roughness={0.7} side={THREE.DoubleSide} emissive={PALETTE.amber} emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.9 : 0.35} />
-        </mesh>
+      {/* the name plate: a block of dark iron leaning back on the table, lettered on its face */}
+      <group position={plateP.position} rotation-y={plateP.facing}>
+        <group position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[PLATE_W + 0.02, PLATE_H + 0.016, 0.03]} />
+            <meshStandardMaterial color={PALETTE.iron} roughness={0.5} metalness={0.6} />
+          </mesh>
+          <mesh position={[0, 0, 0.0155]}>
+            <planeGeometry args={[PLATE_W, PLATE_H]} />
+            <meshStandardMaterial map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.95 : 0.45} />
+          </mesh>
+        </group>
       </group>
       {p.choosable ? (
         <mesh
