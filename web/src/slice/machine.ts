@@ -80,7 +80,7 @@ export function reduce(state: SliceState, action: Action, script: SliceScript): 
     case 'restart':
       return initial();
     case 'advance':
-      return next(state, script);
+      return { ...next(state, script), hovered: null };
     case 'hover':
       return choosable(state, script).includes(action.seat ?? -1) || action.seat === null ? { ...state, hovered: action.seat } : state;
     case 'select':
@@ -88,8 +88,8 @@ export function reduce(state: SliceState, action: Action, script: SliceScript): 
     case 'confirm': {
       const { stage, selected } = state;
       if (selected === null) return state;
-      if (stage.kind === 'accuse') return { ...state, stage: { kind: 'pointed' }, accused: selected, selected: null };
-      if (stage.kind === 'vote') return { ...state, stage: { kind: 'tally' }, vote: selected, selected: null };
+      if (stage.kind === 'accuse') return { ...state, stage: { kind: 'pointed' }, accused: selected, selected: null, hovered: null };
+      if (stage.kind === 'vote') return { ...state, stage: { kind: 'tally' }, vote: selected, selected: null, hovered: null };
       return state;
     }
   }

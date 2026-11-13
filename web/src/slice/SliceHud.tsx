@@ -9,13 +9,15 @@ interface Props {
   onMute: () => void;
   /** Whether a "skip this" control is useful now (a moment that ends on its own). */
   canSkip: boolean;
+  /** The slice is over: offer to sit through it again. */
+  ended: boolean;
 }
 
 /**
  * The controls around the room, for everyone: a list of the choosable names as a form (the same choice as pointing in the room),
  * confirm, skip, sound, and the keys. It is also the whole interface of the 2D fallback and the screen-reader path.
  */
-export function SliceHud({ view, dispatch, muted, onMute, canSkip }: Props) {
+export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended }: Props) {
   const choosing = view.choosable.length > 0;
   const names = new Map(view.figures.map((f) => [f.index, f.name]));
   useEffect(() => {
@@ -38,7 +40,7 @@ export function SliceHud({ view, dispatch, muted, onMute, canSkip }: Props) {
       <div className="slice-bar">
         <button type="button" onClick={onMute} aria-pressed={muted}>{muted ? 'Sound off' : 'Sound on'}</button>
         {canSkip ? <button type="button" onClick={() => dispatch({ t: 'advance' })}>Skip</button> : null}
-        {view.announce.startsWith('The slice is over') ? <button type="button" onClick={() => dispatch({ t: 'restart' })}>Sit through it again</button> : null}
+        {ended ? <button type="button" onClick={() => dispatch({ t: 'restart' })}>Sit through it again</button> : null}
       </div>
       {choosing ? (
         <form

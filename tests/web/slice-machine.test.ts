@@ -125,3 +125,19 @@ describe('the slice machine', () => {
     expect(reduce(playThrough(1, 2).at(-1)!, { t: 'restart' }, script)).toEqual(initial());
   });
 });
+
+describe('a hover does not outlive the choice', () => {
+  it('is cleared when a choice is confirmed and when a moment moves on', () => {
+    let s: SliceState = initial();
+    while (s.stage.kind !== 'accuse') s = reduce(s, { t: 'advance' }, script);
+    s = reduce(reduce(s, { t: 'hover', seat: 2 }, script), { t: 'select', seat: 2 }, script);
+    expect(s.hovered).toBe(2);
+    s = reduce(s, { t: 'confirm' }, script);
+    expect(s.stage.kind).toBe('pointed');
+    expect(s.hovered).toBeNull();
+    s = initial();
+    while (s.stage.kind !== 'vote') s = reduce(s.stage.kind === 'accuse' ? reduce(s, { t: 'select', seat: 1 }, script) : s, s.stage.kind === 'accuse' ? { t: 'confirm' } : { t: 'advance' }, script);
+    s = reduce(reduce(s, { t: 'hover', seat: 3 }, script), { t: 'select', seat: 3 }, script);
+    expect(viewOf(reduce(s, { t: 'confirm' }, script), script).hovered).toBeNull();
+  });
+});

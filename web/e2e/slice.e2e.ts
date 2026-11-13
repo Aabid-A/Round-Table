@@ -80,6 +80,9 @@ test('the plain version (no WebGL) plays the same round, with the list and a liv
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.getByRole('list', { name: 'At the table' }).getByRole('listitem')).toHaveCount(8);
   await expect(page.locator('.slice-caption')).toHaveAttribute('aria-live', 'polite');
+  // The plain version shows what each figure says (the 3D bubble is not there to carry it).
+  await expect(page.locator('.slice-caption')).not.toHaveClass(/sr-only/);
+  await expect(page.locator('.slice-caption')).toContainText(/says:/, { timeout: 8000 });
   await toNextChoice(page);
   await page.getByRole('radio').nth(2).check();
   await page.getByRole('button', { name: 'Confirm' }).click();

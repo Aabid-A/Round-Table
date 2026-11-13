@@ -30,6 +30,7 @@ export class Sound {
   start(): void {
     if (this.ctx || typeof AudioContext === 'undefined') return;
     this.ctx = new AudioContext();
+    void this.ctx.resume();
     this.fire = this.ctx.createGain();
     this.fire.gain.value = this.muted ? 0 : 0.05;
     const noise = this.noise(2);

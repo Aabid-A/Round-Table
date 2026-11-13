@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { runGame } from '../../../src/engine/game.js';
 import { DEFAULT_SETTINGS } from '../../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../../src/players/mock.js';
@@ -18,11 +18,30 @@ const SliceScene = lazy(() => import('../scene/SliceScene.js'));
 /** ?mode=slice: one round table, in WebGL, on a fixed mock game. */
 export function SlicePage() {
   const [script, setScript] = useState<SliceScript | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     document.title = 'Round Table: one round table';
-    void runGame({ cast: MOCK_CAST, settings: DEFAULT_SETTINGS, seed: SLICE_SEED, players: createMockPlayers(MOCK_CAST, SLICE_SEED), buildPrompt, systemPrompt: SYSTEM_PROMPT }).then((log) => setScript(scriptFromLog(log)));
+    let live = true;
+    runGame({ cast: MOCK_CAST, settings: DEFAULT_SETTINGS, seed: SLICE_SEED, players: createMockPlayers(MOCK_CAST, SLICE_SEED), buildPrompt, systemPrompt: SYSTEM_PROMPT })
+      .then((log) => live && setScript(scriptFromLog(log)))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
   }, []);
+  if (failed) return <p className="notice" role="alert">The round table could not be set. Reload the page to try again.</p>;
   return script ? <Slice script={script} /> : <p className="notice" role="status">Setting the table…</p>;
+}
+
+/** If the 3D scene cannot load or start, show the plain version instead of a blank page. */
+class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+  override render(): ReactNode {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
 }
 
 function hasWebGl2(): boolean {
@@ -41,6 +60,7 @@ function Slice({ script }: { script: SliceScript }) {
   const frames = useRef<number[]>([]);
   const onFrame = (ms: number): void => {
     if (fixed) return;
+    if (frames.current.length >= 45) return;
     frames.current.push(ms);
     if (frames.current.length === 45) setQuality(chooseQuality(frames.current.slice(5)));
   };
@@ -74,12 +94,14 @@ function Slice({ script }: { script: SliceScript }) {
       {noGl ? (
         <SliceFallback view={view} reason="This is the plain version of the round table. The 3D room needs WebGL." />
       ) : (
+      <SceneBoundary fallback={<SliceFallback view={view} reason="The 3D room could not start, so this is the plain version." />}>
       <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
         <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'select', seat })} />
       </Suspense>
+      </SceneBoundary>
       )}
-      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} />
-      <p className={view.speech ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
+      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} />
+      <p className={view.speech && !noGl ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
 }
