@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chairPose, figurePose, platePose, seatAngle, SEATS, tablePoint, yawToSeat } from '../../web/src/scene/layout.js';
-import { fovFor } from '../../web/src/scene/camera/fov.js';
+import { fovFor, restPitchFor, yawArcFor } from '../../web/src/scene/camera/fov.js';
 import { SEAT_R, TABLE_R } from '../../web/src/scene/models/dimensions.js';
 
 describe('the seats around the table', () => {
@@ -53,7 +53,17 @@ describe('the field of view', () => {
   it('keeps about the same width of view in a tall window, within limits', () => {
     expect(fovFor(16 / 9)).toBeCloseTo(58, 0);
     expect(fovFor(1)).toBeGreaterThan(fovFor(16 / 9));
-    expect(fovFor(390 / 844)).toBe(96);
+    expect(fovFor(390 / 844)).toBe(88);
     expect(fovFor(5)).toBe(58);
+  });
+  it('in a tall window looks nearer level and lets the head turn further, so every seat can still be reached', () => {
+    expect(restPitchFor(16 / 9)).toBe(-0.18);
+    expect(restPitchFor(390 / 844)).toBeGreaterThan(-0.18);
+    expect(restPitchFor(390 / 844)).toBeLessThan(0);
+    expect(yawArcFor(16 / 9)).toBe(0.62);
+    const tall = 390 / 844;
+    const halfWidth = Math.atan(Math.tan((fovFor(tall) * Math.PI) / 360) * tall);
+    // The seats beside you are about 1.0 radian off straight ahead; turning plus half the view must reach them.
+    expect(yawArcFor(tall) + halfWidth).toBeGreaterThan(1.0);
   });
 });

@@ -1,7 +1,8 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { fovFor } from './fov.js';
+import { approach, idle, useReducedMotion } from '../motion.js';
+import { fovFor, restPitchFor, yawArcFor } from './fov.js';
 
 /** The eye, at the height of a person seated at the table. */
 export const EYE: [number, number, number] = [0, 1.22, 2.62];
@@ -13,7 +14,6 @@ interface Props {
   free: boolean;
 }
 
-const YAW_ARC = 0.62;
 const PITCH_ARC = 0.2;
 
 /**
@@ -25,6 +25,8 @@ export function FirstPerson({ toward, free }: Props) {
   const pointer = useRef({ x: 0, y: 0 });
   const yaw = useRef(0);
   const pitch = useRef(-0.18);
+  const reduced = useReducedMotion();
+  const arc = yawArcFor(size.width / size.height);
   useEffect(() => {
     const el = gl.domElement;
     const move = (e: PointerEvent): void => {
@@ -41,10 +43,11 @@ export function FirstPerson({ toward, free }: Props) {
     cam.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
   useFrame(({ clock }, dt) => {
-    const t = clock.elapsedTime;
-    const wantYaw = (toward !== null ? Math.max(-0.85, Math.min(0.85, toward * 0.6)) : 0) + (free ? pointer.current.x * YAW_ARC : pointer.current.x * YAW_ARC * 0.35);
-    const wantPitch = -0.18 + (free ? -pointer.current.y * PITCH_ARC : 0);
-    const k = 1 - Math.exp(-dt * 2.6);
+    // With motion reduced there is no breathing sway, and the turn toward a speaker is a cut. The look still follows the pointer: that is the player's own movement.
+    const t = clock.elapsedTime * idle(reduced);
+    const wantYaw = (toward !== null ? Math.max(-0.85, Math.min(0.85, toward * 0.6)) : 0) + (free ? pointer.current.x * arc : pointer.current.x * arc * 0.35);
+    const wantPitch = restPitchFor(size.width / size.height) + (free ? -pointer.current.y * PITCH_ARC : 0);
+    const k = approach(dt, 2.6, reduced && toward !== null);
     yaw.current += (wantYaw - yaw.current) * k;
     pitch.current += (wantPitch - pitch.current) * k;
     camera.position.set(EYE[0] + Math.sin(t * 0.37) * 0.006, EYE[1] + Math.sin(t * 0.9) * 0.007, EYE[2]);
