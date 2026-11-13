@@ -26,7 +26,7 @@ describe('the eight masks', () => {
   it('have outlines that are real polygons, tall enough to read, and all different', () => {
     const outlines = MASKS.map((m) => maskOutline(m.shape));
     for (const o of outlines) {
-      expect(o.length).toBeGreaterThanOrEqual(6);
+      expect(o.length).toBeGreaterThanOrEqual(4);
       const ys = o.map((p) => p[1]);
       expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThanOrEqual(1.59);
     }

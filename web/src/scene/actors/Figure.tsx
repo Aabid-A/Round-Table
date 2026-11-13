@@ -34,6 +34,7 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
   const upper = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
   const arm = useRef<THREE.Group>(null);
+  const mask = useRef<THREE.MeshStandardMaterial>(null);
   const pose = useRef({ gone: 0, yaw: 0, lean: 0, point: 0, pointVel: 0, pointYaw: 0, notice: 0 });
   const cloak = useMemo(() => cloakGeometry(index, design.colour), [index, design.colour]);
   const mantle = useMemo(() => mantleGeometry(index, design.colour), [index, design.colour]);
@@ -70,6 +71,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
       head.current.rotation.x = Math.sin(t * 0.8) * 0.015 + (speaking ? -0.04 + Math.sin(t * 5.2) * 0.012 : 0) - p.notice * 0.05;
       head.current.rotation.z = Math.sin(t * 0.31 + 1) * 0.02;
     }
+    // The mask warms in its own colour while the player's eye is on it.
+    if (mask.current) mask.current.emissiveIntensity = p.notice * (selected ? 0.42 : 0.28);
     if (arm.current) {
       const out = Math.max(0, p.point);
       arm.current.visible = out > 0.03;
@@ -107,8 +110,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
                 <sphereGeometry args={[0.16, 16, 12]} />
                 <meshStandardMaterial color={PALETTE.robeDeep} roughness={1} />
               </mesh>
-              <group position={[0, 0.0, 0.1]}>
-                <MaskMesh index={index} scale={0.19} />
+              <group position={[0, 0.0, 0.115]}>
+                <MaskMesh index={index} scale={0.19} material={mask} />
               </group>
             </group>
             <group ref={arm} position={[-0.21, SHOULDER_Y - 0.03, 0.1]} visible={false}>
