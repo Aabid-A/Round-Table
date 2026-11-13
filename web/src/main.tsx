@@ -13,6 +13,9 @@ import { isPlayMode } from './play/params.js';
 import { RoomPage } from './rooms/RoomPage.js';
 import { isRoomMode, isWatchMode } from './rooms/params.js';
 import { WatchPage } from './rooms/WatchPage.js';
+import './slice/slice.css';
+import { SlicePage } from './slice/SlicePage.js';
+import { isSliceMode } from './slice/params.js';
 
 const search = window.location.search;
 const page = isCardPage(search) ? (
@@ -21,6 +24,8 @@ const page = isCardPage(search) ? (
   <GuessPage />
 ) : isPlayMode(search) ? (
   <PlayPage />
+) : isSliceMode(search) ? (
+  <SlicePage />
 ) : isWatchMode(search) ? (
   <WatchPage />
 ) : isRoomMode(search) ? (

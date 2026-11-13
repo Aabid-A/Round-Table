@@ -253,7 +253,7 @@ world is real 3D, built to `/art-direction`, `/scene-3d` and `/game-feel` and
 judged with `/playtest`. Look and feel are the owner's call: these PRs are
 never auto-merged.
 
-- [ ] **M18. Vertical slice: one round table.** One scene taken to finished
+- [x] **M18. Vertical slice: one round table.** One scene taken to finished
   quality, so the owner can judge the look before anything else is converted.
   - Allowed dependencies: three, @types/three, @react-three/fiber,
     @react-three/drei, @react-three/postprocessing.
