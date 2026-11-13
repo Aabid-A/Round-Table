@@ -1,7 +1,4 @@
-import { SEAT_R, TABLE_Y } from './dimensions.js';
-
-/** How far from the middle the player's eye is, along +z. */
-const EYE_Z = SEAT_R + 0.27;
+import { EYE_Z, TABLE_Y } from './dimensions.js';
 
 export interface CandleSpot {
   position: [number, number, number];

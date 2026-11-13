@@ -5,7 +5,7 @@ import { cloakGeometry, HEAD_Y, HIP_Y, cuffBandGeometry, hoodGeometry, mantleGeo
 import { handGeometry } from '../models/hand.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { MASKS } from '../models/masks.js';
-import { approach, idle, useReducedMotion } from '../motion.js';
+import { approach, idle, spring, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { useResource } from '../resources.js';
 
@@ -37,7 +37,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
   const head = useRef<THREE.Group>(null);
   const arm = useRef<THREE.Group>(null);
   const mask = useRef<THREE.MeshStandardMaterial>(null);
-  const pose = useRef({ gone: 0, yaw: 0, lean: 0, point: 0, pointVel: 0, pointYaw: 0, notice: 0 });
+  const pose = useRef({ gone: 0, yaw: 0, lean: 0, point: 0, pointYaw: 0, notice: 0 });
+  const out = useRef({ x: 0, v: 0 });
   const cloak = useResource(`cloak:${index}`, () => cloakGeometry(index, design.colour));
   const mantle = useResource(`mantle:${index}`, () => mantleGeometry(index, design.colour));
   const hood = useResource(`hood:${index}`, () => hoodGeometry(index));
@@ -53,11 +54,7 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
     p.yaw += (lookYaw - p.yaw) * k;
     p.lean += ((speaking ? 0.13 : 0) - p.lean) * k;
     // The arm comes out on a spring, so it overshoots a little and settles instead of stopping dead.
-    const target = pointYaw !== null ? 1 : 0;
-    const step = Math.min(dt, 0.05);
-    p.pointVel += ((target - p.point) * 70 - p.pointVel * 11) * step;
-    p.point += p.pointVel * step;
-    if (reduced) [p.point, p.pointVel] = [target, 0];
+    p.point = spring(out.current, pointYaw !== null ? 1 : 0, dt, 70, 11, reduced);
     if (pointYaw !== null) p.pointYaw += (pointYaw - p.pointYaw) * k;
     p.gone += (leaving - p.gone) * approach(dt, 1.6, reduced);
     p.notice += ((hovered || selected ? 1 : 0) - p.notice) * approach(dt, 9, reduced);
@@ -128,7 +125,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
               <mesh geometry={band}>
                 <meshStandardMaterial color={design.colour} roughness={0.55} metalness={0.15} emissive={design.colour} emissiveIntensity={0.15} side={THREE.DoubleSide} />
               </mesh>
-              <mesh geometry={hand} position={[0, -0.005, SLEEVE - 0.04]} scale={1.35} castShadow>
+              {/* the hand is modelled with its thumb toward -x; mirrored here so the thumb of this right arm lies toward the body */}
+              <mesh geometry={hand} position={[0, -0.005, SLEEVE - 0.04]} scale={[-1.35, 1.35, 1.35]} castShadow>
                 <meshStandardMaterial color={PALETTE.skin} roughness={0.65} />
               </mesh>
             </group>

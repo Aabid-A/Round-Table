@@ -2,10 +2,11 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { approach, idle, useReducedMotion } from '../motion.js';
+import { EYE_Y, EYE_Z } from '../models/dimensions.js';
 import { fovFor, restPitchFor, yawArcFor } from './fov.js';
 
 /** The eye, at the height of a person seated at the table. */
-export const EYE: [number, number, number] = [0, 1.22, 2.62];
+export const EYE: [number, number, number] = [0, EYE_Y, EYE_Z];
 
 interface Props {
   /** The direction (radians, 0 straight across the table, positive to the right) the camera eases toward, or null. */
@@ -26,6 +27,7 @@ export function FirstPerson({ toward, free }: Props) {
   const yaw = useRef(0);
   const pitch = useRef(-0.18);
   const reduced = useReducedMotion();
+  const was = useRef<number | null>(null);
   const arc = yawArcFor(size.width / size.height);
   useEffect(() => {
     const el = gl.domElement;
@@ -47,7 +49,10 @@ export function FirstPerson({ toward, free }: Props) {
     const t = clock.elapsedTime * idle(reduced);
     const wantYaw = (toward !== null ? Math.max(-0.85, Math.min(0.85, toward * 0.6)) : 0) + (free ? pointer.current.x * arc : pointer.current.x * arc * 0.35);
     const wantPitch = restPitchFor(size.width / size.height) + (free ? -pointer.current.y * PITCH_ARC : 0);
-    const k = approach(dt, 2.6, reduced && toward !== null);
+    // Reduced motion: whenever the camera's subject changes (a speaker begins or ends) it cuts; it never pans by itself.
+    const cut = reduced && toward !== was.current;
+    was.current = toward;
+    const k = approach(dt, 2.6, cut);
     yaw.current += (wantYaw - yaw.current) * k;
     pitch.current += (wantPitch - pitch.current) * k;
     camera.position.set(EYE[0] + Math.sin(t * 0.37) * 0.006, EYE[1] + Math.sin(t * 0.9) * 0.007, EYE[2]);

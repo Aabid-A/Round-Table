@@ -48,7 +48,7 @@
 .slice-choose form { padding: 0 12px 12px; }
 .slice-choose fieldset { border: 0; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .slice-choose legend { padding: 0 0 8px; color: #e0b43a; }
-.slice-choose label { display: flex; gap: 6px; align-items: center; min-height: 32px; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
+.slice-choose label { display: flex; gap: 6px; align-items: center; min-height: 44px; box-sizing: border-box; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
 .slice-choose label.on { border-color: #e0b43a; background: rgb(224 180 58 / 0.16); }
 .slice-choose .hint, .slice-fallback .hint { margin: 8px 0 0; color: #a9a291; font-size: 12px; line-height: 1.4; }
 .slice-fallback { max-width: 520px; margin: 0 auto; padding: 56px 20px 160px; font: 16px/1.5 system-ui, sans-serif; }

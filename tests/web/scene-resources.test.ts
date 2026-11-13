@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { approach, idle } from '../../web/src/scene/motion.js';
+import { approach, idle, spring } from '../../web/src/scene/motion.js';
 import { SceneResources, together } from '../../web/src/scene/resources.js';
 
 describe('what a scene has built', () => {
@@ -34,6 +34,19 @@ describe('reduced motion', () => {
     expect(approach(0.016, 4, false)).toBeGreaterThan(0);
     expect(approach(0.016, 4, false)).toBeLessThan(0.1);
     expect(approach(0.016, 4, true)).toBe(1);
+  });
+  it('springs past its target a little and settles, and is simply set when motion is reduced', () => {
+    const s = { x: 0, v: 0 };
+    let peak = 0;
+    for (let i = 0; i < 300; i++) peak = Math.max(peak, spring(s, 1, 1 / 60, 70, 11, false));
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThan(1.25);
+    expect(s.x).toBeCloseTo(1, 2);
+    // A very long frame cannot throw it off.
+    expect(Number.isFinite(spring({ x: 0, v: 0 }, 1, 5, 80, 12, false))).toBe(true);
+    const r = { x: 0, v: 3 };
+    expect(spring(r, 1, 1 / 60, 70, 11, true)).toBe(1);
+    expect(r.v).toBe(0);
   });
   it('stills idle movement', () => {
     expect(idle(false)).toBe(1);

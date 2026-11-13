@@ -2,8 +2,7 @@ import { Bloom, DepthOfField, EffectComposer, Noise, ToneMapping, Vignette } fro
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import type { QualitySettings } from './quality.js';
 
-/** `still` (reduced motion) drops the film grain, which crawls every frame. */
-/** Vignette, light bloom on the flames, film grain, and depth of field on close shots, each switched by the quality level. */
+/** `still` (reduced motion) drops the film grain, which crawls every frame. Vignette, light bloom on the flames, film grain, and depth of field on close shots, each switched by the quality level. */
 export function Effects({ quality, still = false }: { quality: QualitySettings; still?: boolean }) {
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>

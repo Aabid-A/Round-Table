@@ -1,11 +1,10 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { approach, idle, useReducedMotion } from '../motion.js';
+import { approach, idle, spring, useReducedMotion } from '../motion.js';
 import { useResource } from '../resources.js';
 import * as THREE from 'three';
 import { figurePose } from '../layout.js';
-import { HEAD_Y } from '../models/cloak.js';
-import { cuffBandGeometry, sleeveGeometry } from '../models/cloak.js';
+import { cuffBandGeometry, HEAD_Y, sleeveGeometry } from '../models/cloak.js';
 import { TABLE_R, TABLE_Y } from '../models/dimensions.js';
 import { handGeometry } from '../models/hand.js';
 import { MASKS } from '../models/masks.js';
@@ -34,7 +33,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
   const hand = useRef<THREE.Group>(null);
   const rest = useRef<THREE.Mesh>(null);
   const point = useRef<THREE.Mesh>(null);
-  const s = useRef({ up: 0, vel: 0 });
+  const s = useRef({ x: 0, v: 0 });
   const cloth = useResource('sleeve:yours', () => sleeveGeometry(1, 0.046));
   const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.046, 0.76));
   const lying = useResource('hand:rest', () => handGeometry('rest'));
@@ -42,13 +41,8 @@ function Arm({ side, pointAt, accent }: ArmProps) {
   const reduced = useReducedMotion();
   const tmp = useMemo(() => ({ wrist: new THREE.Vector3(), elbow: new THREE.Vector3(), dir: new THREE.Vector3(), aim: new THREE.Vector3(0, 0, 1), q: new THREE.Quaternion(), rest: new THREE.Quaternion(), raised: new THREE.Quaternion(), roll: new THREE.Quaternion(), e: new THREE.Euler() }), []);
   useFrame(({ clock }, dt) => {
-    const p = s.current;
-    const step = Math.min(dt, 0.05);
     // A spring, so the hand overshoots a little as it comes up and settles when it is set down.
-    p.vel += (((pointAt !== null ? 1 : 0) - p.up) * 80 - p.vel * 12) * step;
-    p.up += p.vel * step;
-    if (reduced) [p.up, p.vel] = [pointAt !== null ? 1 : 0, 0];
-    const up = Math.max(0, Math.min(1.1, p.up));
+    const up = Math.max(0, Math.min(1.1, spring(s.current, pointAt !== null ? 1 : 0, dt, 80, 12, reduced)));
     const t = (clock.elapsedTime + side) * idle(reduced);
     tmp.wrist.lerpVectors(REST.wrist, RAISED.wrist, up);
     tmp.elbow.lerpVectors(REST.elbow, RAISED.elbow, up);
@@ -93,7 +87,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
           <meshStandardMaterial color={accent} roughness={0.55} metalness={0.15} emissive={accent} emissiveIntensity={0.06} side={THREE.DoubleSide} />
         </mesh>
       </group>
-      {/* The hand is modelled as a right hand; the left is its mirror image. */}
+      {/* The hand is modelled with its thumb toward -x, which in this seat's space is the middle for your left hand; your right is its mirror image. */}
       <group ref={hand}>
         <group scale={[side === -1 ? -HAND : HAND, HAND, HAND]}>
           <mesh ref={rest} geometry={lying} castShadow receiveShadow>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Action } from './machine.js';
 import type { SliceView } from '../scene/sliceView.js';
 
@@ -24,6 +24,8 @@ export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOp
   const choosing = view.choosable.length > 0;
   const names = new Map(view.figures.map((f) => [f.index, f.name]));
   // The keys read the newest view, so two quick presses are never judged against an old choice.
+  // Once opened, the list stays open for the next choice too, until the player folds it away.
+  const [open, setOpen] = useState(listOpen);
   const latest = useRef(view);
   latest.current = view;
   useEffect(() => {
@@ -50,7 +52,7 @@ export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOp
         {ended ? <button type="button" onClick={() => dispatch({ t: 'restart' })}>Sit through it again</button> : null}
       </div>
       {choosing ? (
-        <details className="slice-choose" open={listOpen || undefined}>
+        <details className="slice-choose" open={open || listOpen} onToggle={(e) => setOpen(e.currentTarget.open)}>
           <summary>Choose from a list</summary>
           <form
             aria-label="Choose a figure"

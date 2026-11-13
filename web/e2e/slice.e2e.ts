@@ -128,6 +128,20 @@ test('the room reports what a frame costs, and stays inside its budget', async (
   expect(Number(await canvas.getAttribute('data-triangles'))).toBeLessThan(200_000);
 });
 
+test('if the graphics context is lost, the plain version takes over with the list open', async ({ page }) => {
+  await page.goto('/?mode=slice&quality=low');
+  const canvas = page.getByTestId('slice').locator('canvas');
+  await expect(canvas).toBeVisible({ timeout: 60_000 });
+  await toNextChoice(page);
+  await canvas.evaluate((c: HTMLCanvasElement) => (c.getContext('webgl2') ?? c.getContext('webgl'))!.getExtension('WEBGL_lose_context')!.loseContext());
+  await expect(page.getByTestId('slice-fallback')).toBeVisible();
+  await expect(page.getByTestId('slice-fallback')).toContainText('graphics context was lost');
+  await expect(page.getByRole('radio')).toHaveCount(7);
+  await page.getByRole('radio').first().check();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
+});
+
 test('the plain version (no WebGL) plays the same round, with the list and a live region', async ({ page }) => {
   await page.goto('/?mode=slice&fallback=1');
   await expect(page.getByTestId('slice-fallback')).toBeVisible();
