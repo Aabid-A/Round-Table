@@ -76,6 +76,9 @@ function Slice({ script }: { script: SliceScript }) {
     const cue = cueForStage(state.stage);
     if (cue) sound.current?.play(cue);
   }, [state.stage]);
+  useEffect(() => {
+    if (state.selected !== null) sound.current?.play('select');
+  }, [state.selected]);
   const toggleMute = (): void => {
     startSound();
     const m = !muted;
@@ -90,17 +93,17 @@ function Slice({ script }: { script: SliceScript }) {
     return () => clearTimeout(t);
   }, [state.stage]);
   return (
-    <main className="slice" data-testid="slice" onPointerDown={startSound} onKeyDown={startSound} data-quality={quality} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind}>
+    <main className="slice" data-testid="slice" onPointerDown={startSound} onKeyDown={startSound} data-quality={quality} data-figures={view.figures.filter((f) => f.present).length} data-stage={state.stage.kind} data-selected={state.selected ?? ''}>
       {noGl ? (
         <SliceFallback view={view} reason="This is the plain version of the round table. The 3D room needs WebGL." />
       ) : (
       <SceneBoundary fallback={<SliceFallback view={view} reason="The 3D room could not start, so this is the plain version." />}>
       <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
-        <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'select', seat })} />
+        <SliceScene view={view} quality={quality} onFrame={onFrame} onHover={(seat) => dispatch({ t: 'hover', seat })} onPick={(seat) => dispatch({ t: 'pick', seat })} />
       </Suspense>
       </SceneBoundary>
       )}
-      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} />
+      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl} />
       <p className={view.speech && !noGl ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );

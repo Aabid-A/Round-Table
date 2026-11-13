@@ -34,16 +34,20 @@ test('plays the whole slice by keyboard and the choice form: accuse, vote, banis
   await expect(page.getByTestId('slice').locator('canvas')).toBeVisible({ timeout: 60_000 });
   await toNextChoice(page);
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'accuse');
-  await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  // The list of names is there for a keyboard or a screen reader, but folded away: the choice is made in the room.
+  await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeHidden();
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('radio', { checked: true })).toHaveCount(1);
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-selected', '1');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
   await expect(page.locator('.slice-caption')).toContainText('You point at');
   await toNextChoice(page);
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'vote');
+  await page.getByText('Choose from a list').click();
+  await expect(page.getByRole('form', { name: 'Choose a figure' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm' })).toBeDisabled();
   await page.getByRole('radio').nth(1).check();
+  await expect(page.getByRole('radio', { checked: true })).toHaveCount(1);
   await page.getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'tally');
   for (let i = 0; i < 6 && (await stage(page)) !== 'end'; i++) {
@@ -63,6 +67,7 @@ test('no role is named anywhere on the page before a mask is turned over', async
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
   await toNextChoice(page);
+  await page.getByText('Choose from a list').click();
   await page.getByRole('radio').first().check();
   const before = (await page.locator('body').innerText()).toLowerCase();
   expect(before).not.toMatch(/traitor|faithful/);
@@ -72,6 +77,29 @@ test('no role is named anywhere on the page before a mask is turned over', async
     await page.waitForTimeout(80);
   }
   await expect(page.locator('.slice-caption')).toContainText(/faithful|traitor/);
+});
+
+test('you accuse by looking at a figure in the room and selecting it, twice to confirm', async ({ page }) => {
+  await page.goto('/?mode=slice&quality=low');
+  await expect(page.getByTestId('slice').locator('canvas')).toBeVisible({ timeout: 60_000 });
+  await toNextChoice(page);
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'accuse');
+  // No list of names in the way by default.
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  // The figure straight across the table (seat 4) is in the middle of the picture, a little above the middle.
+  const box = (await page.getByTestId('slice').locator('canvas').boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height * 0.36;
+  await page.mouse.move(x, y, { steps: 4 });
+  // The head follows the pointer; give it a moment to come round from the Skip button to the middle.
+  await page.waitForTimeout(3000);
+  await page.mouse.click(x, y);
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-selected', '4');
+  await expect(page.locator('.slice-caption')).toContainText('is chosen');
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'accuse');
+  await page.mouse.click(x, y);
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
+  await expect(page.locator('.slice-caption')).toContainText('You point at Dax');
 });
 
 test('the plain version (no WebGL) plays the same round, with the list and a live region', async ({ page }) => {

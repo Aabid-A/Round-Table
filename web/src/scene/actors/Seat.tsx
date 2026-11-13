@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { chairPose, figurePose, headYaw, platePose, yawBetween } from '../layout.js';
 import { Chair } from '../models/Chair.js';
@@ -34,6 +34,11 @@ export function Seat(p: SeatProps) {
   const chair = useRef<THREE.Group>(null);
   const push = useRef(0);
   const plate = useMemo(() => plateTexture(p.figure.name, MASKS[index]!.colour), [p.figure.name, index]);
+  // A seat that can no longer be chosen gives the pointer back.
+  useEffect(() => {
+    if (!p.choosable) return;
+    return () => void (document.body.style.cursor = '');
+  }, [p.choosable]);
   const pose = chairPose(index);
   const fig = figurePose(index);
   const plateP = platePose(index);
@@ -65,9 +70,13 @@ export function Seat(p: SeatProps) {
           visible={false}
           onPointerOver={(e) => {
             e.stopPropagation();
+            document.body.style.cursor = 'pointer';
             p.onHover(index);
           }}
-          onPointerOut={() => p.onHover(null)}
+          onPointerOut={() => {
+            document.body.style.cursor = '';
+            p.onHover(null);
+          }}
           onClick={(e) => {
             e.stopPropagation();
             p.onPick(index);

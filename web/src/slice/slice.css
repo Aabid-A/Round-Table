@@ -39,10 +39,14 @@
 .slice button { padding: 8px 12px; border-radius: 8px; border: 1px solid rgb(224 180 58 / 0.5); background: rgb(10 10 14 / 0.72); color: #efe6d2; cursor: pointer; }
 .slice button:hover:not(:disabled), .slice button:focus-visible { border-color: #e0b43a; outline: 2px solid #e0b43a; outline-offset: 2px; }
 .slice button:disabled { opacity: 0.45; cursor: not-allowed; }
-.slice-choose { position: absolute; left: 12px; bottom: 90px; max-width: 260px; padding: 12px; border-radius: 12px; background: rgb(8 9 13 / 0.82); border: 1px solid rgb(224 180 58 / 0.35); }
+.slice-choose { position: absolute; left: 12px; top: 12px; max-width: 260px; border-radius: 10px; background: rgb(8 9 13 / 0.72); border: 1px solid rgb(224 180 58 / 0.35); }
+.slice-choose[open] { background: rgb(8 9 13 / 0.88); }
+.slice-choose summary { min-height: 44px; box-sizing: border-box; padding: 14px 14px; border-radius: 10px; color: #cfc6b2; cursor: pointer; }
+.slice-choose summary:hover, .slice-choose summary:focus-visible { color: #efe6d2; outline: 2px solid #e0b43a; outline-offset: 2px; }
+.slice-choose form { padding: 0 12px 12px; }
 .slice-choose fieldset { border: 0; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .slice-choose legend { padding: 0 0 8px; color: #e0b43a; }
-.slice-choose label { display: flex; gap: 6px; align-items: center; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
+.slice-choose label { display: flex; gap: 6px; align-items: center; min-height: 32px; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
 .slice-choose label.on { border-color: #e0b43a; background: rgb(224 180 58 / 0.16); }
 .slice-choose .hint, .slice-fallback .hint { margin: 8px 0 0; color: #a9a291; font-size: 12px; line-height: 1.4; }
 .slice-fallback { max-width: 520px; margin: 0 auto; padding: 56px 20px 160px; font: 16px/1.5 system-ui, sans-serif; }
@@ -50,6 +54,6 @@
 .slice-fallback li { display: flex; gap: 10px; align-items: center; }
 .slice-fallback li.out { opacity: 0.55; text-decoration: line-through; }
 .slice-fallback .swatch { width: 14px; height: 14px; border-radius: 50%; }
-@media (max-width: 600px) { .slice-choose { left: 8px; right: 8px; bottom: 8px; max-width: none; } .slice-caption { top: 56px; bottom: auto; max-width: 92vw; } .slice-speech { width: 190px; font-size: 12px; } }
+@media (max-width: 600px) { .slice-choose { left: 8px; top: auto; bottom: 8px; } .slice-choose[open] { right: 8px; max-width: none; } .slice-caption { top: 60px; bottom: auto; width: max-content; max-width: 92vw; font-size: 15px; } .slice-speech { width: 190px; font-size: 13px; } }
 @media (prefers-reduced-motion: reduce) { .slice * { scroll-behavior: auto; } }
 .slice .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; background: none; }

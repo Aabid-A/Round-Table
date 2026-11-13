@@ -15,6 +15,7 @@ import { Fireplace } from './models/Fireplace.js';
 import { Hall } from './models/Hall.js';
 import { Table } from './models/Table.js';
 import { Effects } from './stage/Effects.js';
+import { HoverLight } from './stage/HoverLight.js';
 import { Lights } from './stage/Lights.js';
 import { QUALITY, type Quality } from './stage/quality.js';
 import { CANDLES, type SliceView } from './sliceView.js';
@@ -58,6 +59,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
       <Lights mood={view.mood} litCount={litNow} quality={q} />
+      <HoverLight hovered={view.hovered} selected={view.selected} />
       <Hall />
       <Fireplace />
       <Table />
