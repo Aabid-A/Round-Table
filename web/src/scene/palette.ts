@@ -26,7 +26,7 @@ export const PALETTE = {
   /** The short cape over a figure's shoulders: the same cloth, a shade lighter, so the layers read. */
   mantle: '#4a4257',
   robeDeep: '#0d0c10',
-  skin: '#7a5a48',
+  skin: '#a37c63',
 } as const;
 
 /** One accent per player. Chosen to stay apart in warm low light, so no two are close in hue and each differs in lightness from its neighbours. */

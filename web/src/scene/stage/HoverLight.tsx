@@ -26,7 +26,7 @@ export function HoverLight({ hovered, selected }: Props) {
     const seat = hovered ?? selected;
     // It fades out where it was before it comes up somewhere else: it never slides across the table.
     if (seat !== at.current && l.intensity < 0.05) at.current = seat;
-    const want = seat !== null && seat === at.current ? (seat === selected ? 2.4 : 1.5) : 0;
+    const want = seat !== null && seat === at.current ? (seat === selected ? 3.8 : 1.4) : 0;
     l.intensity += (want - l.intensity) * (1 - Math.exp(-dt * 10));
     if (at.current === null) return;
     const [x, , z] = figurePose(at.current).position;

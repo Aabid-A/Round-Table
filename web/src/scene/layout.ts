@@ -42,6 +42,12 @@ export function platePose(i: number, viewer: number): Pose {
   return { position, facing: Math.atan2(vx - position[0], vz - position[2]) };
 }
 
+/** The plates of the two seats beside the viewer stand much nearer than the rest, so they are made smaller: every name then reads at about the same size. */
+export function plateScale(i: number, viewer: number): number {
+  const apart = Math.min((i - viewer + SEATS) % SEATS, (viewer - i + SEATS) % SEATS);
+  return apart === 1 ? 0.7 : 1;
+}
+
 /** The yaw (radians, 0 straight ahead, positive to the right) from the seat at 0 to seat `i`, for turning a head or a camera toward it. */
 export function yawToSeat(i: number): number {
   const [x, , z] = chairPose(i).position;

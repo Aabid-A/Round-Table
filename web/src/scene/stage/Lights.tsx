@@ -20,9 +20,13 @@ interface Props {
 /** Where the morning comes in: a high window behind the player's left shoulder. */
 const WINDOW: [number, number, number] = [-4.5, 6, 6.5];
 /** How bright the fire is by mood. With the candles out the eye opens to it, so its glow carries across the table. */
-const FIRE = { day: 62, night: 190, dawn: 90 } as const;
+const FIRE = { day: 62, night: 125, dawn: 80 } as const;
+/** The fire's glow thrown back off the wall behind the player: warm, weak, and what lets a face be made out at night without turning it blue. */
+const BOUNCE = { day: 0, night: 9, dawn: 3 } as const;
+/** The grey of morning through the high window, over the whole table. The shaft on the empty chair is far brighter. */
+const MORNING = { day: 0, night: 0, dawn: 0.85 } as const;
 /** The faint cold light from above. At night it is what lets the masks and the empty chair be made out; it never lights the room. */
-const FILL = { day: 0.2, night: 1.5, dawn: 1.3 } as const;
+const FILL = { day: 0.2, night: 0.45, dawn: 0.5 } as const;
 
 /**
  * The light is designed, not ambient: a warm point light over each pair of candles with flicker, a bigger orange one in the fireplace,
@@ -34,6 +38,8 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
   const fire = useRef<THREE.PointLight>(null);
   const shaft = useRef<THREE.SpotLight>(null);
   const fill = useRef<THREE.DirectionalLight>(null);
+  const bounce = useRef<THREE.PointLight>(null);
+  const morning = useRef<THREE.DirectionalLight>(null);
   const level = useRef({ fire: FIRE.day as number });
   // With motion reduced the light is steady; it still fades between day, night and dawn.
   const flicker = idle(useReducedMotion());
@@ -60,14 +66,18 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
     if (fire.current) fire.current.intensity = level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);
     if (shaft.current) shaft.current.intensity += ((mood === 'dawn' && dawnSeat !== null ? 420 : 0) - shaft.current.intensity) * k;
     if (fill.current) fill.current.intensity += (FILL[mood] - fill.current.intensity) * k;
+    if (bounce.current) bounce.current.intensity += (BOUNCE[mood] - bounce.current.intensity) * k;
+    if (morning.current) morning.current.intensity += (MORNING[mood] - morning.current.intensity) * k;
   });
   const shadowSize = quality.shadowMapSize;
   return (
     <>
       <hemisphereLight args={['#2a3050', '#0c0b10', 0.12]} />
       <directionalLight ref={fill} position={[2, 7, 6]} color={PALETTE.coolFill} intensity={FILL.day} />
+      <pointLight ref={bounce} position={[0, 2.6, 5.2]} color="#ff9a5c" intensity={0} distance={14} decay={1.5} />
+      <directionalLight ref={morning} position={WINDOW} color="#cfd6e6" intensity={0} />
       <primitive object={aim} />
-      <spotLight ref={shaft} position={WINDOW} target={aim} color="#ffe2b0" intensity={0} angle={0.125} penumbra={0.8} distance={22} decay={1.6} castShadow={quality.shadows} shadow-mapSize={[shadowSize, shadowSize]} shadow-bias={-0.0006} />
+      <spotLight ref={shaft} position={WINDOW} target={aim} color="#ffe2b0" intensity={0} angle={0.15} penumbra={0.8} distance={22} decay={1.6} castShadow={quality.shadows} shadow-mapSize={[shadowSize, shadowSize]} shadow-bias={-0.0006} />
       {CLUSTER_LIGHTS.map((p, c) => (
         <pointLight
           key={c}

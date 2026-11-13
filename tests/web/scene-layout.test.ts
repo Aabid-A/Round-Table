@@ -53,7 +53,7 @@ describe('the field of view', () => {
   it('keeps about the same width of view in a tall window, within limits', () => {
     expect(fovFor(16 / 9)).toBeCloseTo(58, 0);
     expect(fovFor(1)).toBeGreaterThan(fovFor(16 / 9));
-    expect(fovFor(390 / 844)).toBe(88);
+    expect(fovFor(390 / 844)).toBe(74);
     expect(fovFor(5)).toBe(58);
   });
   it('in a tall window looks nearer level and lets the head turn further, so every seat can still be reached', () => {

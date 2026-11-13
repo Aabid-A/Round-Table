@@ -12,12 +12,12 @@ import { MASKS } from '../models/masks.js';
 import { PALETTE } from '../palette.js';
 
 /** A little over life size, so the fingers read at the bottom of a small screen. */
-const HAND = 1.12;
+const HAND = 1.3;
 const FORWARD = new THREE.Vector3(0, 0, 1);
 // In the space of your own seat: the table's edge at 0, +z across the table, +x to your left.
-const REST = { wrist: new THREE.Vector3(0.24, TABLE_Y + 0.036, 0.07), elbow: new THREE.Vector3(0.38, TABLE_Y + 0.09, -0.4), yaw: -0.6 };
+const REST = { wrist: new THREE.Vector3(0.24, TABLE_Y + 0.036, 0.07), elbow: new THREE.Vector3(0.45, TABLE_Y - 0.04, -0.8), yaw: -0.6 };
 // Raised low and out to the side, so the pointing hand is seen from beside it and not end on.
-const RAISED = { wrist: new THREE.Vector3(0.34, TABLE_Y + 0.17, 0.3), elbow: new THREE.Vector3(0.43, TABLE_Y + 0.03, -0.3) };
+const RAISED = { wrist: new THREE.Vector3(0.34, TABLE_Y + 0.17, 0.3), elbow: new THREE.Vector3(0.5, TABLE_Y - 0.1, -0.75) };
 const ROLL = new THREE.Vector3(0, 0, 1);
 
 interface ArmProps {
@@ -36,7 +36,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
   const point = useRef<THREE.Mesh>(null);
   const s = useRef({ up: 0, vel: 0 });
   const cloth = useResource('sleeve:yours', () => sleeveGeometry(1, 0.046));
-  const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.046));
+  const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.046, 0.76));
   const lying = useResource('hand:rest', () => handGeometry('rest'));
   const pointing = useResource('hand:point', () => handGeometry('point'));
   const reduced = useReducedMotion();
@@ -90,7 +90,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
         </mesh>
         {/* the cuff, in your own mask's colour: how you know which one is yours */}
         <mesh geometry={band} castShadow>
-          <meshStandardMaterial color={accent} roughness={0.55} metalness={0.15} emissive={accent} emissiveIntensity={0.22} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={accent} roughness={0.55} metalness={0.15} emissive={accent} emissiveIntensity={0.06} side={THREE.DoubleSide} />
         </mesh>
       </group>
       {/* The hand is modelled as a right hand; the left is its mirror image. */}

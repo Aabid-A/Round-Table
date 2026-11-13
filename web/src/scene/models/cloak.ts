@@ -12,9 +12,9 @@ const CLOAK_ROWS = [
   [0.03, 0.34, 0.31, 0.3, 0.05],
   [0.26, 0.31, 0.28, 0.3, 0.042],
   [0.49, 0.3, 0.28, 0.26, 0.03],
-  [0.6, 0.3, 0.36, 0.14, 0.02],
-  [0.74, 0.27, 0.23, 0.03, 0.03],
-  [0.95, 0.28, 0.21, 0.0, 0.022],
+  [0.6, 0.3, 0.36, 0.14, 0.036],
+  [0.74, 0.27, 0.23, 0.03, 0.042],
+  [0.95, 0.28, 0.21, 0.0, 0.032],
   [SHOULDER_Y, 0.3, 0.19, 0.0, 0.006],
   [1.17, 0.21, 0.16, 0.0, 0.0],
   [1.23, 0.1, 0.1, -0.01, 0.0],
@@ -134,8 +134,8 @@ export function sleeveGeometry(length: number, cuff = 0.07): THREE.BufferGeometr
 }
 
 /** The band sewn round a sleeve's cuff, which carries the wearer's colour: a strip of cloth lying just proud of the sleeve under it. */
-export function cuffBandGeometry(length: number, cuff = 0.07): THREE.BufferGeometry {
+export function cuffBandGeometry(length: number, cuff = 0.07, from = BAND[0]): THREE.BufferGeometry {
   const row = keyed(SLEEVE_ROWS(cuff).slice(0, 4));
   const fold = folds(7);
-  return ringSurface((v, theta) => sleevePoint(row(BAND[0] + (BAND[1] - BAND[0]) * v), theta, length, fold, 1.05), 3, 20);
+  return ringSurface((v, theta) => sleevePoint(row(from + (BAND[1] - from) * v), theta, length, fold, 1.05), 4, 20);
 }
