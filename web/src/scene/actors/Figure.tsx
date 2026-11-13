@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { cloakGeometry, HEAD_Y, HIP_Y, hoodGeometry, mantleGeometry, SHOULDER_Y, sleeveGeometry } from '../models/cloak.js';
+import { cloakGeometry, HEAD_Y, HIP_Y, cuffBandGeometry, hoodGeometry, mantleGeometry, SHOULDER_Y, sleeveGeometry } from '../models/cloak.js';
 import { handGeometry } from '../models/hand.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { MASKS } from '../models/masks.js';
@@ -39,7 +39,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
   const cloak = useMemo(() => cloakGeometry(index, design.colour), [index, design.colour]);
   const mantle = useMemo(() => mantleGeometry(index, design.colour), [index, design.colour]);
   const hood = useMemo(() => hoodGeometry(index), [index]);
-  const sleeve = useMemo(() => sleeveGeometry(SLEEVE, design.colour), [design.colour]);
+  const sleeve = useMemo(() => sleeveGeometry(SLEEVE), []);
+  const band = useMemo(() => cuffBandGeometry(SLEEVE), []);
   const hand = useMemo(() => handGeometry('point'), []);
   useFrame(({ clock }, dt) => {
     const k = 1 - Math.exp(-dt * 4);
@@ -116,7 +117,10 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
             </group>
             <group ref={arm} position={[-0.21, SHOULDER_Y - 0.03, 0.1]} visible={false}>
               <mesh geometry={sleeve} castShadow>
-                <meshStandardMaterial vertexColors roughness={0.9} side={THREE.DoubleSide} />
+                <meshStandardMaterial color={PALETTE.robe} roughness={0.9} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh geometry={band}>
+                <meshStandardMaterial color={design.colour} roughness={0.55} metalness={0.15} emissive={design.colour} emissiveIntensity={0.15} side={THREE.DoubleSide} />
               </mesh>
               <mesh geometry={hand} position={[0, -0.005, SLEEVE - 0.04]} scale={1.35} castShadow>
                 <meshStandardMaterial color={PALETTE.skin} roughness={0.65} />

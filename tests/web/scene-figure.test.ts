@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BufferGeometry } from 'three';
 import { figurePose, headYaw, MASK_MAX_OFF, NECK_MAX, SEATS, yawBetween } from '../../web/src/scene/layout.js';
-import { cloakGeometry, hoodGeometry, mantleGeometry, sleeveGeometry } from '../../web/src/scene/models/cloak.js';
+import { cloakGeometry, cuffBandGeometry, hoodGeometry, mantleGeometry, sleeveGeometry } from '../../web/src/scene/models/cloak.js';
 import { folds, keyed } from '../../web/src/scene/models/cloth.js';
 import { handGeometry } from '../../web/src/scene/models/hand.js';
 
@@ -78,8 +78,13 @@ describe('the cloth', () => {
     const hood = hoodGeometry(1);
     expect(finite(hood)).toBe(true);
     expect(bounds(hood).max[2]).toBeGreaterThan(0.18);
-    const sleeve = sleeveGeometry(0.4, '#3fa9a0');
+    const sleeve = sleeveGeometry(0.4);
     expect(bounds(sleeve).max[2]).toBeCloseTo(0.4, 1);
+    // The band sits round the cuff end of the sleeve, a little outside it.
+    const band = bounds(cuffBandGeometry(0.4));
+    expect(band.min[2]).toBeGreaterThan(0.3);
+    expect(band.max[2]).toBeLessThan(0.4);
+    expect(band.max[0]).toBeGreaterThan(0.07);
   });
 });
 

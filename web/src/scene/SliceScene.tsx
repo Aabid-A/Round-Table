@@ -85,7 +85,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
             onPick={onPick}
           />
         ))}
-      <YourHands pointAt={view.pointing?.from === view.you ? view.pointing.at : null} />
+      <YourHands you={view.you} pointAt={view.pointing?.from === view.you ? view.pointing.at : null} />
       {view.tokens.map((t, i) => (
         <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} />
       ))}

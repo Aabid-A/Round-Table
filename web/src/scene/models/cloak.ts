@@ -108,27 +108,34 @@ export function hoodGeometry(seed: number): THREE.BufferGeometry {
   );
 }
 
-/** A wide sleeve along +z from the shoulder at the origin to an open cuff, hanging lower underneath. The cuff carries the wearer's colour. */
-export function sleeveGeometry(length: number, accent: string, cuff = 0.07): THREE.BufferGeometry {
-  const cloth = new THREE.Color(PALETTE.robe);
-  const trim = new THREE.Color(accent).multiplyScalar(0.85);
-  const row = keyed([
-    [0, 0.085, 0],
-    [0.5, 0.075, 0.012],
-    [0.86, cuff, 0.03],
-    [1, cuff * 1.12, 0.045],
-    [0.93, cuff * 0.8, 0.03],
-  ]);
+const SLEEVE_ROWS = (cuff: number): number[][] => [
+  [0, 0.085, 0],
+  [0.5, 0.075, 0.012],
+  [0.86, cuff, 0.035],
+  [1, cuff * 1.18, 0.06],
+  [0.93, cuff * 0.8, 0.03],
+];
+/** Where along a sleeve (0 shoulder, 1 cuff) the band of the wearer's colour runs. */
+const BAND: [number, number] = [0.8, 0.95];
+
+function sleevePoint(row: number[], theta: number, length: number, fold: (theta: number, along: number) => number, swell = 1): [number, number, number] {
+  const [t, r, sag] = row as [number, number, number];
+  const s = Math.sin(theta);
+  // Cloth pushed up the arm gathers in soft rings, and hangs in folds toward the cuff.
+  const k = (1 + 0.09 * fold(theta, t * 3) * (0.3 + t) + 0.05 * Math.sin(t * 34 + s * 1.5) * (1 - t) * (1 - t)) * swell;
+  return [Math.cos(theta) * r * k, s * r * k * (s < 0 ? 1 + sag / r : 0.9), t * length];
+}
+
+/** A wide sleeve along +z from the shoulder at the origin to an open cuff, gathered up the arm and hanging lower underneath. */
+export function sleeveGeometry(length: number, cuff = 0.07): THREE.BufferGeometry {
+  const row = keyed(SLEEVE_ROWS(cuff));
   const fold = folds(7);
-  return ringSurface(
-    (v, theta) => {
-      const [t, r, sag] = row(v) as [number, number, number];
-      const s = Math.sin(theta);
-      const k = 1 + 0.05 * fold(theta, t * 3) * t;
-      return [Math.cos(theta) * r * k, s * r * k * (s < 0 ? 1 + sag / r : 0.9), t * length];
-    },
-    16,
-    20,
-    (v) => (v > 0.6 && v < 0.82 ? trim : cloth),
-  );
+  return ringSurface((v, theta) => sleevePoint(row(v), theta, length, fold), 16, 20);
+}
+
+/** The band sewn round a sleeve's cuff, which carries the wearer's colour: a strip of cloth lying just proud of the sleeve under it. */
+export function cuffBandGeometry(length: number, cuff = 0.07): THREE.BufferGeometry {
+  const row = keyed(SLEEVE_ROWS(cuff).slice(0, 4));
+  const fold = folds(7);
+  return ringSurface((v, theta) => sleevePoint(row(BAND[0] + (BAND[1] - BAND[0]) * v), theta, length, fold, 1.05), 3, 20);
 }
