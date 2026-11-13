@@ -76,7 +76,7 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
       head.current.rotation.z = Math.sin(t * 0.31 + 1) * 0.02;
     }
     // The mask warms in its own colour while the player's eye is on it.
-    if (mask.current) mask.current.emissiveIntensity = p.notice * (selected ? 0.6 : 0.25);
+    if (mask.current) mask.current.emissiveIntensity = p.notice * (selected ? 0.36 : 0.22);
     if (arm.current) {
       const out = Math.max(0, p.point);
       arm.current.visible = out > 0.03;
