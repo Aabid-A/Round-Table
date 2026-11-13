@@ -10,7 +10,9 @@
       "vite/client",
       "node"
     ],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
   },
   "include": [
     "src",
