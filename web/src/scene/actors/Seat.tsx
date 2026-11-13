@@ -59,10 +59,12 @@ export function Seat(p: SeatProps) {
       <group position={fig.position} rotation-y={fig.facing}>
         <Figure index={index} lookYaw={p.look === null ? null : relYaw(p.look)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : relYaw(p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
-      <mesh position={[plateP.position[0], plateP.position[1] + 0.012, plateP.position[2]]} rotation={[-Math.PI / 2, 0, plateP.facing + Math.PI]} receiveShadow>
-        <planeGeometry args={[0.42, 0.16]} />
-        <meshStandardMaterial map={plate} roughness={0.7} emissive={PALETTE.amber} emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.9 : 0.12} />
-      </mesh>
+      <group position={[plateP.position[0], plateP.position[1], plateP.position[2]]} rotation-y={plateP.facing}>
+        <mesh position={[0, 0.1, 0]} rotation-x={-0.55} receiveShadow castShadow>
+          <planeGeometry args={[0.46, 0.17]} />
+          <meshStandardMaterial map={plate} roughness={0.7} side={THREE.DoubleSide} emissive={PALETTE.amber} emissiveMap={plate} emissiveIntensity={p.hovered || p.selected ? 0.9 : 0.35} />
+        </mesh>
+      </group>
       {p.choosable ? (
         <mesh
           position={[fig.position[0], 1.0, fig.position[2]]}

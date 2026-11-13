@@ -52,3 +52,4 @@
 .slice-fallback .swatch { width: 14px; height: 14px; border-radius: 50%; }
 @media (max-width: 600px) { .slice-choose { left: 8px; right: 8px; bottom: 8px; max-width: none; } .slice-caption { top: 56px; bottom: auto; max-width: 92vw; } .slice-speech { width: 190px; font-size: 12px; } }
 @media (prefers-reduced-motion: reduce) { .slice * { scroll-behavior: auto; } }
+.slice .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; background: none; }

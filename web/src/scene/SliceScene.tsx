@@ -38,6 +38,14 @@ function useLitCount(target: number): { current: number } {
   return lit;
 }
 
+/** Anchors the speech to the speaker's head, but never lets it leave the picture (or sit under the buttons) when the speaker is at the edge. */
+function keepOnScreen(obj: THREE.Object3D, camera: THREE.Camera, size: { width: number; height: number }): [number, number] {
+  const v = new THREE.Vector3().setFromMatrixPosition(obj.matrixWorld).project(camera);
+  const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
+  const half = Math.min(135, size.width / 2 - 8);
+  return [clamp((v.x * 0.5 + 0.5) * size.width, half, size.width - half), clamp((-v.y * 0.5 + 0.5) * size.height, 90, size.height - 230)];
+}
+
 function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Quality; onHover: (s: number | null) => void; onPick: (s: number) => void }) {
   const q = QUALITY[quality];
   const lit = useLitCount(view.candlesLit);
@@ -83,7 +91,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       {view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} /> : null}
       {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} /> : null}
       {view.speech && view.speech.speaker !== view.you ? (
-        <Html position={[figurePose(view.speech.speaker).position[0], 1.75, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+        <Html position={[figurePose(view.speech.speaker).position[0], 1.6, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} calculatePosition={keepOnScreen} style={{ pointerEvents: 'none' }}>
           <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
         </Html>
       ) : null}
@@ -112,6 +120,11 @@ export default function SliceScene({ view, quality, onFrame, onHover = () => {},
 }
 
 function Meter({ onFrame }: { onFrame: ((ms: number) => void) | undefined }) {
-  useFrame((_, dt) => onFrame?.(dt * 1000));
+  useFrame(({ gl }, dt) => {
+    onFrame?.(dt * 1000);
+    // What the last frame cost, for the playtest: draw calls and triangles do not depend on the machine.
+    gl.domElement.dataset.calls = String(gl.info.render.calls);
+    gl.domElement.dataset.triangles = String(gl.info.render.triangles);
+  });
   return null;
 }

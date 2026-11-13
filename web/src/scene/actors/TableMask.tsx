@@ -30,7 +30,7 @@ export function TableMask({ seat, role }: { seat: number; role: Role | null }) {
             <ringGeometry args={[0.34, 0.4, 48]} />
             <meshBasicMaterial color={colour} toneMapped={false} />
           </mesh>
-          <pointLight color={colour} intensity={role === 'traitor' ? 1.6 : 0.9} distance={1.8} position={[0, 0.5, 0.3]} />
+          <pointLight color={colour} intensity={role === 'traitor' ? 0.55 : 0.3} distance={1.8} position={[0, 0.5, 0.3]} />
         </>
       ) : null}
     </group>

@@ -63,7 +63,7 @@ export function MaskMesh({ index, scale = 0.15 }: { index: number; scale?: numbe
   return (
     <group scale={scale}>
       <mesh geometry={geo} castShadow>
-        <meshStandardMaterial color={PALETTE.bone} roughness={0.5} metalness={0.05} />
+        <meshStandardMaterial color="#b9ae98" roughness={0.6} metalness={0.05} />
       </mesh>
       <mesh geometry={emblem} position={[0, 0.5, 0.3]}>
         <meshStandardMaterial color={design.colour} roughness={0.4} metalness={0.3} emissive={design.colour} emissiveIntensity={0.12} />

@@ -42,7 +42,7 @@ export function FirstPerson({ toward, free }: Props) {
   }, [camera, size.width, size.height]);
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
-    const wantYaw = (toward !== null ? Math.max(-0.5, Math.min(0.5, toward * 0.3)) : 0) + (free ? pointer.current.x * YAW_ARC : pointer.current.x * YAW_ARC * 0.35);
+    const wantYaw = (toward !== null ? Math.max(-0.85, Math.min(0.85, toward * 0.6)) : 0) + (free ? pointer.current.x * YAW_ARC : pointer.current.x * YAW_ARC * 0.35);
     const wantPitch = -0.18 + (free ? -pointer.current.y * PITCH_ARC : 0);
     const k = 1 - Math.exp(-dt * 2.6);
     yaw.current += (wantYaw - yaw.current) * k;

@@ -101,8 +101,8 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
             <coneGeometry args={[0.27, 0.46, 18, 1, true]} />
             <meshStandardMaterial color={robe} roughness={0.95} side={THREE.DoubleSide} />
           </mesh>
-          <group position={[0, 0.0, 0.17]}>
-            <MaskMesh index={index} scale={0.15} />
+          <group position={[0, 0.0, 0.19]}>
+            <MaskMesh index={index} scale={0.19} />
           </group>
           <pointLight position={[0, 0, 0.4]} color={design.colour} intensity={0.5 * pose.current.glow} distance={1.4} />
         </group>

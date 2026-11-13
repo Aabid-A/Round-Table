@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import * as THREE from 'three';
 import { yawToSeat } from '../layout.js';
+import { MASKS } from '../models/masks.js';
 import { PALETTE } from '../palette.js';
 import { TABLE_Y } from '../models/Table.js';
 
@@ -25,6 +26,11 @@ export function YourHands({ pointAt }: { pointAt: number | null }) {
       <mesh rotation-x={Math.PI / 2} position={[0, 0, 0.0]} castShadow>
         <capsuleGeometry args={[0.022, 0.36, 4, 10]} />
         <meshStandardMaterial color={PALETTE.robe} roughness={0.95} />
+      </mesh>
+      {/* the cuff, in your own mask's colour: how you know which one is yours */}
+      <mesh position={[0, 0, 0.12]}>
+        <torusGeometry args={[0.03, 0.009, 8, 20]} />
+        <meshStandardMaterial color={MASKS[0]!.colour} roughness={0.5} emissive={MASKS[0]!.colour} emissiveIntensity={0.15} />
       </mesh>
       <mesh position={[0, 0, 0.2]} castShadow>
         <sphereGeometry args={[0.03, 12, 10]} />

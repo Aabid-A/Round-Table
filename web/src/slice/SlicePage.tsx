@@ -79,7 +79,7 @@ function Slice({ script }: { script: SliceScript }) {
       </Suspense>
       )}
       <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} />
-      <p className="slice-caption" role="status" aria-live="polite">{view.announce}</p>
+      <p className={view.speech ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
 }
