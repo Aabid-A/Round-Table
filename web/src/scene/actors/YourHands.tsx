@@ -11,7 +11,7 @@ import { MASKS } from '../models/masks.js';
 import { PALETTE } from '../palette.js';
 
 /** A little over life size, so the fingers read at the bottom of a small screen. */
-const HAND = 1.3;
+const HAND = 1.65;
 const FORWARD = new THREE.Vector3(0, 0, 1);
 // In the space of your own seat: the table's edge at 0, +z across the table, +x to your left.
 const REST = { wrist: new THREE.Vector3(0.24, TABLE_Y + 0.036, 0.07), elbow: new THREE.Vector3(0.45, TABLE_Y - 0.04, -0.8), yaw: -0.6 };
@@ -34,8 +34,8 @@ function Arm({ side, pointAt, accent }: ArmProps) {
   const rest = useRef<THREE.Mesh>(null);
   const point = useRef<THREE.Mesh>(null);
   const s = useRef({ x: 0, v: 0 });
-  const cloth = useResource('sleeve:yours', () => sleeveGeometry(1, 0.046));
-  const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.046, 0.76));
+  const cloth = useResource('sleeve:yours', () => sleeveGeometry(1, 0.066, 0.105));
+  const band = useResource('cuff:yours', () => cuffBandGeometry(1, 0.066, 0.74, 0.105));
   const lying = useResource('hand:rest', () => handGeometry('rest'));
   const pointing = useResource('hand:point', () => handGeometry('point'));
   const reduced = useReducedMotion();
@@ -72,7 +72,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
       sleeve.current.position.copy(tmp.elbow);
       sleeve.current.quaternion.copy(tmp.q.setFromUnitVectors(FORWARD, tmp.dir.normalize()));
       // The sleeve stops short of the wrist, so the wrist and the whole hand show.
-      sleeve.current.scale.set(1, 1, length - 0.035 - 0.04 * Math.min(1, up));
+      sleeve.current.scale.set(1, 1, length - 0.085 - 0.03 * Math.min(1, up));
     }
   });
   const skin = <meshStandardMaterial color={PALETTE.skin} roughness={0.62} />;
@@ -80,7 +80,7 @@ function Arm({ side, pointAt, accent }: ArmProps) {
     <>
       <group ref={sleeve}>
         <mesh geometry={cloth} castShadow receiveShadow>
-          <meshStandardMaterial color={PALETTE.robe} roughness={0.85} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={PALETTE.robe} roughness={0.72} side={THREE.DoubleSide} />
         </mesh>
         {/* the cuff, in your own mask's colour: how you know which one is yours */}
         <mesh geometry={band} castShadow>

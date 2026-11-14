@@ -108,34 +108,42 @@ export function hoodGeometry(seed: number): THREE.BufferGeometry {
   );
 }
 
-const SLEEVE_ROWS = (cuff: number): number[][] => [
-  [0, 0.085, 0],
-  [0.5, 0.075, 0.012],
-  [0.86, cuff, 0.035],
-  [1, cuff * 1.18, 0.06],
-  [0.93, cuff * 0.8, 0.03],
+// Each row: how far along the sleeve (0 shoulder, 1 cuff), its radius, and how far the cloth hangs below the arm there.
+const SLEEVE_ROWS = (cuff: number, wide: number): number[][] => [
+  [0, wide, 0.01],
+  [0.35, wide * 0.97, 0.03],
+  [0.7, (wide + cuff) / 2, 0.05],
+  [0.9, cuff * 1.02, 0.045],
+  [1, cuff * 1.12, 0.05],
+  [0.94, cuff * 0.9, 0.04],
 ];
-/** Where along a sleeve (0 shoulder, 1 cuff) the band of the wearer's colour runs. */
-const BAND: [number, number] = [0.8, 0.95];
+/** Where along a sleeve (0 shoulder, 1 cuff) the cuff of the wearer's colour runs. */
+const BAND: [number, number] = [0.8, 0.985];
 
 function sleevePoint(row: number[], theta: number, length: number, fold: (theta: number, along: number) => number, swell = 1): [number, number, number] {
   const [t, r, sag] = row as [number, number, number];
   const s = Math.sin(theta);
-  // Cloth pushed up the arm gathers in soft rings, and hangs in folds toward the cuff.
-  const k = (1 + 0.09 * fold(theta, t * 3) * (0.3 + t) + 0.05 * Math.sin(t * 34 + s * 1.5) * (1 - t) * (1 - t)) * swell;
-  return [Math.cos(theta) * r * k, s * r * k * (s < 0 ? 1 + sag / r : 0.9), t * length];
+  // Heavy cloth: long folds that deepen toward the cuff, and creases where it gathers up the arm, closer together near the elbow.
+  const drape = 0.15 * fold(theta, t * 2.5) * (0.35 + 0.65 * t);
+  const creases = 0.07 * Math.sin(t * 26 + 2.2 * Math.sin(theta * 2 + t * 5)) * (1 - t * 0.8) + 0.035 * Math.sin(t * 61 + theta);
+  const k = (1 + drape + creases) * swell;
+  return [Math.cos(theta) * r * k, s * r * k * (s < 0 ? 1 + sag / r : 0.88), t * length];
 }
 
-/** A wide sleeve along +z from the shoulder at the origin to an open cuff, gathered up the arm and hanging lower underneath. */
-export function sleeveGeometry(length: number, cuff = 0.07): THREE.BufferGeometry {
-  const row = keyed(SLEEVE_ROWS(cuff));
+/** A wide sleeve along +z from the shoulder at the origin to an open, belled cuff, in folds, hanging lower underneath. */
+export function sleeveGeometry(length: number, cuff = 0.07, wide = 0.085): THREE.BufferGeometry {
+  const row = keyed(SLEEVE_ROWS(cuff, wide));
   const fold = folds(7);
-  return ringSurface((v, theta) => sleevePoint(row(v), theta, length, fold), 16, 20);
+  return ringSurface((v, theta) => sleevePoint(row(v), theta, length, fold), 40, 32);
 }
 
-/** The band sewn round a sleeve's cuff, which carries the wearer's colour: a strip of cloth lying just proud of the sleeve under it. */
-export function cuffBandGeometry(length: number, cuff = 0.07, from = BAND[0]): THREE.BufferGeometry {
-  const row = keyed(SLEEVE_ROWS(cuff).slice(0, 4));
+/**
+ * The cuff of a sleeve, which carries the wearer's colour: a deep band of thicker cloth turned back over the sleeve, standing proud of
+ * it, with a rolled edge at each end.
+ */
+export function cuffBandGeometry(length: number, cuff = 0.07, from = BAND[0], wide = 0.085): THREE.BufferGeometry {
+  const row = keyed(SLEEVE_ROWS(cuff, wide).slice(0, 5));
   const fold = folds(7);
-  return ringSurface((v, theta) => sleevePoint(row(from + (BAND[1] - from) * v), theta, length, fold, 1.05), 4, 20);
+  const roll = (v: number): number => 1.07 + 0.06 * (Math.exp(-(((v - 0.07) / 0.06) ** 2)) + Math.exp(-(((v - 0.93) / 0.06) ** 2))) - 0.09 * (Math.exp(-((v / 0.03) ** 2)) + Math.exp(-(((1 - v) / 0.03) ** 2)));
+  return ringSurface((v, theta) => sleevePoint(row(from + (BAND[1] - from) * v), theta, length, fold, roll(v)), 14, 32);
 }
