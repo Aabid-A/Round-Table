@@ -102,7 +102,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       {view.recruit ? <Recruit from={view.recruit.from} to={view.recruit.to} mask={maskOf(view.recruit.from)} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       {view.you !== null ? (
-  <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
+  <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.whisper && view.whisper.from !== view.you ? bearingTo(view.whisper.from) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       ) : (
         <Director focus={view.shot?.focus ?? view.speaker ?? view.dawn?.victim ?? null} wide={view.shot?.wide ?? view.voting} cut={view.shot?.cut ?? false} />
       )}
