@@ -48,3 +48,16 @@ describe('the eight masks', () => {
     for (const a of ACCENTS) expect(Math.min(Math.abs(hue(a) - hue(PALETTE.traitor)), 360 - Math.abs(hue(a) - hue(PALETTE.traitor))) > 12 || luminance(a) > 0.3).toBe(true);
   });
 });
+
+describe('the accents in candlelight', () => {
+  it('keep the seven saturated accents at least 25 degrees of hue apart, and magenta and indigo at least 50', () => {
+    const saturated = ACCENTS.slice(0, 7);
+    const gap = (a: string, b: string): number => Math.min(Math.abs(hue(a) - hue(b)), 360 - Math.abs(hue(a) - hue(b)));
+    for (let i = 0; i < saturated.length; i++) for (let j = i + 1; j < saturated.length; j++) expect(gap(saturated[i]!, saturated[j]!), `${saturated[i]} and ${saturated[j]}`).toBeGreaterThanOrEqual(25);
+    expect(gap(ACCENTS[2], ACCENTS[6])).toBeGreaterThanOrEqual(50);
+  });
+  it('give the slab mask (seat 4, across the table) a full-light face, and keep indigo darker than magenta', () => {
+    expect(MASKS[4]!.shade).toBe(1);
+    expect(MASKS[2]!.shade).toBeLessThan(MASKS[6]!.shade);
+  });
+});
