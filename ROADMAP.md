@@ -246,6 +246,36 @@ fallback; a 20 to 40 second Playwright video of the main flow saved under
 `.artifacts/` and linked in the PR; the measured frame rate stated in the PR;
 Playwright tests that open each mode by URL.
 
+## The game world
+
+M14 to M17 built the modes on a CSS 3D room that reads as flat. From here the
+world is real 3D, built to `/art-direction`, `/scene-3d` and `/game-feel` and
+judged with `/playtest`. Look and feel are the owner's call: these PRs are
+never auto-merged.
+
+- [x] **M18. Vertical slice: one round table.** One scene taken to finished
+  quality, so the owner can judge the look before anything else is converted.
+  - Allowed dependencies: three, @types/three, @react-three/fiber,
+    @react-three/drei, @react-three/postprocessing.
+  - Opened by `?mode=slice` on a fixed mock game. First person, seated.
+  - The hall, table, chairs, candles and fire; eight masked figures, each
+    distinct; lighting, shadows, fog and post-processing as art-directed.
+  - Playable: look around, hear a round table (figures turn to each speaker,
+    speech anchored to them), point to accuse, slide a token to vote, watch
+    the banishment and the mask turned over.
+  - One night transition: candles out, then dawn on an empty chair with a
+    mask on the table.
+  - Sound effects, synthesised. No voices.
+  - Three quality levels, the 2D fallback, keyboard and screen-reader paths.
+  - Does not touch the server, the engine, or the existing modes.
+  - Done when `/playtest` passes its own questions and the PR, labelled
+    `needs-human`, carries the video and stills in `docs/playtests/m18/`.
+
+- [ ] **M19. Convert the modes.** Only after the owner approves M18. Replay,
+  spectator, solo seat, rooms and recording mode render through the WebGL
+  world; every staged moment in `/art-direction` is built; the CSS 3D room is
+  removed. One PR per mode, each with a playtest.
+
 ## Final version
 
 The project is ready when every milestone above is `[x]`. What is left then
