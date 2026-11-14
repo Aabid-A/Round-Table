@@ -1,8 +1,8 @@
 import './three-jsx.js';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { EYE, FirstPerson } from './camera/FirstPerson.js';
+import { FirstPerson } from './camera/FirstPerson.js';
+import { SceneCanvas } from './SceneCanvas.js';
 import { bearingTo } from './camera/fov.js';
 import { bearingFromEye, dawnMaskSpot } from './layout.js';
 import { DAWN_MASK_SCALE } from './models/dimensions.js';
@@ -21,7 +21,7 @@ import { Effects } from './stage/Effects.js';
 import { HoverLight } from './stage/HoverLight.js';
 import { Lights } from './stage/Lights.js';
 import { QUALITY, type Quality } from './stage/quality.js';
-import { ReducedMotionContext, useReducedMotion } from './motion.js';
+import { useReducedMotion } from './motion.js';
 import { ResourcesContext, SceneResources } from './resources.js';
 import { CANDLES, type SliceView } from './sliceView.js';
 
@@ -110,61 +110,9 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
 
 /** The slice's WebGL scene. It draws the view it is given and nothing else; the page owns the game. */
 export default function SliceScene({ view, quality, onFrame, onHover = () => {}, onPick = () => {}, reducedMotion = false, onLost }: Props) {
-  const q = QUALITY[quality];
   return (
-    <Canvas
-      key={quality}
-      shadows={q.shadows ? { type: THREE.PCFSoftShadowMap } : false}
-      dpr={q.dpr}
-      camera={{ fov: 58, near: 0.05, far: 40, position: EYE }}
-      gl={{ antialias: q.antialias, powerPreference: 'high-performance' }}
-      onCreated={({ gl }) => gl.setClearColor('#06070b')}
-    >
-      <Meter onFrame={onFrame} />
-      <ContextWatch onLost={onLost} />
-      <ReducedMotionContext.Provider value={reducedMotion}>
-        <World view={view} quality={quality} onHover={onHover} onPick={onPick} />
-      </ReducedMotionContext.Provider>
-    </Canvas>
+    <SceneCanvas quality={quality} onFrame={onFrame} reducedMotion={reducedMotion} onLost={onLost}>
+      <World view={view} quality={quality} onHover={onHover} onPick={onPick} />
+    </SceneCanvas>
   );
-}
-
-/**
- * Reports each frame's time to the page, and leaves what the last whole frame cost (draw calls and triangles, every pass counted)
- * on the canvas as data- attributes: the debug hook a test or a person reads.
- */
-function Meter({ onFrame }: { onFrame: ((ms: number) => void) | undefined }) {
-  const gl = useThree((s) => s.gl);
-  const n = useRef(0);
-  useEffect(() => {
-    gl.info.autoReset = false;
-    return () => void (gl.info.autoReset = true);
-  }, [gl]);
-  // Runs before anything is drawn: read what the frame before this one cost, then start counting again.
-  useFrame((_, dt) => {
-    onFrame?.(dt * 1000);
-    if (n.current++ % 10 === 1) {
-      gl.domElement.dataset.calls = String(gl.info.render.calls);
-      gl.domElement.dataset.triangles = String(gl.info.render.triangles);
-    }
-    gl.info.reset();
-  }, -1);
-  return null;
-}
-
-/** Tells the page when the graphics context is lost, so it can fall back instead of showing a frozen picture. */
-function ContextWatch({ onLost }: { onLost: (() => void) | undefined }) {
-  const gl = useThree((s) => s.gl);
-  useEffect(() => {
-    if (!onLost) return;
-    const el = gl.domElement;
-    const lost = (e: Event): void => {
-      e.preventDefault();
-      onLost();
-    };
-    el.addEventListener('webglcontextlost', lost);
-    // Removed before the canvas is taken down, so the scene's own shutdown is never mistaken for a loss.
-    return () => el.removeEventListener('webglcontextlost', lost);
-  }, [gl, onLost]);
-  return null;
 }
