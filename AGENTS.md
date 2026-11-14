@@ -131,6 +131,10 @@ this file unchanged.
 
 - Language: TypeScript on Node 22, ESM.
 - Branch prefix: `agent/`
+- Commit author: before the first commit, set this repo's `git config user.name`
+  and `user.email` to the owner's, read from their latest merge commit
+  (`git log origin/main --merges -1 --format='%an|%ae'`). Keep the Claude
+  `Co-Authored-By` line in every commit.
 - Commits: small and granular, one logical step each, checks passing at
   each one. Details in `/ship`. PRs merge with a merge commit, never squash.
 - Review gate: A (independent review by a context that didn't write the code;

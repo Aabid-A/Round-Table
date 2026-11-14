@@ -1,4 +1,4 @@
-import { figurePose, SEATS, tablePoint } from '../layout.js';
+import { figurePose, SEATS } from '../layout.js';
 import { EYE_Z } from '../models/dimensions.js';
 
 /** How far the head turns with a mouse pointer (radians each way): further in a narrow window, where less of the table is in view at once. */
@@ -30,18 +30,15 @@ export function fovFor(aspect: number): number {
   return wide + (52 - wide) * t;
 }
 
-/** For the vote a tall window pulls back, so three seats, the tokens and the names they slide to are in view. It looks up a little as it does, which keeps your hands on the bottom of the screen and the floor out of it. */
-export const OVERVIEW = { fov: 84, pitch: 0.2 } as const;
+/**
+ * For the vote a tall window leans in over the table: the eye rises and comes forward and looks down, so the table, the three seats
+ * across it, the tokens and the names they slide to fill the picture from your hands to the top, with no empty hall above them.
+ */
+export const OVERVIEW = { fov: 60, pitch: -0.28, rise: 0.24, forward: 0.22 } as const;
 
 /** The direction from the eye to seat `i` (radians, 0 straight across the table, positive to the right). */
 export function bearingTo(i: number): number {
   const [x, , z] = figurePose(i).position;
-  return Math.atan2(x, EYE_Z - z);
-}
-
-/** The direction from the eye to a point on the table `reach` from the middle toward seat `i`. */
-export function bearingToTable(i: number, reach: number): number {
-  const [x, , z] = tablePoint(i, reach);
   return Math.atan2(x, EYE_Z - z);
 }
 

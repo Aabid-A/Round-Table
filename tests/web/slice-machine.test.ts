@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from '../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../src/players/mock.js';
 import { buildPrompt } from '../../src/prompts/phases.js';
 import { SYSTEM_PROMPT } from '../../src/prompts/system.js';
-import { CANDLES } from '../../web/src/scene/sliceView.js';
+import { CANDLES } from '../../web/src/scene/world.js';
 import { choosable, initial, reduce, stageMs, viewOf, type SliceState, type Stage } from '../../web/src/slice/machine.js';
 import { scriptFromLog, SLICE_SEED, type SliceScript } from '../../web/src/slice/script.js';
 
@@ -146,5 +146,18 @@ describe('a hover does not outlive the choice', () => {
     while (s.stage.kind !== 'vote') s = reduce(s.stage.kind === 'accuse' ? reduce(s, { t: 'select', seat: 1 }, script) : s, s.stage.kind === 'accuse' ? { t: 'confirm' } : { t: 'advance' }, script);
     s = reduce(reduce(s, { t: 'hover', seat: 3 }, script), { t: 'select', seat: 3 }, script);
     expect(viewOf(reduce(s, { t: 'confirm' }, script), script).hovered).toBeNull();
+  });
+});
+
+describe('slice prompts by input', () => {
+  it('a touch screen is told to tap at both choices, and never about arrow keys or Enter', () => {
+    const turns = playThrough(2, 3).filter((s) => s.stage.kind === 'accuse' || s.stage.kind === 'vote');
+    expect(turns.length).toBeGreaterThan(1);
+    for (const s of turns.flatMap((t) => [t, reduce(t, { t: 'select', seat: 4 }, script)])) {
+      const touch = viewOf(s, script, 'touch').announce;
+      expect(touch).toMatch(/tap/i);
+      expect(touch).not.toMatch(/arrow|enter/i);
+      expect(viewOf(s, script).announce).toMatch(/arrow keys|Enter/);
+    }
   });
 });

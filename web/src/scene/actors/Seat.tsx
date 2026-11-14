@@ -8,11 +8,11 @@ import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
 import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { useResource } from '../resources.js';
-import type { SliceFigure } from '../sliceView.js';
+import type { WorldFigure } from '../world.js';
 import { Figure } from './Figure.js';
 
 export interface SeatProps {
-  figure: SliceFigure;
+  figure: WorldFigure;
   /** Look toward this seat (or null). */
   look: number | null;
   /** The seat the picture is seen from, which no mask turns its edge to. */

@@ -1,0 +1,17 @@
+/* The flat controls around the room in every mode: a bar of buttons at the top right and the folded list for choosing. See /ui-design. */
+.scene-bar { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; }
+.scene-bar button, .scene-choose, .scene-choose button { font: 500 14px/1 system-ui, sans-serif; }
+.scene-bar button, .scene-choose button { min-height: 44px; box-sizing: border-box; padding: 8px 14px; border-radius: 8px; border: 1px solid rgb(224 180 58 / 0.5); background: rgb(10 10 14 / 0.72); color: #efe6d2; cursor: pointer; }
+.scene-bar button:hover:not(:disabled), .scene-bar button:focus-visible, .scene-choose button:hover:not(:disabled), .scene-choose button:focus-visible { border-color: #e0b43a; outline: 2px solid #e0b43a; outline-offset: 2px; }
+.scene-bar button:disabled, .scene-choose button:disabled { opacity: 0.45; cursor: not-allowed; }
+.scene-choose { position: absolute; left: 12px; top: 12px; max-width: 260px; border-radius: 10px; background: rgb(8 9 13 / 0.72); border: 1px solid rgb(224 180 58 / 0.35); color: #efe6d2; }
+.scene-choose[open] { background: rgb(8 9 13 / 0.88); }
+.scene-choose summary { min-height: 44px; box-sizing: border-box; padding: 14px 14px; border-radius: 10px; color: #cfc6b2; cursor: pointer; }
+.scene-choose summary:hover, .scene-choose summary:focus-visible { color: #efe6d2; outline: 2px solid #e0b43a; outline-offset: 2px; }
+.scene-choose form { padding: 0 12px 12px; }
+.scene-choose fieldset { border: 0; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.scene-choose legend { padding: 0 0 8px; color: #e0b43a; }
+.scene-choose label { display: flex; gap: 6px; align-items: center; min-height: 44px; box-sizing: border-box; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
+.scene-choose label.on { border-color: #e0b43a; background: rgb(224 180 58 / 0.16); }
+.scene-choose .hint { margin: 8px 0 0; color: #a9a291; font-size: 12px; line-height: 1.4; }
+@media (max-width: 600px) { .scene-choose { left: 8px; top: 12px; } .scene-choose[open] { right: 8px; max-width: none; } }

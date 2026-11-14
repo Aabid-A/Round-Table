@@ -1,9 +1,20 @@
-import { SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
+import { BANISHED_MASK_HALF, BANISHED_REACH, DAWN_MASK_HALF, DAWN_REACH, EYE_Z, PLATE_W, SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
-/** The angle of seat `i` around the table, from the player's own seat at 0 (nearest the camera, +z), going round clockwise seen from above. */
-export const seatAngle = (i: number): number => (i / SEATS) * Math.PI * 2;
+/**
+ * Where each seat is round the table, in degrees from the player's own seat at 0 (nearest the camera, +z), clockwise seen from above.
+ * The two seats beside you are given more room (58 degrees, the rest about 41), so from your chair the figure across the corner of
+ * the table is whole in a wide picture while the ones beside you stay out of it until you turn to them.
+ */
+const ANGLES = [0, 58, 99, 140, 180, 220, 261, 302] as const;
+
+/** The angle of seat `i` around the table, in radians (see ANGLES). */
+export const seatAngle = (i: number): number => (ANGLES[((i % SEATS) + SEATS) % SEATS]! * Math.PI) / 180;
+
+/** The seats beside yours sit a little back from the table, so they do not loom at the edges of your picture. */
+export const BESIDE_BACK = 0.25;
+const back = (i: number): number => (i === 1 || i === SEATS - 1 ? BESIDE_BACK : 0);
 
 export interface Pose {
   position: [number, number, number];
@@ -14,14 +25,14 @@ export interface Pose {
 /** Where a chair stands. The chair's front is +z in its own space; turning it by angle + PI faces the table's middle. */
 export function chairPose(i: number, pushedBack = 0): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R + pushedBack;
+  const r = SEAT_R + back(i) + pushedBack;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
 /** Where a seated figure's body is: on the chair, a little in front of its back. */
 export function figurePose(i: number): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R - 0.1;
+  const r = SEAT_R + back(i) - 0.1;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
@@ -29,6 +40,59 @@ export function figurePose(i: number): Pose {
 export function tablePoint(i: number, r: number): [number, number, number] {
   const a = seatAngle(i);
   return [Math.sin(a) * r, TABLE_Y, Math.cos(a) * r];
+}
+
+/**
+ * Where a mask left on the table lies: `reach` from the middle toward its seat, moved along the table's edge toward the middle of
+ * your view just far enough that, from your seat, the mask (`half` either side of its middle) and its name plate do not cover each
+ * other, with a little room between them.
+ */
+export function maskSpot(i: number, reach: number, half: number): [number, number, number] {
+  const a = seatAngle(i);
+  const [x, y, z] = tablePoint(i, reach);
+  // Along the edge, the way that brings it toward the line straight across the table (the seat across goes to your left).
+  const tx = Math.cos(a);
+  const tz = -Math.sin(a);
+  const toMiddle = Math.abs(x + tx * 0.01) < Math.abs(x) || (Math.abs(x) < 1e-6 && tx < 0) ? 1 : -1;
+  const plate = platePose(i, 0).position;
+  const plateSpan = span(plate, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+  let spot: [number, number, number] = [x, y, z];
+  for (let aside = 0; aside <= 0.6; aside += 0.01) {
+    spot = [x + tx * aside * toMiddle, y, z + tz * aside * toMiddle];
+    const m = span(spot, half);
+    if (m[1] < plateSpan[0] - MASK_GAP || plateSpan[1] < m[0] - MASK_GAP) break;
+  }
+  return spot;
+}
+
+/** The mask found at dawn: near the empty chair, so the morning light and the eye take in both together. */
+export const dawnMaskSpot = (i: number): [number, number, number] => maskSpot(i, DAWN_REACH, DAWN_MASK_HALF);
+
+/**
+ * A banished player's mask, turned over to show the role: in the middle of the table on your side, leaning toward the banished
+ * player's place, so the reveal is near and read at a glance and lies beside no other player's name.
+ */
+export function banishedMaskSpot(i: number): [number, number, number] {
+  const a = seatAngle(i);
+  return [Math.sin(a) * BANISHED_REACH, TABLE_Y, 0.8 + Math.cos(a) * 0.1];
+}
+
+/** How far a banished player's mask is tipped up: a little less than others, so near you it stays below the names across the table. */
+export const BANISHED_TILT = 0.3;
+
+/** Room left between a mask on the table and its plate as you see them, in radians. */
+const MASK_GAP = 0.02;
+
+/** How far across your view something reaches (radians, positive right), from its middle `p` and its half width `half`. */
+function span(p: [number, number, number], half: number): [number, number] {
+  const b = bearingFromEye(p);
+  const w = Math.atan(half / Math.hypot(p[0], EYE_Z - p[2]));
+  return [b - w, b + w];
+}
+
+/** Whether something at `p` is seen from your eye (radians across, positive right). */
+export function bearingFromEye(p: [number, number, number]): number {
+  return Math.atan2(p[0], EYE_Z - p[2]);
 }
 
 /**

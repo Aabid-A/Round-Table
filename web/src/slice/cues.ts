@@ -1,7 +1,7 @@
+import type { Cue } from '../scene/cue.js';
 import type { Stage } from './machine.js';
 
-/** The sound effects of the slice. Each is synthesised in sound.ts; there are no voices and no recorded audio. */
-export type Cue = 'chair' | 'point' | 'token' | 'mask' | 'snuff' | 'dawn' | 'select' | 'confirm';
+export type { Cue };
 
 /** Which sound a change of stage makes, so a moment is heard as well as seen. */
 export function cueForStage(stage: Stage): Cue | null {

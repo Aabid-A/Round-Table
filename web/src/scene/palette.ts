@@ -30,4 +30,6 @@ export const PALETTE = {
 } as const;
 
 /** One accent per player. Chosen to stay apart in warm low light, so no two are close in hue and each differs in lightness from its neighbours. */
-export const ACCENTS = ['#e0b43a', '#19c7b9', '#9a5bd1', '#e8571f', '#3f6fe0', '#a5d936', '#d23fc4', '#c9d3dc'] as const;
+// Hues about 45 to 75 degrees apart round the wheel (orange, gold, lime, green-teal, azure, indigo, magenta) plus a pale grey-blue.
+// Indigo is kept dark and magenta bright, so the closest pair in hue also differs in light.
+export const ACCENTS = ['#e0b43a', '#1fd19a', '#6f52e8', '#e8571f', '#3c9df2', '#a5d936', '#d23fc4', '#c9d3dc'] as const;
