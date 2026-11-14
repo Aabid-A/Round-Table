@@ -5,9 +5,10 @@ const FIXTURE = 'tests/fixtures/sample-game.json';
 const log = JSON.parse(readFileSync(FIXTURE, 'utf8')) as { roles: Record<string, string>; cast: { name: string }[] };
 // In the sample game Aria is faithful and Bram and Cleo are the traitors.
 
+// These tests cover the flat version of the seated replay (the CSS room), which is the 3D room's fallback; replay-3d.e2e.ts covers the room.
 async function open(page: Page, query: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto(`/?log=sample${query}`);
+  await page.goto(`/?log=sample&fallback=1${query}`);
 }
 
 const stepText = (page: Page): Promise<string> => page.getByRole('slider', { name: 'Step' }).getAttribute('aria-valuetext').then((t) => t ?? '');
