@@ -16,7 +16,7 @@ const TILT = 0.42;
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
 /** `at` sets where on the table it lies; by default it lies where a banished player's does (see layout.banishedMaskSpot). */
-export function TableMask({ seat, role, viewer, at, scale = SCALE }: { seat: number; role: Role | null; viewer: number; at?: [number, number, number]; scale?: number }) {
+export function TableMask({ seat, mask, role, viewer, at, scale = SCALE }: { seat: number; mask: number; role: Role | null; viewer: number; at?: [number, number, number]; scale?: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
   const reduced = useReducedMotion();
@@ -34,7 +34,7 @@ export function TableMask({ seat, role, viewer, at, scale = SCALE }: { seat: num
     <group position={[p[0], p[1] + 0.09, p[2]]} rotation-y={Math.atan2(vx - p[0], vz - p[2])}>
       <group rotation-x={-(Math.PI / 2 - TILT)}>
         <group ref={turn}>
-          <MaskMesh index={seat} scale={scale} lining={role ? colour : null} />
+          <MaskMesh index={mask} scale={scale} lining={role ? colour : null} />
         </group>
       </group>
     </group>

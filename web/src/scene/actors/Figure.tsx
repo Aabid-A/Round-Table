@@ -10,7 +10,10 @@ import { PALETTE } from '../palette.js';
 import { useResource } from '../resources.js';
 
 export interface FigureProps {
+  /** The seat, which sets its own rhythm of breathing. */
   index: number;
+  /** Which of the eight masks it wears (see models/masks.ts): who it is, wherever it sits. */
+  mask: number;
   /** Where the head turns, relative to the figure's own facing (radians, see layout.headYaw). */
   lookYaw: number;
   speaking: boolean;
@@ -29,8 +32,8 @@ const SLEEVE = 0.46;
  * Its arms stay inside the cloak; one comes out, sleeve and hand, only to point. It breathes, shifts its weight, turns its head and
  * shoulders toward whoever holds the moment, leans in when it speaks, and sits up when the player's eye is on it.
  */
-export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, leaving }: FigureProps) {
-  const design = MASKS[index]!;
+export function Figure({ index, mask: maskIndex, lookYaw, speaking, pointYaw, hovered, selected, leaving }: FigureProps) {
+  const design = MASKS[maskIndex]!;
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
   const upper = useRef<THREE.Group>(null);
@@ -39,9 +42,9 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
   const mask = useRef<THREE.MeshStandardMaterial>(null);
   const pose = useRef({ gone: 0, yaw: 0, lean: 0, point: 0, pointYaw: 0, notice: 0 });
   const out = useRef({ x: 0, v: 0 });
-  const cloak = useResource(`cloak:${index}`, () => cloakGeometry(index, design.colour));
-  const mantle = useResource(`mantle:${index}`, () => mantleGeometry(index, design.colour));
-  const hood = useResource(`hood:${index}`, () => hoodGeometry(index));
+  const cloak = useResource(`cloak:${maskIndex}`, () => cloakGeometry(maskIndex, design.colour));
+  const mantle = useResource(`mantle:${maskIndex}`, () => mantleGeometry(maskIndex, design.colour));
+  const hood = useResource(`hood:${maskIndex}`, () => hoodGeometry(maskIndex));
   const sleeve = useResource('sleeve:figure', () => sleeveGeometry(SLEEVE));
   const band = useResource('cuff:figure', () => cuffBandGeometry(SLEEVE));
   const hand = useResource('hand:point', () => handGeometry('point'));
@@ -115,7 +118,7 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
                 <meshStandardMaterial color={PALETTE.robeDeep} roughness={1} />
               </mesh>
               <group position={[0, 0.0, 0.145]}>
-                <MaskMesh index={index} scale={0.19} material={mask} />
+                <MaskMesh index={maskIndex} scale={0.19} material={mask} />
               </group>
             </group>
             <group ref={arm} position={[-0.21, SHOULDER_Y - 0.03, 0.1]} visible={false}>

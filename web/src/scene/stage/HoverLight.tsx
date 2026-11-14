@@ -10,13 +10,15 @@ interface Props {
   hovered: number | null;
   /** The seat the player has chosen, or null. It holds the light when nothing is hovered. */
   selected: number | null;
+  /** The mask worn at each seat, for the light's colour. */
+  maskOf: (seat: number) => number;
 }
 
 /**
  * One small light, in the colour of whoever the player is looking at, that rises in front of that figure: the room's answer to a look.
  * A single light that moves, so seven figures do not each carry one.
  */
-export function HoverLight({ hovered, selected }: Props) {
+export function HoverLight({ hovered, selected, maskOf }: Props) {
   const light = useRef<THREE.PointLight>(null);
   const at = useRef<number | null>(null);
   const colour = useRef(new THREE.Color());
@@ -32,7 +34,7 @@ export function HoverLight({ hovered, selected }: Props) {
     const [x, , z] = figurePose(at.current).position;
     // A little toward the middle of the table and below the mask, like a candle held up to it.
     l.position.set(x * 0.8, HEAD_Y - 0.25, z * 0.8);
-    l.color.copy(colour.current.set(MASKS[at.current]!.colour).lerp(WARM, 0.5));
+    l.color.copy(colour.current.set(MASKS[maskOf(at.current)]!.colour).lerp(WARM, 0.5));
   });
   return <pointLight ref={light} intensity={0} distance={2.2} decay={1.6} />;
 }

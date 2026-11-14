@@ -107,8 +107,8 @@ function Arm({ side, pointAt, accent }: ArmProps) {
  * Your own body in the first person: two forearms in the sleeves of your cloak and two hands resting on the table's edge, with your
  * mask's colour on the cuffs. The right hand rises to point.
  */
-export function YourHands({ you, pointAt }: { you: number; pointAt: number | null }) {
-  const accent = MASKS[you]!.colour;
+export function YourHands({ mask, pointAt }: { mask: number; pointAt: number | null }) {
+  const accent = MASKS[mask]!.colour;
   return (
     <group position={[0, 0, TABLE_R]} rotation-y={Math.PI}>
       <Arm side={1} pointAt={null} accent={accent} />

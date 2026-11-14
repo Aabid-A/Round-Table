@@ -10,7 +10,7 @@ export function SliceFallback({ view, reason }: { view: WorldView; reason: strin
       <ul aria-label="At the table">
         {view.figures.map((f) => (
           <li key={f.index} className={f.present ? '' : 'out'}>
-            <span className="swatch" style={{ background: MASKS[f.index]!.colour }} aria-hidden="true" />
+            <span className="swatch" style={{ background: MASKS[f.mask]!.colour }} aria-hidden="true" />
             {f.name}{f.index === view.you ? ' (you)' : ''}{f.present ? '' : ' (gone)'}{f.revealed ? `, was a ${f.revealed}` : ''}
           </li>
         ))}

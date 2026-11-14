@@ -45,6 +45,8 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
   // What this scene builds for the graphics card is released when the scene is taken down.
   const resources = useMemo(() => new SceneResources(), []);
   useEffect(() => () => resources.disposeAll(), [resources]);
+  // A seat is where a player sits as seen from the camera's chair; the mask is who they are. The two differ once the viewer's own seat is turned to the camera.
+  const maskOf = (seat: number): number => view.figures.find((f) => f.index === seat)?.mask ?? seat;
   const [litNow, setLitNow] = useState(CANDLES);
   useFrame(() => {
     if (Math.abs(lit.current - litNow) > 0.02) setLitNow(lit.current);
@@ -54,7 +56,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
       <Lights mood={view.mood} litCount={litNow} quality={q} dawnSeat={view.dawn?.victim ?? null} />
-      <HoverLight hovered={view.hovered} selected={view.selected} />
+      <HoverLight hovered={view.hovered} selected={view.selected} maskOf={maskOf} />
       <Hall />
       <Fireplace />
       <Table />
@@ -82,13 +84,13 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
             onPick={onPick}
           />
         ))}
-      <YourHands you={view.you} pointAt={view.pointing?.from === view.you ? view.pointing.at : null} />
+      <YourHands mask={maskOf(view.you)} pointAt={view.pointing?.from === view.you ? view.pointing.at : null} />
       {view.tokens.map((t, i) => (
-        <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} />
+        <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} mask={maskOf(t.owner)} />
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
-      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
-      {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} at={dawnMaskSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
+      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} /> : null}
+      {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={dawnMaskSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       {/* while a figure speaks, its own words are the caption */}

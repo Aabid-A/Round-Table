@@ -5,8 +5,8 @@ import { MASKS } from '../models/masks.js';
 import { useReducedMotion } from '../motion.js';
 import { tablePoint } from '../layout.js';
 
-/** A vote token: a wooden disc in its owner's accent that slides from the owner's edge of the table to the name voted for, and settles with a small tick of the table. */
-export function Token({ owner, target, delay }: { owner: number; target: number; delay: number }) {
+/** A vote token (`mask` is its owner's): a wooden disc in its owner's accent that slides from the owner's edge of the table to the name voted for, and settles with a small tick of the table. */
+export function Token({ owner, target, delay, mask }: { owner: number; target: number; delay: number; mask: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   const t0 = useRef<number | null>(null);
   const reduced = useReducedMotion();
@@ -25,7 +25,7 @@ export function Token({ owner, target, delay }: { owner: number; target: number;
   return (
     <mesh ref={mesh} visible={false} castShadow>
       <cylinderGeometry args={[0.075, 0.075, 0.024, 24]} />
-      <meshStandardMaterial color={MASKS[owner]!.colour} roughness={0.45} metalness={0.25} emissive={MASKS[owner]!.colour} emissiveIntensity={0.3} />
+      <meshStandardMaterial color={MASKS[mask]!.colour} roughness={0.45} metalness={0.25} emissive={MASKS[mask]!.colour} emissiveIntensity={0.3} />
     </mesh>
   );
 }

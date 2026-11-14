@@ -40,7 +40,7 @@ export function Seat(p: SeatProps) {
   const face = useRef<THREE.MeshStandardMaterial>(null);
   const shown = useRef(1);
   const ends = useRef([new THREE.Vector3(), new THREE.Vector3()]);
-  const plate = useResource(`plate:${index}:${p.figure.name}`, () => plateTexture(p.figure.name, MASKS[index]!.colour));
+  const plate = useResource(`plate:${p.figure.mask}:${p.figure.name}`, () => plateTexture(p.figure.name, MASKS[p.figure.mask]!.colour));
   const reduced = useReducedMotion();
   // A seat that can no longer be chosen gives the pointer back.
   useEffect(() => {
@@ -76,7 +76,7 @@ export function Seat(p: SeatProps) {
         </group>
       </group>
       <group position={fig.position} rotation-y={fig.facing}>
-        <Figure index={index} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
+        <Figure index={index} mask={p.figure.mask} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
       {/* the name plate: a block of dark iron leaning back on the table, lettered on its face */}
       <group position={plateP.position} rotation-y={plateP.facing} scale={plateScale(index, p.viewer)}>
