@@ -79,6 +79,9 @@ test('a banishment is staged beat by beat: the room shows seven, then the mask',
   await open(page);
   await stepTo(page, 36);
   await expect(page.getByTestId('section')).toContainText('Banishment');
-  await expect(page.getByTestId('announcement')).toContainText('Aria');
+  // Never the result before the moment: first the chair, and the role only once the mask is turned over.
+  await expect(page.getByTestId('announcement')).toContainText("Aria's chair is pushed back");
+  await expect(page.getByTestId('announcement')).not.toContainText('faithful');
   await expect(page.getByTestId('world')).toHaveAttribute('data-figures', '6', { timeout: 15_000 });
+  await expect(page.getByTestId('announcement')).toContainText('faithful', { timeout: 15_000 });
 });

@@ -5,6 +5,20 @@ import { CANDLES, type WorldBanish, type WorldView } from './world.js';
 /** The beats of a staged banishment, one after another: the chair pushed back, the figure leaving, the mask turned over, quiet. */
 export const BANISH_BEATS: WorldBanish['stage'][] = ['pushback', 'leave', 'mask', 'done'];
 
+/** How long each beat of a banishment is held, in milliseconds, and so the least time a banishment step stays up. */
+export const BANISH_BEAT_MS = 1500;
+export const BANISH_MS = BANISH_BEATS.length * BANISH_BEAT_MS + 1000;
+
+/**
+ * The words for a banishment beat by beat: what is seen happen, and the role only once the mask is turned over (`full` holds it).
+ * Never the result before the moment (see /game-feel).
+ */
+export function banishWords(name: string, beat: number, full: string): string {
+  if (beat <= 0) return `${name}'s chair is pushed back.`;
+  if (beat === 1) return `${name} stands and leaves the table.`;
+  return full;
+}
+
 /**
  * The room for a scene view, as the WebGL world draws it. It reads nothing but the scene view, so what reaches the screen is what the
  * view's builder decided this viewer may see. A seated viewer's chair is turned to the camera (seat 0); everyone keeps their own mask.

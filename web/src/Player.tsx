@@ -11,7 +11,7 @@ import { describeStep, stepDurationMs, type StepView } from './replay/describe.j
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { Room } from './scene/Room.js';
-import { BANISH_BEATS, worldFromScene } from './scene/fromScene.js';
+import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
 import { useBeat } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
 import { tableSceneView } from './replay/tableScene.js';
@@ -62,8 +62,14 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   // The steps this viewer walks: all of them at the public table, a seat's own list when seated (see seatTimeline).
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
   const durations = useMemo(
-    () => timeline.map((i) => (seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat)))),
-    [timeline, views, log, steps, seat],
+    () =>
+      timeline.map((i) => {
+        const ms = seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat));
+        // In the room a banishment is staged beat by beat; playing waits for the mask to be turned over.
+        const s = steps[i]!;
+        return room3d && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(ms, BANISH_MS) : ms;
+      }),
+    [timeline, views, log, steps, seat, room3d],
   );
   const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
   const at = Math.min(pos, timeline.length - 1);
@@ -114,8 +120,9 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
   // The 3D room shows the public table and a seat's view (the all-seeing room and the result are still drawn flat).
   const scene = room3d && step.kind !== 'result' && !spectating ? (sv ?? tableSceneView(log, steps, index, view)) : null;
-  const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length);
-  const world = scene ? worldFromScene(scene, sv ? roomAnnouncement(sv) : announcement(view), beat) : null;
+  const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
+  const said = sv ? roomAnnouncement(sv) : announcement(view);
+  const world = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
   const sitAt = (s: number): void => {
     const name = world?.figures.find((f) => f.index === s)?.name;
     if (name) sit(name);
@@ -131,7 +138,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : sv ? roomAnnouncement(sv) : announcement(view)}
+        {playing ? '' : world ? world.announce : sv ? roomAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {sv ? sv.moment.title : step.section.title}

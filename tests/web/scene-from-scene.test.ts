@@ -56,3 +56,39 @@ describe('the room for a scene view', () => {
     expect(checked).toBeGreaterThan(1000);
   });
 });
+
+describe('the words of a banishment', () => {
+  it('say what is seen, beat by beat, and the role only once the mask is turned over', async () => {
+    const { banishWords } = await import('../../web/src/scene/fromScene.js');
+    const full = 'Aria is banished. They were a faithful.';
+    expect(banishWords('Aria', 0, full)).toBe("Aria's chair is pushed back.");
+    expect(banishWords('Aria', 1, full)).not.toMatch(/faithful|traitor/);
+    expect(banishWords('Aria', 2, full)).toBe(full);
+  });
+});
+
+describe('a traitor’s seat in the room', () => {
+  it('marks fellow traitors only, and stages only recruitments it took part in (9 games, every traitor seat)', async () => {
+    let fellows = 0;
+    for (const log of [sample, ...(await Promise.all([1, 2, 3, 4, 5, 6, 7, 8].map((s) => playMock(s))))]) {
+      const st = buildSteps(log);
+      const roles = finalRoles(log);
+      for (const c of log.cast) {
+        if (roles[c.name] !== 'traitor') continue;
+        for (let i = 0; i < st.length; i++) {
+          const scene = seatView(log, st, i, c.name);
+          const w = worldFromScene(scene, '');
+          for (const f of w.figures) {
+            if (f.fellow) {
+              fellows++;
+              expect(roles[f.name], `${c.name} step ${i}: ${f.name}`).toBe('traitor');
+              expect(scene.seats.find((s) => s.name === f.name)!.mark).toBe('fellow');
+            }
+          }
+          if (w.recruit) expect([w.recruit.from, w.recruit.to]).toContain(0);
+        }
+      }
+    }
+    expect(fellows).toBeGreaterThan(0);
+  });
+});
