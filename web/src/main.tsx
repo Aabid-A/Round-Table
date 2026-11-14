@@ -13,6 +13,7 @@ import { isPlayMode } from './play/params.js';
 import { RoomPage } from './rooms/RoomPage.js';
 import { isRoomMode, isWatchMode } from './rooms/params.js';
 import { WatchPage } from './rooms/WatchPage.js';
+import './scene/hud.css';
 import './slice/slice.css';
 import { SlicePage } from './slice/SlicePage.js';
 import { isSliceMode } from './slice/params.js';

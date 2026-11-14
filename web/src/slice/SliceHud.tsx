@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { ChooseList, useChooseKeys } from '../scene/Choose.js';
 import type { Action } from './machine.js';
 import type { InputKind } from '../scene/prompts.js';
 import type { WorldView } from '../scene/world.js';
@@ -24,59 +25,21 @@ interface Props {
  * It is also the whole interface of the plain version, where the list starts open.
  */
 export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOpen = false, input = 'keys' }: Props) {
-  const choosing = view.choosable.length > 0;
   const names = new Map(view.figures.map((f) => [f.index, f.name]));
-  // The keys read the newest view, so two quick presses are never judged against an old choice.
+  const select = (seat: number): void => dispatch({ t: 'select', seat });
+  const confirm = (): void => dispatch({ t: 'confirm' });
+  useChooseKeys(view.choosable, view.selected, select, confirm);
   // Once opened, the list stays open for the next choice too, until the player folds it away.
   const [open, setOpen] = useState(listOpen);
-  const latest = useRef(view);
-  latest.current = view;
-  useEffect(() => {
-    if (!choosing) return;
-    const onKey = (e: KeyboardEvent): void => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SUMMARY') return;
-      const { selected, choosable } = latest.current;
-      const i = selected === null ? -1 : choosable.indexOf(selected);
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') dispatch({ t: 'select', seat: choosable[(i + 1) % choosable.length]! });
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dispatch({ t: 'select', seat: choosable[(i - 1 + choosable.length) % choosable.length]! });
-      else if (e.key === 'Enter' && selected !== null) dispatch({ t: 'confirm' });
-      else return;
-      e.preventDefault();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [choosing, dispatch]);
   return (
     <>
-      <div className="slice-bar">
+      <div className="scene-bar">
         <button type="button" onClick={onMute} aria-pressed={muted}>{muted ? 'Sound off' : 'Sound on'}</button>
         {canSkip ? <button type="button" onClick={() => dispatch({ t: 'advance' })}>Skip</button> : null}
         {ended ? <button type="button" onClick={() => dispatch({ t: 'restart' })}>Sit through it again</button> : null}
       </div>
-      {choosing ? (
-        <details className="slice-choose" open={open || listOpen} onToggle={(e) => setOpen(e.currentTarget.open)}>
-          <summary>Choose from a list</summary>
-          <form
-            aria-label="Choose a figure"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (view.selected !== null) dispatch({ t: 'confirm' });
-            }}
-          >
-            <fieldset>
-              <legend>Choose a figure</legend>
-              {view.choosable.map((i) => (
-                <label key={i} className={view.selected === i ? 'on' : ''}>
-                  <input type="radio" name="figure" checked={view.selected === i} onChange={() => dispatch({ t: 'select', seat: i })} onFocus={() => dispatch({ t: 'hover', seat: i })} onBlur={() => dispatch({ t: 'hover', seat: null })} />
-                  {names.get(i)}
-                </label>
-              ))}
-            </fieldset>
-            <button type="submit" disabled={view.selected === null}>Confirm</button>
-            {input === 'keys' ? <p className="hint">Or use the arrow keys to choose, then Enter.</p> : null}
-          </form>
-        </details>
+      {view.choosable.length > 0 ? (
+        <ChooseList options={view.choosable.map((seat) => ({ seat, name: names.get(seat) ?? '' }))} selected={view.selected} onSelect={select} onConfirm={confirm} onHover={(seat) => dispatch({ t: 'hover', seat })} input={input} open={open || listOpen} onOpen={setOpen} />
       ) : null}
     </>
   );
