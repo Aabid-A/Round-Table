@@ -2,10 +2,9 @@ import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import * as THREE from 'three';
 import type { Role } from '../../../../src/types.js';
-import { figurePose, tablePoint } from '../layout.js';
+import { banishedMaskSpot, figurePose } from '../layout.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { approach, useReducedMotion } from '../motion.js';
-import { BANISHED_REACH } from '../models/dimensions.js';
 import { PALETTE } from '../palette.js';
 
 const SCALE = 0.2;
@@ -16,12 +15,12 @@ const TILT = 0.42;
  * A mask left on the table in front of its seat, leaning toward the viewer. It lies face up, then is turned over to show what its
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
-/** `at` sets where on the table it lies; by default it lies well in from its seat (a banished player's). */
+/** `at` sets where on the table it lies; by default it lies where a banished player's does (see layout.banishedMaskSpot). */
 export function TableMask({ seat, role, viewer, at, scale = SCALE }: { seat: number; role: Role | null; viewer: number; at?: [number, number, number]; scale?: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
   const reduced = useReducedMotion();
-  const p = at ?? tablePoint(seat, BANISHED_REACH);
+  const p = at ?? banishedMaskSpot(seat);
   const [vx, , vz] = figurePose(viewer).position;
   useFrame((_, dt) => {
     flip.current += ((role === null ? 0 : 1) - flip.current) * approach(dt, 2.2, reduced);

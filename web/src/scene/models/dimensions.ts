@@ -8,6 +8,8 @@ export const EYE_Z = 2.62;
 export const EYE_Y = 1.22;
 /** How far from the middle of the table a mask lies. A banished player's is left well in, on open wood clear of their name plate. */
 export const BANISHED_REACH = 0.28;
+/** A banished player's mask is drawn at scale 0.2: about 0.19 m either side of its middle. */
+export const BANISHED_MASK_HALF = 0.19;
 /** The one found at dawn lies nearer its empty chair, so the morning light and the eye take in both together. */
 export const DAWN_REACH = 0.92;
 /** The mask found at dawn is drawn at this size (a banished one at 0.2), so it lies beside its name and not over it. About 0.16 m either side of its middle. */

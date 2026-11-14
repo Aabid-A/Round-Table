@@ -1,4 +1,4 @@
-import { DAWN_MASK_HALF, DAWN_REACH, EYE_Z, PLATE_W, SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
+import { BANISHED_MASK_HALF, BANISHED_REACH, DAWN_MASK_HALF, DAWN_REACH, EYE_Z, PLATE_W, SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
@@ -43,12 +43,13 @@ export function tablePoint(i: number, r: number): [number, number, number] {
 }
 
 /**
- * Where the mask found at dawn lies: near the empty chair, moved along the table's edge toward the middle of your view just far
- * enough that, from your seat, the mask and its name plate do not cover each other (with a little room between them).
+ * Where a mask left on the table lies: `reach` from the middle toward its seat, moved along the table's edge toward the middle of
+ * your view just far enough that, from your seat, the mask (`half` either side of its middle) and its name plate do not cover each
+ * other, with a little room between them.
  */
-export function dawnMaskSpot(i: number): [number, number, number] {
+export function maskSpot(i: number, reach: number, half: number): [number, number, number] {
   const a = seatAngle(i);
-  const [x, y, z] = tablePoint(i, DAWN_REACH);
+  const [x, y, z] = tablePoint(i, reach);
   // Along the edge, the way that brings it toward the line straight across the table (the seat across goes to your left).
   const tx = Math.cos(a);
   const tz = -Math.sin(a);
@@ -58,13 +59,19 @@ export function dawnMaskSpot(i: number): [number, number, number] {
   let spot: [number, number, number] = [x, y, z];
   for (let aside = 0; aside <= 0.6; aside += 0.01) {
     spot = [x + tx * aside * toMiddle, y, z + tz * aside * toMiddle];
-    const m = span(spot, DAWN_MASK_HALF);
+    const m = span(spot, half);
     if (m[1] < plateSpan[0] - DAWN_GAP || plateSpan[1] < m[0] - DAWN_GAP) break;
   }
   return spot;
 }
 
-/** Room left between the dawn mask and its plate as you see them, in radians. */
+/** The mask found at dawn: near the empty chair, so the morning light and the eye take in both together. */
+export const dawnMaskSpot = (i: number): [number, number, number] => maskSpot(i, DAWN_REACH, DAWN_MASK_HALF);
+
+/** A banished player's mask: well in from its seat, on open wood. */
+export const banishedMaskSpot = (i: number): [number, number, number] => maskSpot(i, BANISHED_REACH, BANISHED_MASK_HALF);
+
+/** Room left between a mask on the table and its plate as you see them, in radians. */
 const DAWN_GAP = 0.02;
 
 /** How far across your view something reaches (radians, positive right), from its middle `p` and its half width `half`. */
