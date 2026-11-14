@@ -24,6 +24,8 @@ export interface SceneMoment {
   /** The speaker's private notes, shown beside what they said. Only a viewer who may see everyone's notes gets this. */
   thought: string | null;
   kind: 'speech' | 'thought' | 'event' | 'none';
+  /** The seat the moment points at: the one a speaker accuses. Said aloud, so any viewer of the speech may know it. */
+  target?: string | null;
 }
 
 /** A whisper drawn as a line between two seats, with its text. Only a viewer who may see whispers between others gets these. */

@@ -31,7 +31,7 @@ function momentFor(step: Step, seat: string, log: GameLog): SceneMoment {
   if (step.kind === 'turn') {
     const t = step.turn;
     // Round-table speech is said aloud to everyone. Every other turn is private to the one who took it.
-    if (t.phase === 'round_table') return { ...none, speaker: t.player, text: t.speech, kind: 'speech' };
+    if (t.phase === 'round_table') return { ...none, speaker: t.player, text: t.speech, kind: 'speech', target: (t.action as { suspect?: string }).suspect ?? null };
     const lines: string[] = [];
     const a = t.action as { to?: string | null; message?: string };
     if (t.phase === 'whispers') {
