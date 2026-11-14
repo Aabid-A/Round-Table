@@ -53,3 +53,27 @@ describe('reduced motion', () => {
     expect(idle(true)).toBe(0);
   });
 });
+
+describe('the caption in the room', () => {
+  it('breaks into lines at spaces, none longer than asked', async () => {
+    const { wrapCaption } = await import('../../web/src/scene/stage/caption.js');
+    const lines = wrapCaption('Your turn. Look at a figure and select them to accuse, or use the arrow keys and Enter.', 24);
+    expect(lines.length).toBeGreaterThan(2);
+    for (const l of lines) expect(l.length).toBeLessThanOrEqual(24);
+    expect(lines.join(' ')).toBe('Your turn. Look at a figure and select them to accuse, or use the arrow keys and Enter.');
+    expect(wrapCaption('Night.', 24)).toEqual(['Night.']);
+    expect(wrapCaption('', 24)).toEqual([]);
+  });
+  it('comes up, holds long enough to read, and fades away', async () => {
+    const { captionHold, captionOpacity } = await import('../../web/src/scene/stage/caption.js');
+    const hold = captionHold('Dawn. The chair is empty.');
+    expect(hold).toBeGreaterThanOrEqual(4);
+    expect(captionHold('x'.repeat(100))).toBeGreaterThan(hold);
+    expect(captionOpacity(0, hold)).toBe(0);
+    expect(captionOpacity(0.25, hold)).toBeCloseTo(0.5);
+    expect(captionOpacity(2, hold)).toBe(1);
+    expect(captionOpacity(hold + 1.3, hold)).toBeLessThan(1);
+    expect(captionOpacity(hold + 1.3, hold)).toBeGreaterThan(0);
+    expect(captionOpacity(hold + 10, hold)).toBe(0);
+  });
+});

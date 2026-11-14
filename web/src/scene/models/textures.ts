@@ -124,3 +124,53 @@ export function plateTexture(name: string, accent: string): THREE.CanvasTexture 
   t.generateMipmaps = true;
   return t;
 }
+
+/**
+ * A caption as lit letters with nothing behind them: the words in bone white, and a soft dark edge so they read over bright wood.
+ * Returns the picture of the letters, a matching mask of where they are, and the picture's width over its height.
+ */
+export function captionTexture(lines: string[]): { texture: THREE.CanvasTexture; alpha: THREE.CanvasTexture; aspect: number } {
+  const size = 78;
+  const lead = size * 1.32;
+  const w = 1536;
+  const h = Math.ceil(lines.length * lead + size * 0.7);
+  const draw = (mask: boolean): THREE.CanvasTexture => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const g = c.getContext('2d')!;
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, w, h);
+    g.font = `600 ${size}px system-ui, "Segoe UI", Helvetica, Arial, sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    lines.forEach((line, i) => {
+      const y = size * 0.35 + lead * (i + 0.5);
+      if (mask) {
+        // The mask is wider than the letters: a dark halo round each, which is what the letters are read against.
+        g.shadowColor = '#fff';
+        g.shadowBlur = 22;
+        g.lineWidth = 14;
+        g.strokeStyle = 'rgb(200 200 200)';
+        g.strokeText(line, w / 2, y, w - 60);
+        g.shadowBlur = 0;
+        g.fillStyle = '#fff';
+      } else {
+        g.fillStyle = '#f1e7d0';
+      }
+      g.fillText(line, w / 2, y, w - 60);
+    });
+    const t = new THREE.CanvasTexture(c);
+    if (!mask) t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    return t;
+  };
+  const texture = draw(false);
+  const alpha = draw(true);
+  const both = texture.dispose.bind(texture);
+  texture.dispose = () => {
+    both();
+    alpha.dispose();
+  };
+  return { texture, alpha, aspect: w / h };
+}

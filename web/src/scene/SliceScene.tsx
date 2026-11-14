@@ -14,6 +14,7 @@ import { CANDLE_SPOTS } from './models/candles.js';
 import { Fireplace } from './models/Fireplace.js';
 import { Hall } from './models/Hall.js';
 import { Table } from './models/Table.js';
+import { Caption } from './stage/Caption.js';
 import { Effects } from './stage/Effects.js';
 import { HoverLight } from './stage/HoverLight.js';
 import { Lights } from './stage/Lights.js';
@@ -109,6 +110,8 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
         </Html>
       ) : null}
       <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? view.speaker : null} free={view.choosable.length > 0} focus={view.selected} />
+      {/* while a figure speaks, its own words are the caption */}
+      <Caption text={view.speech ? null : view.announce} />
       <Effects quality={q} still={reduced} />
     </ResourcesContext.Provider>
   );

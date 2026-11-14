@@ -123,7 +123,7 @@ function Slice({ script }: { script: SliceScript }) {
       </SceneBoundary>
       )}
       <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl || lost} />
-      <p className={view.speech && !noGl && !lost ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
+      <p className={!noGl && !lost ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
 }
