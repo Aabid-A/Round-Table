@@ -1,5 +1,6 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { readMuted, Sound, writeMuted, type Cue } from './sound.js';
+import { hasWebGl2 } from './webgl.js';
 import { chooseQuality, qualityFromSearch, tooSlow, type Quality } from './stage/quality.js';
 
 /**
@@ -8,10 +9,14 @@ import { chooseQuality, qualityFromSearch, tooSlow, type Quality } from './stage
  */
 
 /** If the 3D room cannot load or start, show the plain version instead of a blank page. */
-export class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+export class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode; onError?: () => void }, { failed: boolean }> {
   override state = { failed: false };
   static getDerivedStateFromError(): { failed: boolean } {
     return { failed: true };
+  }
+  /** Tells the page, so it can stop pacing and wording moments for a room that is not there. */
+  override componentDidCatch(): void {
+    this.props.onError?.();
   }
   override render(): ReactNode {
     return this.state.failed ? this.props.fallback : this.props.children;
@@ -32,13 +37,7 @@ export function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-export function hasWebGl2(): boolean {
-  try {
-    return document.createElement('canvas').getContext('webgl2') !== null;
-  } catch {
-    return false;
-  }
-}
+export { hasWebGl2 };
 
 /**
  * The quality level: `?quality=` if the address sets one, otherwise high until the first 45 frames are timed, then the level they
@@ -96,7 +95,8 @@ export interface RoomChoice {
 export function useRoomChoice(search: string): RoomChoice {
   const { quality, onFrame, slow } = useQualityProbe(search);
   const reduced = usePrefersReducedMotion();
-  const plain = useMemo(() => new URLSearchParams(search).get('fallback') === '1' || !hasWebGl2(), [search]);
+  const asked = new URLSearchParams(search).get('fallback') === '1';
+  const plain = asked || !hasWebGl2();
   const [lost, setLost] = useState(false);
   const onLost = useCallback(() => setLost(true), []);
   return { room: !plain && !reduced && !lost && !slow, quality, onFrame, onLost };

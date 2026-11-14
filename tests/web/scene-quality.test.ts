@@ -40,3 +40,24 @@ describe('too slow for the room', () => {
     expect(tooSlow([120, 130, 90, 140, 150])).toBe(true);
   });
 });
+
+describe('the WebGL check', () => {
+  it('asks the browser once per page and releases the context it opened', async () => {
+    let made = 0;
+    let released = 0;
+    const fake = { getExtension: () => ({ loseContext: () => void released++ }) };
+    const doc = { createElement: () => ({ getContext: () => (made++, fake) }) };
+    const g = globalThis as unknown as { document?: unknown };
+    const before = g.document;
+    g.document = doc;
+    try {
+      const { hasWebGl2 } = await import('../../web/src/scene/webgl.js');
+      expect(hasWebGl2()).toBe(true);
+      expect(hasWebGl2()).toBe(true);
+      expect(made).toBe(1);
+      expect(released).toBe(1);
+    } finally {
+      g.document = before;
+    }
+  });
+});
