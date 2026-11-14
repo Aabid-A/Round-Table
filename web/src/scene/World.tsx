@@ -5,7 +5,7 @@ import { Director } from './camera/Director.js';
 import { Recruit } from './moments/Recruit.js';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
-import { bearingFromEye, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
+import { bearingFromEye, chairPose, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
 import { BANISHED_REACH, DAWN_MASK_SCALE, DAWN_REACH } from './models/dimensions.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
@@ -51,6 +51,14 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
   const firstPerson = view.you !== null;
   // A camera in a chair sits in seat 0 with room either side; a camera in no chair sees eight evenly spaced seats. Set before anything below is placed.
   setSpacing(firstPerson ? 'seated' : 'even');
+  // Where a mask found at dawn or left by the fallen lies: beside its plate as the seated eye sees it, or simply before its chair.
+  const restingSpot = (seat: number): [number, number, number] => (firstPerson ? dawnMaskSpot(seat) : tablePoint(seat, DAWN_REACH));
+  const dawnAt = ((): [number, number] | null => {
+    if (!view.dawn) return null;
+    const [cx, , cz] = chairPose(view.dawn.victim).position;
+    const [tx, , tz] = restingSpot(view.dawn.victim);
+    return [(cx + tx) / 2, (cz + tz) / 2];
+  })();
   const maskOf = (seat: number): number => view.figures.find((f) => f.index === seat)?.mask ?? seat;
   const [litNow, setLitNow] = useState(CANDLES);
   useFrame(() => {
@@ -60,7 +68,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
     <ResourcesContext.Provider value={resources}>
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
-      <Lights mood={view.mood} litCount={litNow} quality={q} dawnSeat={view.dawn?.victim ?? null} hush={!!view.whisper || !!view.recruit} />
+      <Lights mood={view.mood} litCount={litNow} quality={q} dawnAt={dawnAt} hush={!!view.whisper || !!view.recruit} />
       <HoverLight hovered={view.hovered} selected={view.selected} maskOf={maskOf} />
       <Hall />
       <Fireplace />
@@ -95,11 +103,11 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
       {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} {...(firstPerson ? {} : { at: tablePoint(view.banish.seat, BANISHED_REACH) })} /> : null}
-      {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={firstPerson ? dawnMaskSpot(view.dawn.victim) : tablePoint(view.dawn.victim, DAWN_REACH)} scale={DAWN_MASK_SCALE} /> : null}
+      {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={restingSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
       {(view.fallen ?? []).map((f) => (
-        <TableMask key={`fallen-${f.seat}`} seat={f.seat} mask={maskOf(f.seat)} role={f.role} viewer={view.you} at={firstPerson ? dawnMaskSpot(f.seat) : tablePoint(f.seat, DAWN_REACH)} scale={DAWN_MASK_SCALE} settled />
+        <TableMask key={`fallen-${maskOf(f.seat)}`} seat={f.seat} mask={maskOf(f.seat)} role={f.role} viewer={view.you} at={restingSpot(f.seat)} scale={DAWN_MASK_SCALE} settled />
       ))}
-      {view.recruit ? <Recruit from={view.recruit.from} to={view.recruit.to} mask={maskOf(view.recruit.from)} /> : null}
+      {view.recruit ? <Recruit key={`${view.recruit.from}-${view.recruit.to}`} from={view.recruit.from} to={view.recruit.to} mask={maskOf(view.recruit.from)} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       {view.you !== null ? (
   <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.whisper && view.whisper.from !== view.you ? bearingTo(view.whisper.from) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />

@@ -100,17 +100,18 @@ export function useRoomChoice(search: string): { room: boolean; quality: Quality
  * by hand onto the moment plays it again from the start.
  */
 export function useBeat(key: string | null, beats: number, ms = 1500): number {
-  const [beat, setBeat] = useState(0);
+  // The beat belongs to the key it was counted for, so a new moment starts at 0 on its very first frame.
+  const [beat, setBeat] = useState({ key, n: 0 });
   useEffect(() => {
-    setBeat(0);
     if (key === null) return;
     let n = 0;
+    setBeat({ key, n });
     const t = setInterval(() => {
       n += 1;
-      setBeat(n);
+      setBeat({ key, n });
       if (n >= beats - 1) clearInterval(t);
     }, ms);
     return () => clearInterval(t);
   }, [key, beats, ms]);
-  return beat;
+  return beat.key === key ? beat.n : 0;
 }

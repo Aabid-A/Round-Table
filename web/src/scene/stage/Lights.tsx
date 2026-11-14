@@ -3,7 +3,6 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
-import { chairPose, dawnMaskSpot } from '../layout.js';
 import { CLUSTER_LIGHTS } from '../models/candles.js';
 import type { WorldMood } from '../world.js';
 import type { QualitySettings } from './quality.js';
@@ -13,8 +12,8 @@ interface Props {
   /** How many of the six candles are lit, as a number that moves smoothly (a candle going out is half lit for a moment). */
   litCount: number;
   quality: QualitySettings;
-  /** The seat the morning light falls on (the one found empty at dawn), or null. */
-  dawnSeat: number | null;
+  /** Where the morning light falls (between the chair found empty at dawn and the mask before it, x and z), or null. */
+  dawnAt: [number, number] | null;
   /** A private moment (a whisper, a recruitment): the candles and the fire sink low around it. */
   hush?: boolean;
 }
@@ -35,7 +34,7 @@ const FILL = { day: 0.2, night: 0.45, dawn: 0.5 } as const;
  * a faint cold fill so the dark is blue not black, and at dawn one shaft of pale gold from a high window that finds the empty chair
  * and the mask on the table in front of it. The only ambient light is under 0.15.
  */
-export function Lights({ mood, litCount, quality, dawnSeat, hush = false }: Props) {
+export function Lights({ mood, litCount, quality, dawnAt, hush = false }: Props) {
   const clusters = useRef<(THREE.PointLight | null)[]>([]);
   const fire = useRef<THREE.PointLight>(null);
   const shaft = useRef<THREE.SpotLight>(null);
@@ -46,15 +45,8 @@ export function Lights({ mood, litCount, quality, dawnSeat, hush = false }: Prop
   // With motion reduced the light is steady; it still fades between day, night and dawn.
   const flicker = idle(useReducedMotion());
   // The shaft is aimed between the empty chair and the mask left on the table.
-  const aim = useMemo(() => {
-    const o = new THREE.Object3D();
-    if (dawnSeat !== null) {
-      const [cx, , cz] = chairPose(dawnSeat).position;
-      const [tx, , tz] = dawnMaskSpot(dawnSeat);
-      o.position.set((cx + tx) / 2, 0.9, (cz + tz) / 2);
-    }
-    return o;
-  }, [dawnSeat]);
+  const aim = useMemo(() => new THREE.Object3D(), []);
+  aim.position.set(dawnAt?.[0] ?? 0, 0.9, dawnAt?.[1] ?? 0);
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
     const k = 1 - Math.exp(-dt * 1.4);
@@ -69,7 +61,7 @@ export function Lights({ mood, litCount, quality, dawnSeat, hush = false }: Prop
     });
     level.current.fire += (FIRE[mood] - level.current.fire) * k;
     if (fire.current) fire.current.intensity = (1 - level.current.quiet * 0.45) * level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);
-    if (shaft.current) shaft.current.intensity += ((mood === 'dawn' && dawnSeat !== null ? 420 : 0) - shaft.current.intensity) * k;
+    if (shaft.current) shaft.current.intensity += ((mood === 'dawn' && dawnAt !== null ? 420 : 0) - shaft.current.intensity) * k;
     if (fill.current) fill.current.intensity += (FILL[mood] - fill.current.intensity) * k;
     if (bounce.current) bounce.current.intensity += (BOUNCE[mood] - bounce.current.intensity) * k;
     if (morning.current) morning.current.intensity += (MORNING[mood] - morning.current.intensity) * k;

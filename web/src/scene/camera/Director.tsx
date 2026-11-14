@@ -20,6 +20,8 @@ export function Director({ focus, wide, cut }: Props) {
   const { camera, gl, size } = useThree();
   const reduced = useReducedMotion();
   const shot = useMemo(() => shotFor(focus, wide), [focus, wide]);
+  // The debug hook a test reads: which shot is held.
+  const shotName = focus === null || wide ? 'wide' : String(focus);
   const pos = useRef(new THREE.Vector3(...shot.position));
   const look = useRef(new THREE.Vector3(...shot.target));
   const held = useRef(0);
@@ -48,8 +50,7 @@ export function Director({ focus, wide, cut }: Props) {
     look.current.lerp(target, k);
     camera.position.copy(pos.current);
     camera.lookAt(look.current);
-    const shown = focus === null || wide ? 'wide' : String(focus);
-    if (gl.domElement.dataset.shot !== shown) gl.domElement.dataset.shot = shown;
+    if (gl.domElement.dataset.shot !== shotName) gl.domElement.dataset.shot = shotName;
   });
   return null;
 }

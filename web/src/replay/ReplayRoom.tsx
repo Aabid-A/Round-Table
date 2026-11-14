@@ -20,7 +20,7 @@ export function ReplayRoom({ view, fallback, onSit, label }: Props) {
   if (!room) return <>{fallback}</>;
   const choosable = view.figures.filter((f) => f.index !== view.you).map((f) => f.index);
   return (
-    <div className="world-room" data-testid="world" role="img" aria-label={label} data-figures={view.figures.filter((f) => f.present).length} data-quality={quality} data-first={view.you !== null}>
+    <div className="world-room" data-testid="world" role="group" aria-label={label} data-figures={view.figures.filter((f) => f.present).length} data-quality={quality} data-first={view.you !== null}>
       <SceneBoundary fallback={fallback}>
         <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
           <RoomScene view={{ ...view, choosable, hovered: choosable.includes(hovered ?? -1) ? hovered : null }} quality={quality} onFrame={onFrame} onLost={onLost} onHover={setHovered} onPick={onSit} />
