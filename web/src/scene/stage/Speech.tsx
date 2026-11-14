@@ -34,7 +34,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     gl.domElement.dataset.speaker = speaker === null || !text ? '' : String(speaker);
   }, [gl, speaker, text]);
   const shown = useRef(0);
-  const tmp = useMemo(() => ({ head: new THREE.Vector3(), side: new THREE.Vector3(), right: new THREE.Vector3(), at: new THREE.Vector3() }), []);
+  const tmp = useMemo(() => ({ head: new THREE.Vector3(), seen: new THREE.Vector3(), side: new THREE.Vector3(), right: new THREE.Vector3(), at: new THREE.Vector3(), forward: new THREE.Vector3() }), []);
   useEffect(() => void (shown.current = 0), [drawn]);
   useFrame((_, dt) => {
     if (!mesh.current || !material.current || !drawn || speaker === null) return;
@@ -44,7 +44,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     tmp.head.set(x, HEAD_Y, z);
     tmp.right.set(1, 0, 0).applyQuaternion(cam.quaternion);
     tmp.side.copy(tmp.head).addScaledVector(tmp.right, HEAD_HALF).project(cam);
-    const head = tmp.head.clone().project(cam);
+    const head = tmp.seen.copy(tmp.head).project(cam);
     const behind = head.z > 1;
     // A speaker behind the eye is off to one side: the words wait at that edge of the picture.
     const at = behind ? { x: head.x > 0 ? -2 : 2, y: 0 } : { x: head.x, y: head.y };
@@ -56,7 +56,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     mesh.current.position.copy(cam.position).addScaledVector(tmp.at, AHEAD);
     mesh.current.quaternion.copy(cam.quaternion);
     // Sized on the picture: so many device units wide, at the distance the words hang along their own line of sight.
-    const along = AHEAD * tmp.at.dot(new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion));
+    const along = AHEAD * tmp.at.dot(tmp.forward.set(0, 0, -1).applyQuaternion(cam.quaternion));
     const width = box.x * along * Math.tan((cam.fov * Math.PI) / 360) * aspect;
     mesh.current.scale.set(width, width / drawn.aspect, 1);
     shown.current += (1 - shown.current) * approach(dt, 6, reduced);

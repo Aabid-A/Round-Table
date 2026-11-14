@@ -10,7 +10,8 @@ const coarse = (): boolean => typeof window.matchMedia === 'function' && window.
 export function useInputKind(): InputKind {
   const [kind, setKind] = useState<InputKind>(() => (coarse() ? 'touch' : 'keys'));
   useEffect(() => {
-    const onPointer = (e: PointerEvent): void => setKind(e.pointerType === 'touch' ? 'touch' : 'keys');
+    // A pen on a tablet is a touch screen with no keys to speak of.
+    const onPointer = (e: PointerEvent): void => setKind(e.pointerType === 'touch' || e.pointerType === 'pen' ? 'touch' : 'keys');
     const onKey = (): void => setKind('keys');
     window.addEventListener('pointerdown', onPointer, true);
     window.addEventListener('keydown', onKey, true);
