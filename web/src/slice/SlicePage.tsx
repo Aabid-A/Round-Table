@@ -11,7 +11,7 @@ import { paceFromSearch } from './params.js';
 import { initial, reduce, stageMs, viewOf } from './machine.js';
 import { SliceFallback } from './SliceFallback.js';
 import { SliceHud } from './SliceHud.js';
-import { readMuted, Sound, writeMuted } from './sound.js';
+import { readMuted, Sound, writeMuted } from '../scene/sound.js';
 import { scriptFromLog, SLICE_SEED, type SliceScript } from './script.js';
 
 const SliceScene = lazy(() => import('../scene/SliceScene.js'));
