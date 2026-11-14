@@ -8,8 +8,8 @@ import { approach, useReducedMotion } from '../motion.js';
 import { wrapCaption } from './caption.js';
 import { speechPlacement } from './speech.js';
 
-/** How far in front of the eye the words hang: near enough to be over everything, far enough to sit in the room. */
-const AHEAD = 1.6;
+/** How far in front of the eye the words hang: at the distance the depth of field is focused on, so they are sharp, and in front of everything else drawn. */
+const AHEAD = 2.6;
 /** How wide the words are, as a part of the picture's width: a column beside the speaker on a wide screen, most of a phone's. */
 const WIDE = 0.24;
 const NARROW = 0.64;

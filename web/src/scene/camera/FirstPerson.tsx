@@ -104,8 +104,8 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
     const t = clock.elapsedTime * idle(reduced);
     const s = swipe.current;
     if (s.finger === null) s.yaw += (s.rest - s.yaw) * approach(dt, 5, reduced);
-    // A wide window keeps most of the table in view and only leans toward a speaker; a tall one turns to face them.
-    const turn = toward === null ? 0 : tall ? clamp(toward, -SWIPE_MAX, SWIPE_MAX) : clamp(toward * 0.72, -0.85, 0.85);
+    // A wide window keeps most of the table in view and leans toward a speaker across it; one beside you is turned to fully, so they are whole and not cut by the edge.
+    const turn = toward === null ? 0 : tall || Math.abs(toward) > 0.8 ? clamp(toward, -SWIPE_MAX, SWIPE_MAX) : clamp(toward * 0.72, -0.85, 0.85);
     const wantYaw = turn + s.yaw + pointer.current.x * arc * (free ? 1 : 0.35);
     const wide = tall && overview;
     const wantPitch = wide ? OVERVIEW.pitch - pointer.current.y * PITCH_ARC * 0.5 : restPitchFor(aspect) + (free ? -pointer.current.y * PITCH_ARC : 0);

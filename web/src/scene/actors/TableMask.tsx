@@ -9,14 +9,14 @@ import { PALETTE } from '../palette.js';
 
 const SCALE = 0.2;
 /** How far the mask is tipped up from lying flat, toward the viewer, so it can be read from a seat. */
-const TILT = 0.42;
+const TILT = 0.62;
 
 /**
  * A mask left on the table in front of its seat, leaning toward the viewer. It lies face up, then is turned over to show what its
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
 /** `at` sets where on the table it lies; by default it lies where a banished player's does (see layout.banishedMaskSpot). */
-export function TableMask({ seat, mask, role, viewer, at, scale = SCALE, settled = false }: { seat: number; mask: number; role: Role | null; viewer: number | null; at?: [number, number, number]; scale?: number; settled?: boolean }) {
+export function TableMask({ seat, mask, role, viewer, at, scale = SCALE, settled = false, tilt = TILT }: { seat: number; mask: number; role: Role | null; viewer: number | null; at?: [number, number, number]; scale?: number; settled?: boolean; tilt?: number }) {
   const turn = useRef<THREE.Group>(null);
   // A mask that has lain there since an earlier moment is already turned; it does not turn over again.
   const flip = useRef(settled && role !== null ? 1 : 0);
@@ -36,7 +36,7 @@ export function TableMask({ seat, mask, role, viewer, at, scale = SCALE, settled
   const colour = role === 'traitor' ? PALETTE.traitor : PALETTE.faithful;
   return (
     <group ref={face} position={[p[0], p[1] + 0.09, p[2]]} rotation-y={Math.atan2(vx - p[0], vz - p[2])}>
-      <group rotation-x={-(Math.PI / 2 - TILT)}>
+      <group rotation-x={-(Math.PI / 2 - tilt)}>
         <group ref={turn}>
           <MaskMesh index={mask} scale={scale} lining={role ? colour : null} />
         </group>

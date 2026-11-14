@@ -97,22 +97,29 @@ describe('the field of view', () => {
   });
 });
 
-describe('the mask found at dawn', () => {
-  it('lies near the empty chair, and from your seat never covers its name plate (nor does a banished player’s)', async () => {
-    const { banishedMaskSpot, bearingFromEye, dawnMaskSpot } = await import('../../web/src/scene/layout.js');
-    const { BANISHED_MASK_HALF, DAWN_MASK_HALF, PLATE_W } = await import('../../web/src/scene/models/dimensions.js');
-    const { plateScale } = await import('../../web/src/scene/layout.js');
-    // How far across the picture each reaches, from the eye: the mask its half width, the plate half its width.
-    const span = (p: [number, number, number], half: number): [number, number] => {
+describe('a mask on the table', () => {
+  it('from your seat never covers its name plate: they are apart across the picture or up and down it', async () => {
+    const { BANISHED_TILT, banishedMaskSpot, bearingFromEye, dawnMaskSpot, plateScale } = await import('../../web/src/scene/layout.js');
+    const { BANISHED_MASK_HALF, DAWN_MASK_HALF, DAWN_MASK_SCALE, EYE_Y, PLATE_H, PLATE_W, TABLE_Y } = await import('../../web/src/scene/models/dimensions.js');
+    const dist = (p: [number, number, number]): number => Math.hypot(p[0], EYE_Z - p[2]);
+    const across = (p: [number, number, number], half: number): [number, number] => {
       const b = bearingFromEye(p);
-      const w = Math.atan(half / Math.hypot(p[0], EYE_Z - p[2]));
+      const w = Math.atan(half / dist(p));
       return [b - w, b + w];
     };
+    const upDown = (p: [number, number, number], lo: number, hi: number): [number, number] => [Math.atan((lo - EYE_Y) / dist(p)), Math.atan((hi - EYE_Y) / dist(p))];
+    const apart = (a: [number, number], b: [number, number]): boolean => a[1] < b[0] || b[1] < a[0];
+    // A mask lies 0.09 above the wood, tipped toward you, and stands up to about its scale above that.
+    const dawnTop = TABLE_Y + 0.09 + DAWN_MASK_SCALE * 1.05;
+    const banishedTop = TABLE_Y + 0.09 + 0.2 * 1.05 * Math.sin(BANISHED_TILT) + 0.02;
     for (let i = 1; i < SEATS; i++) {
-      const spot = dawnMaskSpot(i);
-      expect(Math.hypot(spot[0], spot[2]), `seat ${i}`).toBeLessThan(TABLE_R - 0.15);
-      const p = span(platePose(i, 0).position, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
-      for (const m of [span(spot, DAWN_MASK_HALF), span(banishedMaskSpot(i), BANISHED_MASK_HALF)]) expect(m[1] < p[0] || p[1] < m[0], `seat ${i}: mask ${m} plate ${p}`).toBe(true);
+      const plate = platePose(i, 0).position;
+      const pa = across(plate, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+      const pu = upDown(plate, TABLE_Y, TABLE_Y + PLATE_H + 0.016);
+      for (const [spot, half, top] of [[dawnMaskSpot(i), DAWN_MASK_HALF, dawnTop], [banishedMaskSpot(i), BANISHED_MASK_HALF, banishedTop]] as const) {
+        expect(Math.hypot(spot[0], spot[2]), `seat ${i}`).toBeLessThan(TABLE_R - 0.15);
+        expect(apart(across(spot, half), pa) || apart(upDown(spot, TABLE_Y, top), pu), `seat ${i}`).toBe(true);
+      }
     }
   });
 });

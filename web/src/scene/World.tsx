@@ -5,7 +5,7 @@ import { Director } from './camera/Director.js';
 import { Recruit } from './moments/Recruit.js';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
-import { bearingFromEye, chairPose, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
+import { BANISHED_TILT, bearingFromEye, chairPose, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
 import { BANISHED_REACH, DAWN_MASK_SCALE, DAWN_REACH } from './models/dimensions.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
@@ -102,7 +102,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
         <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} mask={maskOf(t.owner)} />
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
-      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} {...(firstPerson ? {} : { at: tablePoint(view.banish.seat, BANISHED_REACH) })} /> : null}
+      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} tilt={BANISHED_TILT} {...(firstPerson ? {} : { at: tablePoint(view.banish.seat, BANISHED_REACH) })} /> : null}
       {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={restingSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
       {(view.fallen ?? []).map((f) => (
         <TableMask key={`fallen-${maskOf(f.seat)}`} seat={f.seat} mask={maskOf(f.seat)} role={f.role} viewer={view.you} at={restingSpot(f.seat)} scale={DAWN_MASK_SCALE} settled />
