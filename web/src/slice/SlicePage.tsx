@@ -1,17 +1,16 @@
-import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { runGame } from '../../../src/engine/game.js';
 import { DEFAULT_SETTINGS } from '../../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../../src/players/mock.js';
 import { buildPrompt } from '../../../src/prompts/phases.js';
 import { SYSTEM_PROMPT } from '../../../src/prompts/system.js';
 import { useInputKind } from '../scene/input.js';
-import { chooseQuality, qualityFromSearch, type Quality } from '../scene/stage/quality.js';
+import { hasWebGl2, SceneBoundary, usePrefersReducedMotion, useQualityProbe, useRoomSound } from '../scene/host.js';
 import { cueForStage } from './cues.js';
 import { paceFromSearch } from './params.js';
 import { initial, reduce, stageMs, viewOf } from './machine.js';
 import { SliceFallback } from './SliceFallback.js';
 import { SliceHud } from './SliceHud.js';
-import { readMuted, Sound, writeMuted } from '../scene/sound.js';
 import { scriptFromLog, SLICE_SEED, type SliceScript } from './script.js';
 
 const SliceScene = lazy(() => import('../scene/SliceScene.js'));
@@ -34,77 +33,24 @@ export function SlicePage() {
   return script ? <Slice script={script} /> : <p className="notice" role="status">Setting the table…</p>;
 }
 
-/** If the 3D scene cannot load or start, show the plain version instead of a blank page. */
-class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  override state = { failed: false };
-  static getDerivedStateFromError(): { failed: boolean } {
-    return { failed: true };
-  }
-  override render(): ReactNode {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
-}
-
-/** Whether the viewer has asked their system for reduced motion, kept up to date if they change it. */
-function usePrefersReducedMotion(): boolean {
-  const query = '(prefers-reduced-motion: reduce)';
-  const [reduced, setReduced] = useState(() => typeof window.matchMedia === 'function' && window.matchMedia(query).matches);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const m = window.matchMedia(query);
-    const on = (): void => setReduced(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, []);
-  return reduced;
-}
-
-function hasWebGl2(): boolean {
-  try {
-    return document.createElement('canvas').getContext('webgl2') !== null;
-  } catch {
-    return false;
-  }
-}
-
 function Slice({ script }: { script: SliceScript }) {
   const [state, dispatch] = useReducer((s: ReturnType<typeof initial>, a: Parameters<typeof reduce>[1]) => reduce(s, a, script), undefined, initial);
   const input = useInputKind();
   const view = useMemo(() => viewOf(state, script, input), [state, script, input]);
-  const [quality, setQuality] = useState<Quality>(() => qualityFromSearch(window.location.search) ?? 'high');
-  const fixed = qualityFromSearch(window.location.search) !== null;
-  const frames = useRef<number[]>([]);
-  const onFrame = (ms: number): void => {
-    if (fixed) return;
-    if (frames.current.length >= 45) return;
-    frames.current.push(ms);
-    if (frames.current.length === 45) setQuality(chooseQuality(frames.current.slice(5)));
-  };
+  const { quality, onFrame } = useQualityProbe(window.location.search);
   const noGl = useMemo(() => new URLSearchParams(window.location.search).get('fallback') === '1' || !hasWebGl2(), []);
   const reducedMotion = usePrefersReducedMotion();
   const [lost, setLost] = useState(false);
   const onLost = useCallback(() => setLost(true), []);
   const pace = useMemo(() => paceFromSearch(window.location.search), []);
-  const sound = useRef<Sound | null>(null);
-  const [muted, setMuted] = useState(readMuted);
-  const startSound = (): void => {
-    sound.current ??= new Sound(muted);
-    sound.current.start();
-  };
+  const { muted, start: startSound, toggleMute, play } = useRoomSound();
   useEffect(() => {
     const cue = cueForStage(state.stage);
-    if (cue) sound.current?.play(cue);
-  }, [state.stage]);
+    if (cue) play(cue);
+  }, [state.stage, play]);
   useEffect(() => {
-    if (state.selected !== null) sound.current?.play('select');
-  }, [state.selected]);
-  const toggleMute = (): void => {
-    startSound();
-    const m = !muted;
-    setMuted(m);
-    writeMuted(m);
-    sound.current?.setMuted(m);
-  };
+    if (state.selected !== null) play('select');
+  }, [state.selected, play]);
   useEffect(() => {
     const ms = stageMs(state.stage);
     if (ms === null) return;
