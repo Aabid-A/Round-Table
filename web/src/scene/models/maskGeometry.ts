@@ -6,7 +6,7 @@ import { maskOutline, outlineRadius, type Emblem, type MaskDesign } from './mask
 /** How thick a mask is, in its own units (a mask is about two units tall). */
 export const MASK_THICKNESS = 0.09;
 const RINGS = 10;
-const EYE: [number, number] = [0.27, 0.1];
+const EYE_Y = 0.1;
 const BROW_Y = 0.52;
 
 const bell = (d: number, w: number): number => Math.exp(-((d / w) ** 2));
@@ -15,11 +15,11 @@ const bell = (d: number, w: number): number => Math.exp(-((d / w) ** 2));
  * The sculpted face of a mask: how far forward its surface stands at a point. It curves round the face from side to side and a little
  * from brow to chin, with a brow ridge, a nose that runs down to a tip, and two hollows where the eyes are set.
  */
-export function maskHeight(x: number, y: number): number {
+export function maskHeight(x: number, y: number, eyes = 0.27): number {
   const curve = 0.36 * (1 - (x / 0.92) ** 2) - 0.09 * y * y;
   const nose = 0.15 * bell(x, 0.1) * bell(y + 0.2, 0.24) + 0.04 * bell(x, 0.2) * bell(y + 0.3, 0.12);
   const brow = 0.05 * bell(y - 0.29, 0.1) * (1 - bell(x, 0.1)) * bell(x, 0.62);
-  const sockets = 0.075 * (bell(x - EYE[0], 0.18) + bell(x + EYE[0], 0.18)) * bell(y - EYE[1], 0.11);
+  const sockets = 0.075 * (bell(x - eyes, 0.18) + bell(x + eyes, 0.18)) * bell(y - EYE_Y, 0.11);
   return curve + nose + brow - sockets;
 }
 
@@ -80,8 +80,9 @@ function skin(design: MaskDesign, side: 'shell' | 'lining'): THREE.BufferGeometr
   const outline = maskOutline(design.shape);
   const dirs = directions(outline);
   const n = dirs.length;
-  const bone = new THREE.Color(PALETTE.bone);
   const accent = new THREE.Color(design.colour);
+  // The whole face leans toward the wearer's colour, lighter or darker by design; the rim is the colour itself.
+  const bone = new THREE.Color(PALETTE.bone).lerp(accent, design.tint).multiplyScalar(design.shade);
   const inside = new THREE.Color(PALETTE.boneShade).multiplyScalar(0.35);
   const positions: number[] = [];
   const colours: number[] = [];
@@ -95,7 +96,7 @@ function skin(design: MaskDesign, side: 'shell' | 'lining'): THREE.BufferGeometr
         const x = Math.cos(a) * r;
         const y = Math.sin(a) * r;
         // The edge rolls back a little, so the rim is rounded and not a knife.
-        const z = maskHeight(x, y) - 0.05 * s ** 8 - (back ? MASK_THICKNESS * (1 - 0.5 * s ** 6) : 0);
+        const z = maskHeight(x, y, design.eyes) - 0.05 * s ** 8 - (back ? MASK_THICKNESS * (1 - 0.5 * s ** 6) : 0);
         positions.push(x, y, z);
         // A band of the wearer's colour round the rim: the colour is read after the shape, from the same silhouette.
         (back ? inside : s > 0.8 ? accent : bone).toArray(colours, colours.length);
@@ -144,12 +145,13 @@ export function maskGeometry(design: MaskDesign): THREE.BufferGeometry {
   const dark = new THREE.Color('#050506');
   const parts = [shell];
   for (const side of [-1, 1]) {
-    const eye = new THREE.SphereGeometry(1, 12, 8).scale(0.15, 0.062, 0.035).rotateZ(side * -0.12).translate(side * EYE[0], EYE[1], maskHeight(side * EYE[0], EYE[1]) + 0.004);
+    const eye = new THREE.SphereGeometry(1, 12, 8).scale(Math.min(0.15, design.eyes * 0.62), 0.062, 0.035).rotateZ(side * -0.12).translate(side * design.eyes, EYE_Y, maskHeight(side * design.eyes, EYE_Y, design.eyes) + 0.004);
     parts.push(paint(eye.toNonIndexed(), dark));
   }
-  const slope = Math.atan2(maskHeight(0, BROW_Y + 0.1) - maskHeight(0, BROW_Y - 0.1), 0.2);
-  const emblem = new THREE.ExtrudeGeometry(emblemShape(design.emblem), { depth: 0.05, bevelEnabled: false }).scale(1.45, 1.45, 1).rotateX(-slope).translate(0, BROW_Y, maskHeight(0, BROW_Y) - 0.01);
-  parts.push(paint(emblem.toNonIndexed(), new THREE.Color(design.colour)));
+  const slope = Math.atan2(maskHeight(0, BROW_Y + 0.1, design.eyes) - maskHeight(0, BROW_Y - 0.1, design.eyes), 0.2);
+  const emblem = new THREE.ExtrudeGeometry(emblemShape(design.emblem), { depth: 0.05, bevelEnabled: false }).scale(1.45, 1.45, 1).rotateX(-slope).translate(0, BROW_Y, maskHeight(0, BROW_Y, design.eyes) - 0.01);
+  // The emblem is a dark inlay, like the eyes: it reads on a light face and a dark one.
+  parts.push(paint(emblem.toNonIndexed(), dark));
   const merged = mergeGeometries(parts);
   for (const p of parts) p.dispose();
   return merged;

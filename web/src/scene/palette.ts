@@ -30,4 +30,4 @@ export const PALETTE = {
 } as const;
 
 /** One accent per player. Chosen to stay apart in warm low light, so no two are close in hue and each differs in lightness from its neighbours. */
-export const ACCENTS = ['#e0b43a', '#3fa9a0', '#9a5bd1', '#d9743a', '#4b7fd8', '#8dbb4a', '#d95b8a', '#b9c4cf'] as const;
+export const ACCENTS = ['#e0b43a', '#19c7b9', '#9a5bd1', '#e8571f', '#3f6fe0', '#a5d936', '#d23fc4', '#c9d3dc'] as const;

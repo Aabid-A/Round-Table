@@ -114,7 +114,7 @@ export function Figure({ index, lookYaw, speaking, pointYaw, hovered, selected, 
                 <sphereGeometry args={[0.16, 16, 12]} />
                 <meshStandardMaterial color={PALETTE.robeDeep} roughness={1} />
               </mesh>
-              <group position={[0, 0.0, 0.115]}>
+              <group position={[0, 0.0, 0.145]}>
                 <MaskMesh index={index} scale={0.19} material={mask} />
               </group>
             </group>
