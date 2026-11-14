@@ -31,3 +31,12 @@ describe('quality levels', () => {
     expect(qualityFromSearch('')).toBeNull();
   });
 });
+
+describe('too slow for the room', () => {
+  it('is a median frame over 100 ms, so one slow frame does not decide', async () => {
+    const { tooSlow } = await import('../../web/src/scene/stage/quality.js');
+    expect(tooSlow([])).toBe(false);
+    expect(tooSlow([16, 16, 400, 16, 16])).toBe(false);
+    expect(tooSlow([120, 130, 90, 140, 150])).toBe(true);
+  });
+});

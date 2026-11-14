@@ -1,6 +1,6 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { readMuted, Sound, writeMuted, type Cue } from './sound.js';
-import { chooseQuality, qualityFromSearch, type Quality } from './stage/quality.js';
+import { chooseQuality, qualityFromSearch, tooSlow, type Quality } from './stage/quality.js';
 
 /**
  * What every page that shows the room needs around it: the plain page if the room cannot start, a quality level chosen from how
@@ -42,21 +42,25 @@ export function hasWebGl2(): boolean {
 
 /**
  * The quality level: `?quality=` if the address sets one, otherwise high until the first 45 frames are timed, then the level they
- * point to. `onFrame` is handed to the scene, which calls it with each frame's time.
+ * point to. `slow` turns true if the first frames show the machine cannot show the room at all. `onFrame` is handed to the scene,
+ * which calls it with each frame's time.
  */
-export function useQualityProbe(search: string): { quality: Quality; onFrame: (ms: number) => void } {
+export function useQualityProbe(search: string): { quality: Quality; onFrame: (ms: number) => void; slow: boolean } {
   const fixed = qualityFromSearch(search);
   const [quality, setQuality] = useState<Quality>(fixed ?? 'high');
+  const [slow, setSlow] = useState(false);
   const frames = useRef<number[]>([]);
   const onFrame = useCallback(
     (ms: number): void => {
       if (fixed !== null || frames.current.length >= 45) return;
       frames.current.push(ms);
+      // Ten frames are enough to tell a machine that cannot show the room at all (the first few, while it loads, are left out).
+      if (frames.current.length === 15 && tooSlow(frames.current.slice(5))) setSlow(true);
       if (frames.current.length === 45) setQuality(chooseQuality(frames.current.slice(5)));
     },
     [fixed],
   );
-  return { quality, onFrame };
+  return { quality, onFrame, slow };
 }
 
 /** Sound for the room: silent until `start` is called from a click or key, then cues play unless muted. The mute is remembered. */
@@ -76,4 +80,37 @@ export function useRoomSound(): { muted: boolean; start: () => void; toggleMute:
   }, [muted, start]);
   const play = useCallback((cue: Cue): void => sound.current?.play(cue), []);
   return useMemo(() => ({ muted, start, toggleMute, play }), [muted, start, toggleMute, play]);
+}
+
+/**
+ * Whether a page shows the 3D room or its plain version, and what the room needs. The plain version is shown with no WebGL, with
+ * ?fallback=1, when the viewer asks for reduced motion, when the graphics context is lost, and when the first frames are too slow.
+ */
+export function useRoomChoice(search: string): { room: boolean; quality: Quality; onFrame: (ms: number) => void; onLost: () => void } {
+  const { quality, onFrame, slow } = useQualityProbe(search);
+  const reduced = usePrefersReducedMotion();
+  const plain = useMemo(() => new URLSearchParams(search).get('fallback') === '1' || !hasWebGl2(), [search]);
+  const [lost, setLost] = useState(false);
+  const onLost = useCallback(() => setLost(true), []);
+  return { room: !plain && !reduced && !lost && !slow, quality, onFrame, onLost };
+}
+
+/**
+ * The beat of a staged banishment, counting up every `ms` from 0 while `key` names one, and back to 0 when the key changes. Stepping
+ * by hand onto the moment plays it again from the start.
+ */
+export function useBeat(key: string | null, beats: number, ms = 1500): number {
+  const [beat, setBeat] = useState(0);
+  useEffect(() => {
+    setBeat(0);
+    if (key === null) return;
+    let n = 0;
+    const t = setInterval(() => {
+      n += 1;
+      setBeat(n);
+      if (n >= beats - 1) clearInterval(t);
+    }, ms);
+    return () => clearInterval(t);
+  }, [key, beats, ms]);
+  return beat;
 }
