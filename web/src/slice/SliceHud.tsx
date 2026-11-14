@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Action } from './machine.js';
+import type { InputKind } from '../scene/prompts.js';
 import type { SliceView } from '../scene/sliceView.js';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   ended: boolean;
   /** Start with the list of names open (the plain version, which has no room to choose in). */
   listOpen?: boolean;
+  /** Touch or keys: a touch screen is not told about arrow keys. */
+  input?: InputKind;
 }
 
 /**
@@ -20,7 +23,7 @@ interface Props {
  * (arrows to choose, Enter to confirm) and, folded away, the same choice as a list for a screen reader or anyone who prefers one.
  * It is also the whole interface of the plain version, where the list starts open.
  */
-export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOpen = false }: Props) {
+export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOpen = false, input = 'keys' }: Props) {
   const choosing = view.choosable.length > 0;
   const names = new Map(view.figures.map((f) => [f.index, f.name]));
   // The keys read the newest view, so two quick presses are never judged against an old choice.
@@ -71,7 +74,7 @@ export function SliceHud({ view, dispatch, muted, onMute, canSkip, ended, listOp
               ))}
             </fieldset>
             <button type="submit" disabled={view.selected === null}>Confirm</button>
-            <p className="hint">Or use the arrow keys to choose, then Enter.</p>
+            {input === 'keys' ? <p className="hint">Or use the arrow keys to choose, then Enter.</p> : null}
           </form>
         </details>
       ) : null}

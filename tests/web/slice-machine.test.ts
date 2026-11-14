@@ -148,3 +148,16 @@ describe('a hover does not outlive the choice', () => {
     expect(viewOf(reduce(s, { t: 'confirm' }, script), script).hovered).toBeNull();
   });
 });
+
+describe('slice prompts by input', () => {
+  it('a touch screen is told to tap at both choices, and never about arrow keys or Enter', () => {
+    const turns = playThrough(2, 3).filter((s) => s.stage.kind === 'accuse' || s.stage.kind === 'vote');
+    expect(turns.length).toBeGreaterThan(1);
+    for (const s of turns.flatMap((t) => [t, reduce(t, { t: 'select', seat: 4 }, script)])) {
+      const touch = viewOf(s, script, 'touch').announce;
+      expect(touch).toMatch(/tap/i);
+      expect(touch).not.toMatch(/arrow|enter/i);
+      expect(viewOf(s, script).announce).toMatch(/arrow keys|Enter/);
+    }
+  });
+});

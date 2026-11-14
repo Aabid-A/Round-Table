@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from '../../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../../src/players/mock.js';
 import { buildPrompt } from '../../../src/prompts/phases.js';
 import { SYSTEM_PROMPT } from '../../../src/prompts/system.js';
+import { useInputKind } from '../scene/input.js';
 import { chooseQuality, qualityFromSearch, type Quality } from '../scene/stage/quality.js';
 import { cueForStage } from './cues.js';
 import { paceFromSearch } from './params.js';
@@ -68,7 +69,8 @@ function hasWebGl2(): boolean {
 
 function Slice({ script }: { script: SliceScript }) {
   const [state, dispatch] = useReducer((s: ReturnType<typeof initial>, a: Parameters<typeof reduce>[1]) => reduce(s, a, script), undefined, initial);
-  const view = useMemo(() => viewOf(state, script), [state, script]);
+  const input = useInputKind();
+  const view = useMemo(() => viewOf(state, script, input), [state, script, input]);
   const [quality, setQuality] = useState<Quality>(() => qualityFromSearch(window.location.search) ?? 'high');
   const fixed = qualityFromSearch(window.location.search) !== null;
   const frames = useRef<number[]>([]);
@@ -122,7 +124,7 @@ function Slice({ script }: { script: SliceScript }) {
       </Suspense>
       </SceneBoundary>
       )}
-      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl || lost} />
+      <SliceHud view={view} dispatch={dispatch} muted={muted} onMute={toggleMute} canSkip={stageMs(state.stage) !== null} ended={state.stage.kind === 'end'} listOpen={noGl || lost} input={input} />
       <p className={!noGl && !lost ? 'slice-caption sr-only' : 'slice-caption'} role="status" aria-live="polite">{view.announce}</p>
     </main>
   );
