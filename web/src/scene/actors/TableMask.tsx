@@ -9,7 +9,7 @@ import { PALETTE } from '../palette.js';
 
 const SCALE = 0.2;
 /** How far the mask is tipped up from lying flat, toward the viewer, so it can be read from a seat. */
-const TILT = 0.42;
+const TILT = 0.62;
 
 /**
  * A mask left on the table in front of its seat, leaning toward the viewer. It lies face up, then is turned over to show what its

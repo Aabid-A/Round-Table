@@ -60,7 +60,7 @@ export function maskSpot(i: number, reach: number, half: number): [number, numbe
   for (let aside = 0; aside <= 0.6; aside += 0.01) {
     spot = [x + tx * aside * toMiddle, y, z + tz * aside * toMiddle];
     const m = span(spot, half);
-    if (m[1] < plateSpan[0] - DAWN_GAP || plateSpan[1] < m[0] - DAWN_GAP) break;
+    if (m[1] < plateSpan[0] - MASK_GAP || plateSpan[1] < m[0] - MASK_GAP) break;
   }
   return spot;
 }
@@ -68,11 +68,27 @@ export function maskSpot(i: number, reach: number, half: number): [number, numbe
 /** The mask found at dawn: near the empty chair, so the morning light and the eye take in both together. */
 export const dawnMaskSpot = (i: number): [number, number, number] => maskSpot(i, DAWN_REACH, DAWN_MASK_HALF);
 
-/** A banished player's mask: well in from its seat, on open wood. */
-export const banishedMaskSpot = (i: number): [number, number, number] => maskSpot(i, BANISHED_REACH, BANISHED_MASK_HALF);
+/**
+ * A banished player's mask, turned over to show the role: in the middle of the table on your side, leaning toward the banished
+ * player's place, so the reveal is near and read at a glance and lies beside no other player's name.
+ */
+export function banishedMaskSpot(i: number): [number, number, number] {
+  const a = seatAngle(i);
+  const z = 0.8 + Math.cos(a) * 0.1;
+  // Moved sideways (away from the middle, or left for the seat across) just far enough to clear the plate as you see it.
+  const side = Math.sin(a) > 0.01 ? 1 : -1;
+  const plateSpan = span(platePose(i, 0).position, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+  let x = Math.sin(a) * BANISHED_REACH;
+  for (let k = 0; k < 60; k++) {
+    const m = span([x, TABLE_Y, z], BANISHED_MASK_HALF);
+    if (m[1] < plateSpan[0] - MASK_GAP || plateSpan[1] < m[0] - MASK_GAP) break;
+    x += side * 0.01;
+  }
+  return [x, TABLE_Y, z];
+}
 
 /** Room left between a mask on the table and its plate as you see them, in radians. */
-const DAWN_GAP = 0.02;
+const MASK_GAP = 0.02;
 
 /** How far across your view something reaches (radians, positive right), from its middle `p` and its half width `half`. */
 function span(p: [number, number, number], half: number): [number, number] {
