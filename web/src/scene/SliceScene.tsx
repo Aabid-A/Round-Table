@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { EYE, FirstPerson } from './camera/FirstPerson.js';
 import { Html } from '@react-three/drei';
-import { figurePose, yawToSeat } from './layout.js';
+import { figurePose } from './layout.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
 import { TableMask } from './actors/TableMask.js';
@@ -108,7 +108,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
           <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
         </Html>
       ) : null}
-      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? yawToSeat(view.speaker) : null} free={view.choosable.length > 0} />
+      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? view.speaker : null} free={view.choosable.length > 0} focus={view.selected} />
       <Effects quality={q} still={reduced} />
     </ResourcesContext.Provider>
   );

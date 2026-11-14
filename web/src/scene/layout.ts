@@ -48,11 +48,14 @@ export function plateScale(i: number, viewer: number): number {
   return apart === 1 ? 0.7 : 1;
 }
 
-/** The yaw (radians, 0 straight ahead, positive to the right) from the seat at 0 to seat `i`, for turning a head or a camera toward it. */
-export function yawToSeat(i: number): number {
-  const [x, , z] = chairPose(i).position;
-  const [, , z0] = chairPose(0).position;
-  return Math.atan2(x, z0 - z);
+/**
+ * How much of a name plate to show, from where its two ends fall across the picture (-1 at the left edge, 1 at the right): all of it
+ * while it is whole and clear of the edge, none of it by the time an end would touch the edge. A name is never left half cut off.
+ */
+export function plateShown(left: number, right: number, behind = false): number {
+  if (behind) return 0;
+  const margin = 1 - Math.max(Math.abs(left), Math.abs(right));
+  return Math.max(0, Math.min(1, margin / 0.08));
 }
 
 const wrap = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));

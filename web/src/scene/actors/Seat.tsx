@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { chairPose, figurePose, headYaw, platePose, plateScale, yawBetween } from '../layout.js';
+import { chairPose, figurePose, headYaw, platePose, plateScale, plateShown, yawBetween } from '../layout.js';
 import { Chair } from '../models/Chair.js';
 import { MASKS } from '../models/masks.js';
 import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
@@ -35,6 +35,11 @@ export function Seat(p: SeatProps) {
   const { index } = p.figure;
   const chair = useRef<THREE.Group>(null);
   const push = useRef(0);
+  const plateGroup = useRef<THREE.Group>(null);
+  const iron = useRef<THREE.MeshStandardMaterial>(null);
+  const face = useRef<THREE.MeshStandardMaterial>(null);
+  const shown = useRef(1);
+  const ends = useRef([new THREE.Vector3(), new THREE.Vector3()]);
   const plate = useResource(`plate:${index}:${p.figure.name}`, () => plateTexture(p.figure.name, MASKS[index]!.colour));
   const reduced = useReducedMotion();
   // A seat that can no longer be chosen gives the pointer back.
@@ -45,7 +50,21 @@ export function Seat(p: SeatProps) {
   const pose = chairPose(index);
   const fig = figurePose(index);
   const plateP = platePose(index, p.viewer);
-  useFrame((_, dt) => {
+  useFrame(({ camera }, dt) => {
+    // A plate that would be cut by the edge of the picture fades out whole, and comes back when it is whole again.
+    if (plateGroup.current && iron.current && face.current) {
+      const [l, r] = ends.current as [THREE.Vector3, THREE.Vector3];
+      plateGroup.current.localToWorld(l.set(-PLATE_W / 2 - 0.01, 0, 0)).project(camera);
+      plateGroup.current.localToWorld(r.set(PLATE_W / 2 + 0.01, 0, 0)).project(camera);
+      const want = plateShown(l.x, r.x, l.z > 1 || r.z > 1);
+      shown.current += (want - shown.current) * approach(dt, 8, reduced);
+      const o = shown.current;
+      plateGroup.current.visible = o > 0.01;
+      for (const m of [iron.current, face.current]) {
+        m.transparent = o < 0.995;
+        m.opacity = o;
+      }
+    }
     push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * approach(dt, 3, reduced);
     if (chair.current) chair.current.position.z = push.current;
   });
@@ -63,14 +82,14 @@ export function Seat(p: SeatProps) {
       </group>
       {/* the name plate: a block of dark iron leaning back on the table, lettered on its face */}
       <group position={plateP.position} rotation-y={plateP.facing} scale={plateScale(index, p.viewer)}>
-        <group position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
+        <group ref={plateGroup} position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[PLATE_W + 0.02, PLATE_H + 0.016, 0.03]} />
-            <meshStandardMaterial color={PALETTE.iron} roughness={0.5} metalness={0.6} />
+            <meshStandardMaterial ref={iron} color={PALETTE.iron} roughness={0.5} metalness={0.6} />
           </mesh>
           <mesh position={[0, 0, 0.0155]}>
             <planeGeometry args={[PLATE_W, PLATE_H]} />
-            <meshStandardMaterial map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.selected ? 1 : p.hovered ? 0.7 : 0.16} />
+            <meshStandardMaterial ref={face} map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.selected ? 1 : p.hovered ? 0.7 : 0.16} />
           </mesh>
         </group>
       </group>
@@ -89,6 +108,8 @@ export function Seat(p: SeatProps) {
           }}
           onClick={(e) => {
             e.stopPropagation();
+            // A swipe that ends on a figure is a look, not a choice.
+            if (e.delta > 8) return;
             p.onPick(index);
           }}
         >

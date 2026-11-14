@@ -56,6 +56,6 @@
 .slice-fallback li { display: flex; gap: 10px; align-items: center; }
 .slice-fallback li.out { opacity: 0.55; text-decoration: line-through; }
 .slice-fallback .swatch { width: 14px; height: 14px; border-radius: 50%; }
-@media (max-width: 600px) { .slice-choose { left: 8px; top: auto; bottom: 8px; } .slice-choose[open] { right: 8px; max-width: none; } .slice-caption { top: 60px; bottom: auto; width: max-content; max-width: 92vw; font-size: 15px; } .slice-speech { width: 190px; font-size: 13px; } .slice-speech::after { display: none; } }
+@media (max-width: 600px) { .slice-choose { left: 8px; top: 12px; } .slice-choose[open] { right: 8px; max-width: none; } .slice-caption { top: 60px; bottom: auto; width: max-content; max-width: 92vw; font-size: 15px; } .slice-speech { width: 190px; font-size: 13px; } .slice-speech::after { display: none; } }
 @media (prefers-reduced-motion: reduce) { .slice * { scroll-behavior: auto; } }
 .slice .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; background: none; }
