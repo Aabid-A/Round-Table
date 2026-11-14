@@ -1,4 +1,4 @@
-import { SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
+import { DAWN_MASK_HALF, DAWN_REACH, EYE_Z, PLATE_W, SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
@@ -40,6 +40,43 @@ export function figurePose(i: number): Pose {
 export function tablePoint(i: number, r: number): [number, number, number] {
   const a = seatAngle(i);
   return [Math.sin(a) * r, TABLE_Y, Math.cos(a) * r];
+}
+
+/**
+ * Where the mask found at dawn lies: near the empty chair, moved along the table's edge toward the middle of your view just far
+ * enough that, from your seat, the mask and its name plate do not cover each other (with a little room between them).
+ */
+export function dawnMaskSpot(i: number): [number, number, number] {
+  const a = seatAngle(i);
+  const [x, y, z] = tablePoint(i, DAWN_REACH);
+  // Along the edge, the way that brings it toward the line straight across the table (the seat across goes to your left).
+  const tx = Math.cos(a);
+  const tz = -Math.sin(a);
+  const toMiddle = Math.abs(x + tx * 0.01) < Math.abs(x) || (Math.abs(x) < 1e-6 && tx < 0) ? 1 : -1;
+  const plate = platePose(i, 0).position;
+  const plateSpan = span(plate, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+  let spot: [number, number, number] = [x, y, z];
+  for (let aside = 0; aside <= 0.6; aside += 0.01) {
+    spot = [x + tx * aside * toMiddle, y, z + tz * aside * toMiddle];
+    const m = span(spot, DAWN_MASK_HALF);
+    if (m[1] < plateSpan[0] - DAWN_GAP || plateSpan[1] < m[0] - DAWN_GAP) break;
+  }
+  return spot;
+}
+
+/** Room left between the dawn mask and its plate as you see them, in radians. */
+const DAWN_GAP = 0.02;
+
+/** How far across your view something reaches (radians, positive right), from its middle `p` and its half width `half`. */
+function span(p: [number, number, number], half: number): [number, number] {
+  const b = bearingFromEye(p);
+  const w = Math.atan(half / Math.hypot(p[0], EYE_Z - p[2]));
+  return [b - w, b + w];
+}
+
+/** Whether something at `p` is seen from your eye (radians across, positive right). */
+export function bearingFromEye(p: [number, number, number]): number {
+  return Math.atan2(p[0], EYE_Z - p[2]);
 }
 
 /**

@@ -3,11 +3,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { EYE, FirstPerson } from './camera/FirstPerson.js';
-import { bearingTo, bearingToTable } from './camera/fov.js';
+import { bearingTo } from './camera/fov.js';
+import { bearingFromEye, dawnMaskSpot } from './layout.js';
+import { DAWN_MASK_SCALE } from './models/dimensions.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
 import { TableMask } from './actors/TableMask.js';
-import { DAWN_REACH } from './models/dimensions.js';
 import { YourHands } from './actors/YourHands.js';
 import { Candle } from './models/Candle.js';
 import { CANDLE_SPOTS } from './models/candles.js';
@@ -97,9 +98,9 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
       {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
-      {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} reach={DAWN_REACH} /> : null}
+      {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} at={dawnMaskSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
-      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
+      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
       <Effects quality={q} still={reduced} />

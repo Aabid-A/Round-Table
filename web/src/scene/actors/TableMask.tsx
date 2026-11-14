@@ -16,11 +16,12 @@ const TILT = 0.42;
  * A mask left on the table in front of its seat, leaning toward the viewer. It lies face up, then is turned over to show what its
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
-export function TableMask({ seat, role, viewer, reach = BANISHED_REACH }: { seat: number; role: Role | null; viewer: number; reach?: number }) {
+/** `at` sets where on the table it lies; by default it lies well in from its seat (a banished player's). */
+export function TableMask({ seat, role, viewer, at, scale = SCALE }: { seat: number; role: Role | null; viewer: number; at?: [number, number, number]; scale?: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
   const reduced = useReducedMotion();
-  const p = tablePoint(seat, reach);
+  const p = at ?? tablePoint(seat, BANISHED_REACH);
   const [vx, , vz] = figurePose(viewer).position;
   useFrame((_, dt) => {
     flip.current += ((role === null ? 0 : 1) - flip.current) * approach(dt, 2.2, reduced);
@@ -34,7 +35,7 @@ export function TableMask({ seat, role, viewer, reach = BANISHED_REACH }: { seat
     <group position={[p[0], p[1] + 0.09, p[2]]} rotation-y={Math.atan2(vx - p[0], vz - p[2])}>
       <group rotation-x={-(Math.PI / 2 - TILT)}>
         <group ref={turn}>
-          <MaskMesh index={seat} scale={SCALE} lining={role ? colour : null} />
+          <MaskMesh index={seat} scale={scale} lining={role ? colour : null} />
         </group>
       </group>
     </group>

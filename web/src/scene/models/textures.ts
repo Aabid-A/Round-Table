@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { PLATE_H, PLATE_W } from './dimensions.js';
+
+export { PLATE_H, PLATE_W };
 import { together, type Disposable } from '../resources.js';
 
 export type Maps = { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } & Disposable;
@@ -95,9 +98,6 @@ export function woodMaps(base: string, repeat = 2): Maps {
   return together({ map: finish(c, repeat, true), bump: finish(b, repeat, false) });
 }
 
-/** The shape of a name plate's face, in metres. */
-export const PLATE_W = 0.4;
-export const PLATE_H = 0.135;
 
 /**
  * The face of a name plate: bone-white lettering on dark iron under a bar of the seat's colour. Drawn large (1024 across) with

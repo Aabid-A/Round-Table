@@ -10,3 +10,9 @@ export const EYE_Y = 1.22;
 export const BANISHED_REACH = 0.28;
 /** The one found at dawn lies nearer its empty chair, so the morning light and the eye take in both together. */
 export const DAWN_REACH = 0.92;
+/** The mask found at dawn is drawn at this size (a banished one at 0.2), so it lies beside its name and not over it. About 0.16 m either side of its middle. */
+export const DAWN_MASK_SCALE = 0.17;
+export const DAWN_MASK_HALF = 0.16;
+/** A name plate's lettered face, in metres. */
+export const PLATE_W = 0.4;
+export const PLATE_H = 0.135;

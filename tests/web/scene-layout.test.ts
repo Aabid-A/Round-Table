@@ -96,3 +96,24 @@ describe('the field of view', () => {
     expect(nearestStop(5)).toBeCloseTo(bearingTo(1));
   });
 });
+
+describe('the mask found at dawn', () => {
+  it('lies near the empty chair, and from your seat never covers its name plate', async () => {
+    const { bearingFromEye, dawnMaskSpot } = await import('../../web/src/scene/layout.js');
+    const { DAWN_MASK_HALF, PLATE_W } = await import('../../web/src/scene/models/dimensions.js');
+    const { plateScale } = await import('../../web/src/scene/layout.js');
+    // How far across the picture each reaches, from the eye: the mask its half width, the plate half its width.
+    const span = (p: [number, number, number], half: number): [number, number] => {
+      const b = bearingFromEye(p);
+      const w = Math.atan(half / Math.hypot(p[0], EYE_Z - p[2]));
+      return [b - w, b + w];
+    };
+    for (let i = 1; i < SEATS; i++) {
+      const spot = dawnMaskSpot(i);
+      expect(Math.hypot(spot[0], spot[2]), `seat ${i}`).toBeLessThan(TABLE_R - 0.15);
+      const m = span(spot, DAWN_MASK_HALF);
+      const p = span(platePose(i, 0).position, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+      expect(m[1] < p[0] || p[1] < m[0], `seat ${i}: mask ${m} plate ${p}`).toBe(true);
+    }
+  });
+});
