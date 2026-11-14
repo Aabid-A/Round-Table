@@ -44,7 +44,8 @@ export function Caption({ text, waiting = false }: { text: string | null; waitin
     // Hung in front of where you are looking, and brought round after your look rather than pinned to it.
     look.setFromQuaternion(camera.quaternion);
     yaw.current = yaw.current === null ? look.y : yaw.current + (look.y - yaw.current) * approach(dt, 3, reduced);
-    mesh.current.position.set(camera.position.x - Math.sin(yaw.current) * AHEAD, Math.max(TABLE_Y + 0.12, camera.position.y - BELOW - AHEAD * 0.1), camera.position.z - Math.cos(yaw.current) * AHEAD);
+    // Below the middle of the look, and lower still when the look tilts down over the table, but never under the table top.
+    mesh.current.position.set(camera.position.x - Math.sin(yaw.current) * AHEAD, Math.max(TABLE_Y + 0.12, camera.position.y + Math.tan(Math.min(0, look.x) - BELOW) * AHEAD), camera.position.z - Math.cos(yaw.current) * AHEAD);
     mesh.current.quaternion.copy(camera.quaternion);
     // As wide as most of the picture at the distance they hang, whatever the lens is doing this frame.
     const across = 2 * AHEAD * Math.tan(((camera as THREE.PerspectiveCamera).fov * Math.PI) / 360) * (size.width / size.height);

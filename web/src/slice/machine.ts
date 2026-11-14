@@ -152,6 +152,7 @@ export function viewOf(state: SliceState, script: SliceScript, input: InputKind 
     speech: speech ? { text: speech.text, speaker: speech.speaker } : null,
     pointing,
     looks,
+    voting: stage.kind === 'vote' || stage.kind === 'tally',
     tokens,
     banish: state.banished !== null && stage.kind === 'banish' ? { seat: state.banished, stage: stage.step, role: stage.step === 'mask' ? script.players[state.banished]!.role : null } : state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end') ? { seat: state.banished, stage: 'done', role: script.players[state.banished]!.role } : null,
     dawn: dawn && state.victim !== null ? { victim: state.victim, role: script.players[state.victim]!.role } : null,

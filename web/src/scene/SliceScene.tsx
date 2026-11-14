@@ -112,7 +112,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
           <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
         </Html>
       ) : null}
-      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.tokens.length > 0 && view.banish === null && view.mood === 'day'} />
+      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
       <Effects quality={q} still={reduced} />

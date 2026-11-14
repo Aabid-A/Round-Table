@@ -37,6 +37,8 @@ export interface SliceView {
   pointing: { from: number; at: number } | null;
   /** Whom each figure looks toward, by seat (null looks at the table). */
   looks: (number | null)[];
+  /** The table is voting (choosing, or the tokens sliding): the camera takes in the whole table. */
+  voting: boolean;
   /** Tokens slid toward a name on the table. */
   tokens: { owner: number; target: number }[];
   banish: SliceBanish | null;
