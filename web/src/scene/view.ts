@@ -51,6 +51,17 @@ export interface ScenePicking {
   picked: string | null;
 }
 
+/**
+ * A moment the room stages, in place of a line of text: the murder found at dawn, a banishment with the mask turned over, the votes as
+ * tokens, a recruitment slid across the table, a whisper leaning in. Only a moment this viewer saw is ever set.
+ */
+export type SceneStage =
+  | { kind: 'dawn'; victim: string; role: Role | null }
+  | { kind: 'banish'; seat: string; role: Role; votes: { voter: string; target: string }[] }
+  | { kind: 'votes'; votes: { voter: string; target: string }[] }
+  | { kind: 'recruit'; from: string; to: string }
+  | { kind: 'whisper'; from: string; to: string };
+
 /** Where the camera looks. */
 export interface SceneCamera {
   /** The seat the camera turns to. Null looks at the table from the front. */
@@ -83,4 +94,6 @@ export interface SceneView {
   proposals?: SceneProposal[];
   timer?: SceneTimer | null;
   picking?: ScenePicking | null;
+  /** The moment the room stages now, if any (see SceneStage). */
+  stage?: SceneStage | null;
 }

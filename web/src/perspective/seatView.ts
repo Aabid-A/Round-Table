@@ -1,8 +1,9 @@
-import type { GameEvent, GameLog } from '../../../src/engine/types.js';
+import type { GameEvent, GameLog, Turn } from '../../../src/engine/types.js';
 import { renderEvent } from '../../../src/prompts/history.js';
 import type { SceneMoment, SceneSeat, SceneView } from '../scene/view.js';
 import type { Step } from '../replay/timeline.js';
 import { knowledgeAt } from './knowledge.js';
+import { seatSight, stageAt } from './stage.js';
 
 const canSee = (e: GameEvent, seat: string): boolean => e.visibleTo === 'all' || e.visibleTo.includes(seat);
 
@@ -36,12 +37,7 @@ function momentFor(step: Step, seat: string, log: GameLog): SceneMoment {
     if (t.phase === 'whispers') {
       if (t.player === seat && typeof a.to === 'string' && typeof a.message === 'string') lines.push(renderEvent(whisperEvent(t.player, a.to, a.message, t.round, t.id), seat));
       // What was whispered to this seat reaches it when the whisper phase ends, not when the sender typed it.
-      if (lastWhisperTurnOfRound(log, t.id, t.round)) {
-        for (const w of log.turns) {
-          const x = w.action as { to?: string | null; message?: string };
-          if (w.phase === 'whispers' && w.round === t.round && w.player !== seat && x.to === seat && typeof x.message === 'string') lines.push(renderEvent(whisperEvent(w.player, seat, x.message, w.round, w.id), seat));
-        }
-      }
+      for (const w of whispersTo(log, t, seat)) lines.push(renderEvent(whisperEvent(w.player, seat, (w.action as { message: string }).message, w.round, w.id), seat));
       if (lines.length > 0) return { ...none, text: lines.join(' '), kind: 'event' };
     }
     const isRecruit = t.phase === 'recruit_choose' || t.phase === 'recruit_respond';
@@ -54,6 +50,15 @@ function momentFor(step: Step, seat: string, log: GameLog): SceneMoment {
     if (step.event.type === 'recruit') return { ...none, title: HIDDEN_TITLE };
   }
   return none;
+}
+
+/** The whispers that reach `seat` at turn `t`: all of the round's whispers to it, handed out once the whisper phase ends. */
+function whispersTo(log: GameLog, t: Turn, seat: string): Turn[] {
+  if (t.phase !== 'whispers' || !lastWhisperTurnOfRound(log, t.id, t.round)) return [];
+  return log.turns.filter((w) => {
+    const x = w.action as { to?: string | null; message?: string };
+    return w.phase === 'whispers' && w.round === t.round && w.player !== seat && x.to === seat && typeof x.message === 'string';
+  });
 }
 
 function whisperEvent(from: string, to: string, message: string, round: number, afterTurn: number): GameEvent {
@@ -94,8 +99,11 @@ export function seatView(log: GameLog, steps: Step[], index: number, seat: strin
     return { name: c.name, model: c.model, status, role, mark };
   });
   const step = steps[index] as Step;
+  // A whisper reaching this seat is staged: the sender leans in. Otherwise whatever this seat saw happen (see stageAt).
+  const whisper = step.kind === 'turn' ? whispersTo(log, step.turn, seat)[0] : undefined;
   return {
     viewer: seat,
+    stage: whisper ? { kind: 'whisper', from: whisper.player, to: seat } : stageAt(log, steps, index, seatSight(seat)),
     seats,
     moment: momentFor(step, seat, log),
     night: step.section.title === 'Night',
