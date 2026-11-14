@@ -144,6 +144,32 @@ test('if the graphics context is lost, the plain version takes over with the lis
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
 });
 
+test('on a phone held upright you swipe to look around, and a swipe does not choose', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?mode=slice&quality=low');
+  const canvas = page.getByTestId('slice').locator('canvas');
+  await expect(canvas).toBeVisible({ timeout: 60_000 });
+  await toNextChoice(page);
+  await expect(canvas).toHaveAttribute('data-yaw', /^-?0\.0\d$/, { timeout: 15_000 });
+  // A finger dragged from the middle to the left brings the seats on the right into view.
+  await canvas.evaluate(async (c: HTMLCanvasElement) => {
+    const r = c.getBoundingClientRect();
+    const touch = (type: string, x: number): boolean => c.dispatchEvent(new PointerEvent(type, { pointerId: 5, pointerType: 'touch', clientX: x, clientY: r.top + r.height * 0.45, bubbles: true }));
+    touch('pointerdown', r.left + 300);
+    for (let i = 1; i <= 8; i++) {
+      touch('pointermove', r.left + 300 - i * 30);
+      await new Promise((f) => setTimeout(f, 20));
+    }
+    touch('pointerup', r.left + 60);
+  });
+  // It comes to rest facing a figure to the right, not back in the middle.
+  await expect.poll(async () => Number(await canvas.getAttribute('data-yaw')), { timeout: 15_000 }).toBeGreaterThan(0.3);
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-selected', '');
+  // The words of the moment are in the room, not in a box on the page; the live region still carries them.
+  await expect(page.locator('.slice-caption')).toHaveClass(/sr-only/);
+  await expect(page.locator('.slice-caption')).toContainText('Your turn');
+});
+
 test('the plain version (no WebGL) plays the same round, with the list and a live region', async ({ page }) => {
   await page.goto('/?mode=slice&fallback=1');
   await expect(page.getByTestId('slice-fallback')).toBeVisible();
