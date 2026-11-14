@@ -1,18 +1,18 @@
-import { useMemo } from 'react';
 import * as THREE from 'three';
 import { PALETTE } from '../palette.js';
 import { SEAT_R, TABLE_R, TABLE_Y } from './dimensions.js';
+import { useResource } from '../resources.js';
 import { woodMaps } from './textures.js';
 
 export { SEAT_R, TABLE_R, TABLE_Y };
 
 /** The heavy round table: a thick top with a rounded edge, an inlaid ring, a skirt and a turned pedestal. */
 export function Table() {
-  const wood = useMemo(() => woodMaps(PALETTE.wood, 2), []);
-  const pedestal = useMemo(() => {
+  const wood = useResource('wood:table', () => woodMaps(PALETTE.wood, 2));
+  const pedestal = useResource('pedestal', () => {
     const pts = [[0.9, 0], [0.82, 0.08], [0.5, 0.14], [0.3, 0.3], [0.22, 0.45], [0.34, 0.55], [0.2, 0.62], [0.18, 0.7], [0.5, TABLE_Y - 0.2]].map(([x, y]) => new THREE.Vector2(x, y));
     return new THREE.LatheGeometry(pts, 28);
-  }, []);
+  });
   return (
     <group>
       <mesh position-y={TABLE_Y - 0.07} castShadow receiveShadow>

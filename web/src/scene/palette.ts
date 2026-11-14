@@ -23,9 +23,11 @@ export const PALETTE = {
   traitor: '#b3201e',
   faithful: '#d8b45a',
   robe: '#3b3445',
+  /** The short cape over a figure's shoulders: the same cloth, a shade lighter, so the layers read. */
+  mantle: '#4a4257',
   robeDeep: '#0d0c10',
-  skin: '#7a5a48',
+  skin: '#a37c63',
 } as const;
 
 /** One accent per player. Chosen to stay apart in warm low light, so no two are close in hue and each differs in lightness from its neighbours. */
-export const ACCENTS = ['#e0b43a', '#3fa9a0', '#9a5bd1', '#d9743a', '#4b7fd8', '#8dbb4a', '#d95b8a', '#b9c4cf'] as const;
+export const ACCENTS = ['#e0b43a', '#19c7b9', '#9a5bd1', '#e8571f', '#3f6fe0', '#a5d936', '#d23fc4', '#c9d3dc'] as const;

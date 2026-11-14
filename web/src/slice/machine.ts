@@ -25,7 +25,8 @@ export interface SliceState {
   victim: number | null;
 }
 
-export type Action = { t: 'advance' } | { t: 'hover'; seat: number | null } | { t: 'select'; seat: number } | { t: 'confirm' } | { t: 'restart' };
+/** `pick` is the choice made in the room: selecting a figure chooses it, and selecting the chosen figure again confirms it. */
+export type Action = { t: 'advance' } | { t: 'hover'; seat: number | null } | { t: 'select'; seat: number } | { t: 'pick'; seat: number } | { t: 'confirm' } | { t: 'restart' };
 
 export const initial = (): SliceState => ({ stage: { kind: 'intro' }, accused: null, vote: null, hovered: null, selected: null, banished: null, victim: null });
 
@@ -85,6 +86,8 @@ export function reduce(state: SliceState, action: Action, script: SliceScript): 
       return choosable(state, script).includes(action.seat ?? -1) || action.seat === null ? { ...state, hovered: action.seat } : state;
     case 'select':
       return choosable(state, script).includes(action.seat) ? { ...state, selected: action.seat } : state;
+    case 'pick':
+      return reduce(state, state.selected === action.seat ? { t: 'confirm' } : { t: 'select', seat: action.seat }, script);
     case 'confirm': {
       const { stage, selected } = state;
       if (selected === null) return state;
@@ -129,9 +132,9 @@ export function viewOf(state: SliceState, script: SliceScript): SliceView {
     switch (stage.kind) {
       case 'intro': return 'You sit at the round table. Seven masked figures sit with you. The candles are lit.';
       case 'speak': return `${names[speech!.speaker]} says: ${speech!.text} They point at ${names[speech!.suspect]}.`;
-      case 'accuse': return 'Your turn. Look at a figure and choose who you suspect, then confirm.';
+      case 'accuse': return state.selected === null ? 'Your turn. Look at a figure and select them to accuse, or use the arrow keys and Enter.' : `${names[state.selected]} is chosen. Select them again (or press Enter) to accuse them, or look at someone else.`;
       case 'pointed': return `You point at ${names[state.accused ?? 0]}. The table turns to look.`;
-      case 'vote': return 'Time to vote. Choose the name your token slides toward, then confirm.';
+      case 'vote': return state.selected === null ? 'Time to vote. Look at a figure and select them to vote against them, or use the arrow keys and Enter.' : `${names[state.selected]} is chosen. Select them again (or press Enter) to slide your token to them, or look at someone else.`;
       case 'tally': return 'The tokens slide across the table.';
       case 'banish': return state.banished === null ? '' : stage.step === 'pushback' ? `${names[state.banished]}'s chair is pushed back.` : stage.step === 'leave' ? `${names[state.banished]} stands and leaves the table.` : `Their mask is turned over: a ${script.players[state.banished]!.role}.`;
       case 'night': return 'Night. The candles go out, one by one. Only the fire is left.';

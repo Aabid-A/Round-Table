@@ -1,48 +1,59 @@
-# M18 playtest: the vertical slice (`?mode=slice`)
+# M18 playtest: the vertical slice (`?mode=slice`), second polish pass (phone first)
 
-**How it was run.** Vite dev server, Chromium 1243 headless with WebGL2 through **SwiftShader (software)**, fixed mock game (seed 14), driven by Playwright with real pointer, keyboard and the choice form: speeches, accuse, point, vote, tokens, banishment, night, dawn, end. `?pace=3` (every moment three times longer) so a slow software renderer cannot skip a moment while a still is taken. WebGL did render, so every look described here was seen in a still.
+**How it was run.** Vite dev server, Chromium 1243 headless with WebGL2 through **SwiftShader (software)**. This machine has no GPU (the renderer string is `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)))`). Fixed mock game (seed 14), driven by Playwright with a real pointer, synthetic touch swipes and the keyboard. `?pace=4` for the stills so a slow software renderer cannot skip a moment. WebGL did render, so every look described here was seen in a still.
 
-**Files.** Short video `m18-slice-cut.webm` (36 s: the full 3.5 minute run sped up six times, so motion is not real time). Six desktop stills 1280x720: `1-speech` to `6-dawn`; two phone stills 390x844: `mobile-accuse`, `mobile-mask`. `fps.json`: frame rates.
+**Files.** Twelve stills, six moments at two sizes: `p-*` at 390x844 and `d-*` at 1280x720, for `1-your-turn`, `2-accusation`, `3-vote`, `4-banishment`, `5-night`, `6-dawn`. `blur-test.png`: the table seen to the left and to the right, sharp beside blurred (Gaussian, sigma 9). `m18-slice-cut.webm`: 37 s, the whole 172 s desktop run at 4.7 times speed, so motion is not real time (the renderer made about 1.2 frames a second; every frame it drew is in the video). `fps.json`: frame rates and frame cost. Earlier stills are in the history (`1060ce7` before any polish, `1a99292` after the first pass).
 
-## Rounds
+No reference images: `design-references/game/` holds only its README, so the written `/art-direction` was the guide.
 
-Three fix rounds, then a second opinion and one more fix pass from it.
-1. Flames and bright wood drew coloured speckle (film grain on bright pixels); flames were white sticks. Fixed: grain as a gentle overlay after tone mapping, flame as an unlit material, softer bloom.
-2. Camera turned too far; own forearms were heavy logs; turned-over masks were unreadable lumps under depth-of-field; the phone view was a thin strip; the choice panel covered the caption. Fixed: clamped look, thinner arms, upright lit masks, wider vertical view in tall windows, caption moved up on phones.
-3. Speech bubble clipped off the picture; masks blown out; dawn looked like night. Fixed: bubble kept on screen, dimmer table masks, stronger dawn light, cuff in your own mask colour on your sleeve.
-4. From the second opinion (a separate context given only the stills and `/art-direction`): the caption repeated the bubble (now read aloud but hidden while a bubble shows), the speaker was out of the picture (camera now turns far enough), name plates unreadable (now standing placards), masks too small (bigger).
+## What this pass changed
+
+Each item was changed, run in the browser at 390x844 first, looked at in a still and changed again until the still looked right.
+
+1. **Portrait framing.** A tall window gets a closer, level view (52 degrees tall). Your hands and the table's near edge sit on the bottom of the screen; there is no floor under them. The figure you face, the table and the fireplace fill the height.
+2. **Swipe and name plates.** On a touch screen you swipe to look round the table; the look comes to rest facing the nearest figure, turns to a speaker, and turns to a figure you choose. A swipe that ends on a figure does not choose it. A name plate that the edge of the picture would cut fades out whole and comes back whole (at every window size).
+3. **Masks.** Bolder outlines (a wide face under one tall peak, eight long rays, a wide lozenge, a square slab, a face a third as wide as tall, a small face under two great horns, a broad heart), and each whole face tinted toward its player's colour, lighter or darker by design. Teal, orange and magenta were pushed apart for candlelight. **Blur test:** in `blur-test.png` the seven are a white heart, a magenta horned blot, a yellow bar, a grey-blue square, an orange lozenge, a pink star and a green peak. Each is still its own blot. The two nearest in hue are the magenta horns and the pink star, which sit on opposite sides of the table.
+4. **Your sleeves and hands.** Sleeves in long folds with creases where the cloth gathers; a deep turned-back cuff with a rolled edge in your colour; hands a quarter larger again and clear of the cuff.
+5. **Flames.** A flame is a teardrop with a paler core and keeps its outline as it flickers. Bloom is about a third of what it was and takes only the brightest light. The candle lights sit above the flames, so the wax is no longer burnt white.
+6. **The turn prompt.** Pale lit words that hang over the table in front of you with no box, hold while they are read and fade away. They follow your look slowly. The page's caption box is gone from the 3D room; the same words still go to the live region.
+
+Also: for the vote a tall window pulls back to show three seats and the tokens; a banished player's mask lies well in from its plate and clear of the fire; at dawn only the victim's mask is on the table, near the empty chair, and the camera turns to take in both.
 
 ## The seven questions
 
-1. **A stranger: 3D game or web page?** On desktop, a 3D game: candles, wood grain, bloom, stone, a fire, real depth. On a phone it is closer to a web page with a 3D band: the choice panel takes about a third of the screen.
-2. **Mostly dark, light leading the eye?** Yes. The candle-lit table pulls the eye; the walls and far chairs fall away. Night and dawn are very dark.
-3. **Told apart at a glance without names?** Partly. Mask shapes differ (diamond, kite, crescent, shield, horn) and plates carry names, but at table distance the masks are all the same pale tan, the accent is a small dot or a sash, and the unlit robes hide it. A stranger would still need the plates. **Falls short.**
-4. **Flat card, default material or evenly lit?** No flat cards or default materials; lighting is uneven with shadows. The figures' bodies are unlit-looking egg shapes and their hands are small spheres: cheap.
-5. **Text unreadable, clipped or floating free?** Speech is anchored by the speaker's head and clamped on screen; when the speaker is off to the side it sits at the edge, near but not on them. Plates are readable up close, small across the table. HUD and caption are flat and quiet.
-6. **Anticipation, response, settle?** See the PR. Pointing: the camera and heads ease, then the hand rises, then the table looks. Vote: a token lifts, slides and settles. Banishment: chair eases back, figure rises and leaves, mask rolls over, then quiet. Night: candles go out one at a time, with a wisp of smoke. Dawn: light rises on an empty chair and the mask. The pointing arm of a figure is stiff and was hard to see in stills.
-7. **Frozen figure? Camera snap or drift?** Figures breathe, turn heads and lean (seen in stills and a few video frames; the video was not reviewed frame by frame, so a brief freeze could have been missed). The camera is eased by code, with no cuts, and has no idle drift beyond a small breathing sway. A dropped frame under software rendering looks like a stutter, not a snap.
+1. **A stranger: 3D game or web page?** A 3D game at both sizes. The flat things left are two small buttons and one folded control.
+2. **Mostly dark, light leading the eye?** Yes. Day: the candle-lit table. Night: the fire. Dawn: the shaft on the empty chair.
+3. **Told apart at a glance without names?** Yes, by outline and by colour, and still when blurred.
+4. **Flat card, default material or evenly lit?** No.
+5. **Text unreadable, clipped or floating free?** Plates are whole or absent, never cut. The caption is in the room. A figure's speech is still a small boxed bubble above its head.
+6. **Anticipation, response, settle?** As in the first pass. On a phone a tap chooses, the camera turns to the chosen figure, a second tap confirms.
+7. **Frozen figure? Camera snap or drift?** Not seen in the stills or the contact sheet of the video. At about one frame a second smoothness could not be judged.
 
-## Fail list (`/art-direction`)
+## Falls short
 
-- Reads as flat cards: no.
-- Default or unlit materials, visible grid, plain background: no, except the figures' hands and flames, which are deliberately unlit.
-- Evenly lit: no.
-- **Humanoid models with stiff or sliding limbs: partly hit.** Figures are capsule-and-cone bodies with stiff arms; the second opinion called them "egg-bodied blobs with cylinder arms". Not fixed.
-- Emoji, icons, chrome in the world: no. The gold rings under the table masks read as markers; the second opinion called them debug-like.
-- **Two players that can be confused at a glance: partly hit** (question 3).
+- **Portrait shows one figure at a time** (three during the vote). That is the price of filling the screen; you swipe for the rest. During the vote the top third of the screen is the dark upper hall.
+- **The plates of the four seats nearest you are not under their figures in portrait.** From your seat the line of sight to those figures does not cross the table, so when you face one of them its plate is out of the picture.
+- **The dawn mask overlaps a corner of its own name plate** from your seat (`d-6-dawn`, `p-6-dawn`).
+- **Magenta and pink** are the closest pair under candlelight.
+- **Your hands** have spread, sausage-like fingers; they read as hands, not as fine ones.
+- Still true from the first pass: a leaving figure glides away seated, the pointing arm of a figure has no elbow, a figure seen close from the side is plain below the cape, the pushed-back chair does not read by day.
+- **No second opinion on the stills in this pass** and no frame rate from a real GPU.
 
-## Second opinion: three weakest frames
+## Frame rate and frame cost
 
-1. Phone speech: duplicate caption and bubble, bubble not on the speaker, scene squeezed. Duplicate removed; speaker brought into view. Phone is still cramped.
-2. Desktop speech: bubble pinned at the corner, a dark blob in the foreground eating a third of the frame. Bubble now follows the speaker; the foreground figure (your neighbour, 1.7 m away) is still large and dark.
-3. Phone accuse: a full flat form under a flat caption. Caption moved up; the form is still large. A smaller control for phones is a follow-up.
+`requestAnimationFrame` deltas over 10 s after a 3 s warm-up, Chromium headless, **SwiftShader software rendering, no GPU on this machine**:
 
-Runners-up, night and dawn: nearly black; the empty chair is hard to read. Not fixed beyond the stronger dawn light.
+| Size and level | fps | median ms | draw calls | triangles |
+|---|---|---|---|---|
+| 1280x720 high | 0.8 | 1233 | 401 | 418k |
+| 1280x720 medium | 1.2 | 833 | 418 | 424k |
+| 1280x720 low | 2.1 | 467 | 90 | 70k |
+| 390x844 high | 1.9 | 500 | 319 | 383k |
+| 390x844 medium | 2.8 | 350 | 305 | 379k |
+| 390x844 low | 5.9 | 167 | 19 | 31k |
 
-## Frame rate and how it was measured
-
-`requestAnimationFrame` deltas over 10 s, after 3 s warm-up, Chromium headless with **SwiftShader software rendering on a build sandbox with no GPU**: 1280x720 high 0.9 fps, medium 1.4, low 2.1; 390x844 high 2.6, medium 4.4, low 7.8 (`fps.json`). This says nothing about a real GPU. It does show quality levels are ordered (low about 2x cheaper than high at desktop size). No 50 or 60 fps claim is made. The page's own quality probe would choose `low` here; a person with a GPU needs to check it.
+Draw calls and triangles count every pass of a frame. At low there is one pass and no shadows, so that row is the scene itself and is inside the budget (150 calls, 200k triangles); a browser test holds it there. At high and medium the three shadow-casting lights draw the scene again and take the total past the budget. This says nothing about the frame rate on a real GPU: no 60 or 30 fps claim is made, and a person with a GPU needs to check it.
 
 ## Verdict
 
-Mood, light and the staged moments work and were seen. Not ready to call finished: figures and hands are cheap, masks are hard to tell apart across the table, night and dawn are too dark, the phone layout is cramped. Owner's call.
+The six items asked for are done and each was seen in a still at both sizes. Not finished: see "Falls short". Owner's call.

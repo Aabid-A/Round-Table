@@ -1,4 +1,4 @@
-import { TABLE_Y } from './Table.js';
+import { EYE_Z, TABLE_Y } from './dimensions.js';
 
 export interface CandleSpot {
   position: [number, number, number];
@@ -7,21 +7,30 @@ export interface CandleSpot {
   cluster: number;
 }
 
-const CLUSTER_ANGLES = [Math.PI * 0.18, Math.PI * 0.85, Math.PI * 1.52];
-const CLUSTER_R = 0.78;
+/**
+ * Where the three pairs stand on the table (x, z). Seen from the player's seat each pair falls between two seats, so no candle
+ * stands in front of a mask or a name plate.
+ */
+const CLUSTERS: [number, number][] = [
+  [0.867, 0.598],
+  [0.41, -0.5],
+  [-0.33, 0.1],
+];
 
 /** Six candles in three pairs on the table, at different heights so they do not read as a row. */
-export const CANDLE_SPOTS: CandleSpot[] = CLUSTER_ANGLES.flatMap((a, cluster) => {
-  const cx = Math.sin(a) * CLUSTER_R;
-  const cz = Math.cos(a) * CLUSTER_R;
-  const tx = Math.cos(a);
-  const tz = -Math.sin(a);
+export const CANDLE_SPOTS: CandleSpot[] = CLUSTERS.flatMap(([cx, cz], cluster) => {
+  // The two of a pair stand mostly one behind the other as the player sees them, and a little apart, so the pair stays narrow.
+  const d = Math.hypot(cx, EYE_Z - cz);
+  const ax = cx / d;
+  const az = (cz - EYE_Z) / d;
+  // The pair nearest the player has the narrowest gap to stand in, so it stands exactly in line.
+  const spread = cluster === 0 ? 0 : 0.045;
   return [-1, 1].map((side, k) => ({
-    position: [cx + tx * 0.09 * side, TABLE_Y, cz + tz * 0.09 * side] as [number, number, number],
+    position: [cx + (ax * 0.09 - az * spread) * side, TABLE_Y, cz + (az * 0.09 + ax * spread) * side] as [number, number, number],
     height: 0.2 + 0.1 * ((cluster + k) % 3),
     cluster,
   }));
 });
 
-/** Where each cluster's light sits: over the middle of the pair, at flame height. */
-export const CLUSTER_LIGHTS: [number, number, number][] = CLUSTER_ANGLES.map((a) => [Math.sin(a) * CLUSTER_R, TABLE_Y + 0.42, Math.cos(a) * CLUSTER_R]);
+/** Where each cluster's light sits: over the middle of the pair, a little above the flames, so the wax under it is not burnt white. */
+export const CLUSTER_LIGHTS: [number, number, number][] = CLUSTERS.map(([x, z]) => [x, TABLE_Y + 0.66, z]);

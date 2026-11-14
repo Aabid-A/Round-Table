@@ -52,6 +52,13 @@ describe('the slice machine', () => {
     expect(reduce(s, { t: 'select', seat: 0 }, script).selected).toBeNull(); // not yourself
     expect(reduce(s, { t: 'confirm' }, script).stage.kind).toBe('accuse'); // nothing chosen yet
     expect(reduce(reduce(s, { t: 'select', seat: 4 }, script), { t: 'confirm' }, script)).toMatchObject({ stage: { kind: 'pointed' }, accused: 4 });
+    // In the room: selecting a figure chooses it, selecting another moves the choice, selecting the chosen one again confirms.
+    const picked = reduce(s, { t: 'pick', seat: 4 }, script);
+    expect(picked).toMatchObject({ stage: { kind: 'accuse' }, selected: 4 });
+    expect(viewOf(picked, script).announce).toContain(`${script.players[4]!.name} is chosen`);
+    expect(reduce(picked, { t: 'pick', seat: 5 }, script)).toMatchObject({ stage: { kind: 'accuse' }, selected: 5 });
+    expect(reduce(picked, { t: 'pick', seat: 4 }, script)).toMatchObject({ stage: { kind: 'pointed' }, accused: 4 });
+    expect(reduce(s, { t: 'pick', seat: 0 }, script).selected).toBeNull();
   });
 
   it('counts the player’s token in the banishment and shows who goes, whatever they choose', () => {

@@ -1,16 +1,20 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import * as THREE from 'three';
 import { PALETTE } from '../palette.js';
+import { idle, useReducedMotion } from '../motion.js';
+import { useResource } from '../resources.js';
 import { stoneMaps } from './textures.js';
 
 /** A tall stone fireplace on the far wall with logs, embers and flames that lick and shrink. Its light is in stage/Lights. */
 export function Fireplace() {
-  const stone = useMemo(() => stoneMaps(PALETTE.stoneLight, 2), []);
+  const stone = useResource('stone:fire', () => stoneMaps(PALETTE.stoneLight, 2));
+  const still = !idle(useReducedMotion());
   const tongues = useRef<(THREE.Mesh | null)[]>([]);
   const embers = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
+    // With motion reduced the fire is a still shape: it glows but does not lick.
+    const t = still ? 0 : clock.elapsedTime;
     tongues.current.forEach((m, i) => {
       if (!m) return;
       const k = 1 + Math.sin(t * (5 + i * 1.3) + i * 2) * 0.22 + Math.sin(t * 11 + i) * 0.1;
@@ -59,7 +63,7 @@ export function Fireplace() {
       {[-0.4, -0.12, 0.16, 0.42].map((x, i) => (
         <mesh key={i} ref={(m) => void (tongues.current[i] = m)} position={[x, 0.55 + (i % 2) * 0.08, 0.12]}>
           <coneGeometry args={[0.2 - (i % 2) * 0.04, 0.9 + (i % 3) * 0.2, 10]} />
-          <meshStandardMaterial color={i % 2 ? PALETTE.flame : PALETTE.ember} emissive={i % 2 ? PALETTE.flame : PALETTE.ember} emissiveIntensity={3.2} toneMapped={false} transparent opacity={0.88} />
+          <meshStandardMaterial color={i % 2 ? PALETTE.flame : PALETTE.ember} emissive={i % 2 ? PALETTE.flame : PALETTE.ember} emissiveIntensity={1.7} transparent opacity={0.9} />
         </mesh>
       ))}
     </group>
