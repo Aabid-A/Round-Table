@@ -5,11 +5,11 @@ import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { chairPose, dawnMaskSpot } from '../layout.js';
 import { CLUSTER_LIGHTS } from '../models/candles.js';
-import type { SliceMood } from '../sliceView.js';
+import type { WorldMood } from '../world.js';
 import type { QualitySettings } from './quality.js';
 
 interface Props {
-  mood: SliceMood;
+  mood: WorldMood;
   /** How many of the six candles are lit, as a number that moves smoothly (a candle going out is half lit for a moment). */
   litCount: number;
   quality: QualitySettings;

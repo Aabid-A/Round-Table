@@ -1,8 +1,8 @@
 import { MASKS } from '../scene/models/masks.js';
-import type { SliceView } from '../scene/sliceView.js';
+import type { WorldView } from '../scene/world.js';
 
 /** The same moment as plain markup, for a browser without WebGL or a person who asks for it (?fallback=1): who is at the table, and what is happening. */
-export function SliceFallback({ view, reason }: { view: SliceView; reason: string }) {
+export function SliceFallback({ view, reason }: { view: WorldView; reason: string }) {
   return (
     <div className="slice-fallback" data-testid="slice-fallback">
       <h1>Round table</h1>

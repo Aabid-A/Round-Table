@@ -1,4 +1,4 @@
-import { CANDLES, type SliceFigure, type SliceView } from '../scene/sliceView.js';
+import { CANDLES, type WorldFigure, type WorldView } from '../scene/world.js';
 import { choosePrompt, chosenPrompt, type InputKind } from '../scene/prompts.js';
 import { banished, dawnVictim, type SliceScript } from './script.js';
 
@@ -100,12 +100,12 @@ export function reduce(state: SliceState, action: Action, script: SliceScript): 
 }
 
 /** The scene's input for this state. The role of a seat is in it only once the game has shown it. `input` picks touch or key wording for the prompts. */
-export function viewOf(state: SliceState, script: SliceScript, input: InputKind = 'keys'): SliceView {
+export function viewOf(state: SliceState, script: SliceScript, input: InputKind = 'keys'): WorldView {
   const { stage } = state;
   const shown = state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end' || (stage.kind === 'banish' && stage.step === 'mask'));
   const gone = state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end' || (stage.kind === 'banish' && stage.step !== 'pushback'));
   const dawn = state.victim !== null && (stage.kind === 'dawn' || stage.kind === 'end');
-  const figures: SliceFigure[] = script.players.map((p) => ({
+  const figures: WorldFigure[] = script.players.map((p) => ({
     index: p.index,
     name: p.name,
     mask: p.index,
@@ -114,7 +114,7 @@ export function viewOf(state: SliceState, script: SliceScript, input: InputKind 
   }));
   const speech = stage.kind === 'speak' ? script.speeches[stage.i] : undefined;
   const speaker = speech?.speaker ?? null;
-  let pointing: SliceView['pointing'] = null;
+  let pointing: WorldView['pointing'] = null;
   if (speech) pointing = { from: speech.speaker, at: speech.suspect };
   if (stage.kind === 'pointed' && state.accused !== null) pointing = { from: script.you, at: state.accused };
   const looks: (number | null)[] = script.players.map((p) => {
@@ -123,7 +123,7 @@ export function viewOf(state: SliceState, script: SliceScript, input: InputKind 
     if (stage.kind === 'banish' && state.banished !== null) return state.banished;
     return null;
   });
-  const tokens: SliceView['tokens'] = [];
+  const tokens: WorldView['tokens'] = [];
   if (stage.kind === 'tally' || stage.kind === 'banish' || stage.kind === 'night') {
     for (const [owner, target] of Object.entries(script.aiVotes)) tokens.push({ owner: Number(owner), target });
     if (state.vote !== null) tokens.push({ owner: script.you, target: state.vote });

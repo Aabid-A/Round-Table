@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Action } from './machine.js';
 import type { InputKind } from '../scene/prompts.js';
-import type { SliceView } from '../scene/sliceView.js';
+import type { WorldView } from '../scene/world.js';
 
 interface Props {
-  view: SliceView;
+  view: WorldView;
   dispatch: (a: Action) => void;
   muted: boolean;
   onMute: () => void;

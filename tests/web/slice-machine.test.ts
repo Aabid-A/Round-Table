@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from '../../src/engine/types.js';
 import { createMockPlayers, MOCK_CAST } from '../../src/players/mock.js';
 import { buildPrompt } from '../../src/prompts/phases.js';
 import { SYSTEM_PROMPT } from '../../src/prompts/system.js';
-import { CANDLES } from '../../web/src/scene/sliceView.js';
+import { CANDLES } from '../../web/src/scene/world.js';
 import { choosable, initial, reduce, stageMs, viewOf, type SliceState, type Stage } from '../../web/src/slice/machine.js';
 import { scriptFromLog, SLICE_SEED, type SliceScript } from '../../web/src/slice/script.js';
 
