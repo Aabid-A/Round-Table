@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
-import { bearingFromEye, dawnMaskSpot } from './layout.js';
+import { BANISHED_TILT, bearingFromEye, dawnMaskSpot } from './layout.js';
 import { DAWN_MASK_SCALE } from './models/dimensions.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
@@ -87,7 +87,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
         <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} />
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
-      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
+      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} tilt={BANISHED_TILT} /> : null}
       {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} at={dawnMaskSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
