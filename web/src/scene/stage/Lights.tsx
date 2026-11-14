@@ -15,6 +15,8 @@ interface Props {
   quality: QualitySettings;
   /** The seat the morning light falls on (the one found empty at dawn), or null. */
   dawnSeat: number | null;
+  /** A private moment (a whisper, a recruitment): the candles and the fire sink low around it. */
+  hush?: boolean;
 }
 
 /** Where the morning comes in: a high window behind the player's left shoulder. */
@@ -33,14 +35,14 @@ const FILL = { day: 0.2, night: 0.45, dawn: 0.5 } as const;
  * a faint cold fill so the dark is blue not black, and at dawn one shaft of pale gold from a high window that finds the empty chair
  * and the mask on the table in front of it. The only ambient light is under 0.15.
  */
-export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
+export function Lights({ mood, litCount, quality, dawnSeat, hush = false }: Props) {
   const clusters = useRef<(THREE.PointLight | null)[]>([]);
   const fire = useRef<THREE.PointLight>(null);
   const shaft = useRef<THREE.SpotLight>(null);
   const fill = useRef<THREE.DirectionalLight>(null);
   const bounce = useRef<THREE.PointLight>(null);
   const morning = useRef<THREE.DirectionalLight>(null);
-  const level = useRef({ fire: FIRE.day as number });
+  const level = useRef({ fire: FIRE.day as number, quiet: 0 });
   // With motion reduced the light is steady; it still fades between day, night and dawn.
   const flicker = idle(useReducedMotion());
   // The shaft is aimed between the empty chair and the mask left on the table.
@@ -56,14 +58,17 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
     const k = 1 - Math.exp(-dt * 1.4);
+    // Sinking for a private moment takes a breath; coming back is quicker.
+    level.current.quiet += ((hush ? 1 : 0) - level.current.quiet) * (1 - Math.exp(-dt * (hush ? 1.6 : 3)));
+    const dim = 1 - level.current.quiet * 0.6;
     clusters.current.forEach((l, c) => {
       if (!l) return;
       // The two candles of a cluster: how lit the pair is.
       const lit = Math.min(1, Math.max(0, litCount - c * 2) / 2) * 0.5 + Math.min(1, Math.max(0, litCount - c * 2 - 1)) * 0.5;
-      l.intensity = lit * (4.6 + (Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3) * flicker);
+      l.intensity = dim * lit * (4.6 + (Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3) * flicker);
     });
     level.current.fire += (FIRE[mood] - level.current.fire) * k;
-    if (fire.current) fire.current.intensity = level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);
+    if (fire.current) fire.current.intensity = (1 - level.current.quiet * 0.45) * level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);
     if (shaft.current) shaft.current.intensity += ((mood === 'dawn' && dawnSeat !== null ? 420 : 0) - shaft.current.intensity) * k;
     if (fill.current) fill.current.intensity += (FILL[mood] - fill.current.intensity) * k;
     if (bounce.current) bounce.current.intensity += (BOUNCE[mood] - bounce.current.intensity) * k;

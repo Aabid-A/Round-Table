@@ -82,12 +82,12 @@ export function Seat(p: SeatProps) {
       <group position={fig.position} rotation-y={fig.facing}>
         <Figure index={index} mask={p.figure.mask} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
-      {/* the name plate: a block of dark iron leaning back on the table, lettered on its face */}
+      {/* the name plate: a block of dark iron leaning back on the table, lettered on its face; for a traitor, a fellow traitor's is red iron */}
       <group ref={plateTurn} position={plateP.position} rotation-y={plateP.facing} scale={p.viewer === null ? 1 : plateScale(index, p.viewer)}>
         <group ref={plateGroup} position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[PLATE_W + 0.02, PLATE_H + 0.016, 0.03]} />
-            <meshStandardMaterial ref={iron} color={PALETTE.iron} roughness={0.5} metalness={0.6} transparent />
+            <meshStandardMaterial ref={iron} color={p.figure.fellow ? PALETTE.traitor : PALETTE.iron} roughness={0.5} metalness={0.6} transparent />
           </mesh>
           <mesh position={[0, 0, 0.0155]}>
             <planeGeometry args={[PLATE_W, PLATE_H]} />
