@@ -13,6 +13,8 @@ const AHEAD = 1.6;
 /** How wide the words are, as a part of the picture's width: a column beside the speaker on a wide screen, most of a phone's. */
 const WIDE = 0.24;
 const NARROW = 0.64;
+/** The narrowest the words go, in pixels. */
+const MIN_PX = 290;
 /** Half the width of a hooded head, in metres, to keep the words clear of the mask. */
 const HEAD_HALF = 0.2;
 
@@ -49,7 +51,8 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     // A speaker behind the eye is off to one side: the words wait at that edge of the picture.
     const at = behind ? { x: head.x > 0 ? -2 : 2, y: 0 } : { x: head.x, y: head.y };
     const half = { x: Math.abs(tmp.side.x - head.x), y: Math.abs(tmp.side.x - head.x) * aspect };
-    const boxX = (narrow ? NARROW : WIDE) * 2;
+    // A part of the picture, but never narrower than a short column of type: a room drawn in a small window still reads.
+    const boxX = Math.min(NARROW, Math.max(narrow ? NARROW : WIDE, MIN_PX / size.width)) * 2;
     const box = { x: boxX, y: (boxX / drawn.aspect) * aspect };
     const c = speechPlacement(at, half, box);
     tmp.at.set(c.x, c.y, 0.5).unproject(cam).sub(cam.position).normalize();

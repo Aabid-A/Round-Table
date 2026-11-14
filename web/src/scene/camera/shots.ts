@@ -10,7 +10,8 @@ export interface Shot {
 }
 
 /** The whole table from high on one side: for votes, reveals, and when no one holds the moment. */
-export const WIDE: Shot = { position: [0, 3.5, 5.0], target: [0, TABLE_Y, -0.2], push: 0.04 };
+// High and between two seats, so no figure's hood stands in the middle of the picture.
+export const WIDE: Shot = { position: [Math.sin(-Math.PI / 8) * 4.4, 4.3, Math.cos(-Math.PI / 8) * 4.4], target: [0, TABLE_Y, 0], push: 0.04 };
 
 /**
  * A shot of the seat `focus` from across the table: over the shoulder of the figure opposite, a little to one side and above, looking

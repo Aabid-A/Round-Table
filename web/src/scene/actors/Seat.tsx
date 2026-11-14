@@ -60,7 +60,7 @@ export function Seat(p: SeatProps) {
       const [l, r] = ends.current as [THREE.Vector3, THREE.Vector3];
       plateGroup.current.localToWorld(l.set(-PLATE_W / 2 - 0.01, 0, 0)).project(camera);
       plateGroup.current.localToWorld(r.set(PLATE_W / 2 + 0.01, 0, 0)).project(camera);
-      const want = plateShown(l.x, r.x, l.z > 1 || r.z > 1);
+      const want = plateShown(l.x, r.x, l.z > 1 || r.z > 1, (l.y + r.y) / 2);
       shown.current += (want - shown.current) * approach(dt, 8, reduced);
       const o = shown.current;
       plateGroup.current.visible = o > 0.01;

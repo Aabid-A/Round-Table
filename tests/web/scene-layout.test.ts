@@ -132,3 +132,11 @@ describe('a room seen from no chair', () => {
     expect(seatAngle(1)).toBeCloseTo((58 * Math.PI) / 180);
   });
 });
+
+describe('a name plate at the top or bottom of the picture', () => {
+  it('fades out before the edge cuts it', () => {
+    expect(plateShown(-0.2, 0.1, false, 0)).toBe(1);
+    expect(plateShown(-0.2, 0.1, false, -0.95)).toBe(0);
+    expect(plateShown(-0.2, 0.1, false, 0.8)).toBeLessThan(1);
+  });
+});

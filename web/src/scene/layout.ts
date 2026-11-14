@@ -120,9 +120,10 @@ export function plateScale(i: number, viewer: number): number {
  * How much of a name plate to show, from where its two ends fall across the picture (-1 at the left edge, 1 at the right): all of it
  * while it is whole and clear of the edge, none of it by the time an end would touch the edge. A name is never left half cut off.
  */
-export function plateShown(left: number, right: number, behind = false): number {
+export function plateShown(left: number, right: number, behind = false, up = 0): number {
   if (behind) return 0;
-  const margin = 1 - Math.max(Math.abs(left), Math.abs(right));
+  // `up` is the plate's height on the picture (-1 bottom, 1 top): a plate at the top or bottom edge fades too.
+  const margin = Math.min(1 - Math.max(Math.abs(left), Math.abs(right)), (0.9 - Math.abs(up)) * 0.5);
   return Math.max(0, Math.min(1, margin / 0.08));
 }
 
