@@ -4,8 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { EYE, FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo, bearingToTable } from './camera/fov.js';
-import { Html } from '@react-three/drei';
-import { figurePose } from './layout.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
 import { TableMask } from './actors/TableMask.js';
@@ -17,6 +15,7 @@ import { Fireplace } from './models/Fireplace.js';
 import { Hall } from './models/Hall.js';
 import { Table } from './models/Table.js';
 import { Caption } from './stage/Caption.js';
+import { Speech } from './stage/Speech.js';
 import { Effects } from './stage/Effects.js';
 import { HoverLight } from './stage/HoverLight.js';
 import { Lights } from './stage/Lights.js';
@@ -46,14 +45,6 @@ function useLitCount(target: number): { current: number } {
     lit.current += Math.sign(target - lit.current) * Math.min(Math.abs(target - lit.current), rate * dt);
   });
   return lit;
-}
-
-/** Anchors the speech to the speaker's head, but never lets it leave the picture (or sit under the buttons) when the speaker is at the edge. */
-function keepOnScreen(obj: THREE.Object3D, camera: THREE.Camera, size: { width: number; height: number }): [number, number] {
-  const v = new THREE.Vector3().setFromMatrixPosition(obj.matrixWorld).project(camera);
-  const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
-  const half = Math.min(135, size.width / 2 - 8);
-  return [clamp((v.x * 0.5 + 0.5) * size.width, half, size.width - half), clamp((-v.y * 0.5 + 0.5) * size.height, 90, size.height - 230)];
 }
 
 function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Quality; onHover: (s: number | null) => void; onPick: (s: number) => void }) {
@@ -107,11 +98,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
       {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
       {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} reach={DAWN_REACH} /> : null}
-      {view.speech && view.speech.speaker !== view.you ? (
-        <Html position={[figurePose(view.speech.speaker).position[0], 1.86, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} calculatePosition={keepOnScreen} style={{ pointerEvents: 'none' }}>
-          <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
-        </Html>
-      ) : null}
+      <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />

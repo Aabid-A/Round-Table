@@ -129,10 +129,9 @@ export function plateTexture(name: string, accent: string): THREE.CanvasTexture 
  * A caption as lit letters with nothing behind them: the words in bone white, and a soft dark edge so they read over bright wood.
  * Returns the picture of the letters, a matching mask of where they are, and the picture's width over its height.
  */
-export function captionTexture(lines: string[]): { texture: THREE.CanvasTexture; alpha: THREE.CanvasTexture; aspect: number } {
+export function captionTexture(lines: string[], w = 1536): { texture: THREE.CanvasTexture; alpha: THREE.CanvasTexture; aspect: number } {
   const size = 78;
   const lead = size * 1.32;
-  const w = 1536;
   const h = Math.ceil(lines.length * lead + size * 0.7);
   const draw = (mask: boolean): THREE.CanvasTexture => {
     const c = document.createElement('canvas');
