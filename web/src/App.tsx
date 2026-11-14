@@ -45,7 +45,7 @@ export function App() {
   if (state.kind === 'ready') {
     return (
       <ErrorBoundary key={state.log.seed} fallback={(message) => loader('error', message)}>
-        <Player log={state.log} onReload={() => setState({ kind: 'idle' })} />
+        <Player log={state.log} onReload={() => setState({ kind: 'idle' })} room3d />
       </ErrorBoundary>
     );
   }

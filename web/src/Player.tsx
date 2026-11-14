@@ -11,6 +11,10 @@ import { describeStep, stepDurationMs, type StepView } from './replay/describe.j
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { Room } from './scene/Room.js';
+import { BANISH_BEATS, worldFromScene } from './scene/fromScene.js';
+import { useBeat } from './scene/host.js';
+import { ReplayRoom } from './replay/ReplayRoom.js';
+import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
 import { usePlayback } from './usePlayback.js';
@@ -22,6 +26,8 @@ interface Props {
   live?: boolean;
   /** What to show when the address does not say (a watcher opens in the all-seeing room). */
   initial?: Perspective;
+  /** Show the public table and the seats in the 3D room where it can be shown (the flat page stays as its fallback). */
+  room3d?: boolean;
 }
 
 const announcement = (view: StepView): string =>
@@ -41,7 +47,7 @@ const roomAnnouncement = (view: SceneView): string => {
 };
 
 /** Plays one game log like an episode. */
-export function Player({ log, onReload, live = false, initial }: Props) {
+export function Player({ log, onReload, live = false, initial, room3d = false }: Props) {
   const steps = useMemo(() => buildSteps(log, { partial: live }), [log, live]);
   const views = useMemo(() => steps.map((s) => describeStep(s, log)), [steps, log]);
   const [showNotes, setShowNotes] = useState(false);
@@ -106,6 +112,14 @@ export function Player({ log, onReload, live = false, initial }: Props) {
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
+  // The 3D room shows the public table and a seat's view (the all-seeing room and the result are still drawn flat).
+  const scene = room3d && step.kind !== 'result' && !spectating ? (sv ?? tableSceneView(log, steps, index, view)) : null;
+  const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length);
+  const world = scene ? worldFromScene(scene, sv ? roomAnnouncement(sv) : announcement(view), beat) : null;
+  const sitAt = (s: number): void => {
+    const name = world?.figures.find((f) => f.index === s)?.name;
+    if (name) sit(name);
+  };
 
   return (
     <main className="app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
@@ -124,12 +138,19 @@ export function Player({ log, onReload, live = false, initial }: Props) {
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
-        {sv ? (
+        {sv && !world ? (
           <div className="seat-room">
             <Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
+        ) : world ? (
+          <ReplayRoom
+            view={world}
+            onSit={sitAt}
+            label={seat !== null ? `The room from ${seat}'s chair` : 'The round table'}
+            fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={`The room from ${seat}'s chair`} /></div> : <Table seats={seats} view={view} />}
+          />
         ) : (
           <Table seats={seats} view={view} />
         )}
