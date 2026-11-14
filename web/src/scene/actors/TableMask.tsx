@@ -7,20 +7,23 @@ import { MaskMesh } from '../models/MaskMesh.js';
 import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 
+/** How far from the middle of the table a mask lies. A banished player's is left well in, on open wood clear of their name plate. */
+export const BANISHED_REACH = 0.28;
+/** The one found at dawn lies nearer its empty chair, so the morning light and the eye take in both together. */
+export const DAWN_REACH = 0.92;
 const SCALE = 0.2;
 /** How far the mask is tipped up from lying flat, toward the viewer, so it can be read from a seat. */
-const TILT = 0.75;
+const TILT = 0.42;
 
 /**
  * A mask left on the table in front of its seat, leaning toward the viewer. It lies face up, then is turned over to show what its
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
-export function TableMask({ seat, role, viewer }: { seat: number; role: Role | null; viewer: number }) {
+export function TableMask({ seat, role, viewer, reach = BANISHED_REACH }: { seat: number; role: Role | null; viewer: number; reach?: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
   const reduced = useReducedMotion();
-  // Nearer the middle than the name plate, so from the player's seat neither hides the other.
-  const p = tablePoint(seat, 0.7);
+  const p = tablePoint(seat, reach);
   const [vx, , vz] = figurePose(viewer).position;
   useFrame((_, dt) => {
     flip.current += ((role === null ? 0 : 1) - flip.current) * approach(dt, 2.2, reduced);

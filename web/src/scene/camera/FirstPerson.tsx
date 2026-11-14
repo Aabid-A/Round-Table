@@ -3,18 +3,20 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { approach, idle, useReducedMotion } from '../motion.js';
 import { EYE_Y, EYE_Z } from '../models/dimensions.js';
-import { bearingTo, fovFor, nearestStop, restPitchFor, SWIPE_MAX, yawArcFor } from './fov.js';
+import { bearingTo, fovFor, nearestStop, OVERVIEW, restPitchFor, SWIPE_MAX, yawArcFor } from './fov.js';
 
 /** The eye, at the height of a person seated at the table. */
 export const EYE: [number, number, number] = [0, EYE_Y, EYE_Z];
 
 interface Props {
-  /** The seat that holds the moment (a speaker), which the camera eases toward, or null. */
+  /** Where the moment is (a speaker, an empty chair): the direction the camera eases toward (radians, 0 straight across, positive right), or null. */
   toward: number | null;
   /** The pointer's look is allowed when nothing is being shown that needs the camera. */
   free: boolean;
   /** The seat the player has chosen. In a tall window the camera turns to it, so a choice made by keyboard is seen. */
   focus: number | null;
+  /** The moment is about the whole table (the vote): a tall window widens to take it in. */
+  overview: boolean;
 }
 
 const PITCH_ARC = 0.2;
@@ -25,7 +27,7 @@ const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.m
  * look around, and the look comes to rest facing the nearest figure. Either way it eases toward whoever holds the moment and breathes
  * a little; it never snaps, and it can always be looked around (see /game-feel).
  */
-export function FirstPerson({ toward, free, focus }: Props) {
+export function FirstPerson({ toward, free, focus, overview }: Props) {
   const { camera, gl, size } = useThree();
   const pointer = useRef({ x: 0, y: 0 });
   // The swipe: how far the player has turned the head, where it is settling, and the finger that is down.
@@ -80,6 +82,10 @@ export function FirstPerson({ toward, free, focus }: Props) {
     cam.fov = fovFor(aspect);
     cam.updateProjectionMatrix();
   }, [camera, aspect]);
+  // The whole table is straight ahead.
+  useEffect(() => {
+    if (overview) swipe.current.rest = 0;
+  }, [overview]);
   // A new speaker takes the look back from wherever a swipe left it. In a tall window, so does a newly chosen figure.
   useEffect(() => {
     if (toward !== null) swipe.current.rest = 0;
@@ -93,9 +99,16 @@ export function FirstPerson({ toward, free, focus }: Props) {
     const s = swipe.current;
     if (s.finger === null) s.yaw += (s.rest - s.yaw) * approach(dt, 5, reduced);
     // A wide window keeps most of the table in view and only leans toward a speaker; a tall one turns to face them.
-    const lean = toward === null ? 0 : tall ? clamp(bearingTo(toward), -SWIPE_MAX, SWIPE_MAX) : clamp(bearingTo(toward) * 0.72, -0.85, 0.85);
+    const lean = toward === null ? 0 : tall ? clamp(toward, -SWIPE_MAX, SWIPE_MAX) : clamp(toward * 0.72, -0.85, 0.85);
     const wantYaw = lean + s.yaw + pointer.current.x * arc * (free ? 1 : 0.35);
-    const wantPitch = restPitchFor(aspect) + (free ? -pointer.current.y * PITCH_ARC : 0);
+    const wide = tall && overview;
+    const wantPitch = wide ? OVERVIEW.pitch : restPitchFor(aspect) + (free ? -pointer.current.y * PITCH_ARC : 0);
+    const cam = camera as THREE.PerspectiveCamera;
+    const wantFov = wide ? OVERVIEW.fov : fovFor(aspect);
+    if (Math.abs(cam.fov - wantFov) > 0.01) {
+      cam.fov += (wantFov - cam.fov) * approach(dt, 2.2, reduced);
+      cam.updateProjectionMatrix();
+    }
     // Reduced motion: whenever the camera's subject changes (a speaker begins or ends, a choice opens or is made) it cuts; it never pans by itself.
     const cut = reduced && (toward !== was.current || free !== wasFree.current);
     was.current = toward;

@@ -3,11 +3,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { EYE, FirstPerson } from './camera/FirstPerson.js';
+import { bearingTo, bearingToTable } from './camera/fov.js';
 import { Html } from '@react-three/drei';
 import { figurePose } from './layout.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
-import { TableMask } from './actors/TableMask.js';
+import { DAWN_REACH, TableMask } from './actors/TableMask.js';
 import { YourHands } from './actors/YourHands.js';
 import { Candle } from './models/Candle.js';
 import { CANDLE_SPOTS } from './models/candles.js';
@@ -102,14 +103,15 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       {view.tokens.map((t, i) => (
         <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} />
       ))}
-      {view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
-      {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} /> : null}
+      {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
+      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} role={view.banish.role} viewer={view.you} /> : null}
+      {view.dawn ? <TableMask seat={view.dawn.victim} role={view.dawn.role} viewer={view.you} reach={DAWN_REACH} /> : null}
       {view.speech && view.speech.speaker !== view.you ? (
         <Html position={[figurePose(view.speech.speaker).position[0], 1.86, figurePose(view.speech.speaker).position[2]]} center zIndexRange={[10, 0]} calculatePosition={keepOnScreen} style={{ pointerEvents: 'none' }}>
           <p className="slice-speech" data-testid="speech">{view.speech.text}</p>
         </Html>
       ) : null}
-      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? view.speaker : null} free={view.choosable.length > 0} focus={view.selected} />
+      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.tokens.length > 0 && view.banish === null && view.mood === 'day'} />
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} />
       <Effects quality={q} still={reduced} />

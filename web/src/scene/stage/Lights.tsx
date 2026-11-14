@@ -48,7 +48,7 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
     const o = new THREE.Object3D();
     if (dawnSeat !== null) {
       const [cx, , cz] = chairPose(dawnSeat).position;
-      const [tx, , tz] = tablePoint(dawnSeat, 0.7);
+      const [tx, , tz] = tablePoint(dawnSeat, 0.92); // where the mask lies (DAWN_REACH)
       o.position.set((cx + tx) / 2, 0.9, (cz + tz) / 2);
     }
     return o;
