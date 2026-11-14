@@ -86,7 +86,14 @@ export function useRoomSound(): { muted: boolean; start: () => void; toggleMute:
  * Whether a page shows the 3D room or its plain version, and what the room needs. The plain version is shown with no WebGL, with
  * ?fallback=1, when the viewer asks for reduced motion, when the graphics context is lost, and when the first frames are too slow.
  */
-export function useRoomChoice(search: string): { room: boolean; quality: Quality; onFrame: (ms: number) => void; onLost: () => void } {
+export interface RoomChoice {
+  room: boolean;
+  quality: Quality;
+  onFrame: (ms: number) => void;
+  onLost: () => void;
+}
+
+export function useRoomChoice(search: string): RoomChoice {
   const { quality, onFrame, slow } = useQualityProbe(search);
   const reduced = usePrefersReducedMotion();
   const plain = useMemo(() => new URLSearchParams(search).get('fallback') === '1' || !hasWebGl2(), [search]);

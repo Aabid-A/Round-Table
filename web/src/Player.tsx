@@ -12,7 +12,7 @@ import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { Room } from './scene/Room.js';
 import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
-import { useBeat } from './scene/host.js';
+import { useBeat, useRoomChoice } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
 import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
@@ -61,15 +61,18 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const ctx = useMemo(() => buildContext(log), [log]);
   // The steps this viewer walks: all of them at the public table, a seat's own list when seated (see seatTimeline).
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
+  // Whether the 3D room is actually on screen (not just wanted): the flat page keeps its own words and pace.
+  const choice = useRoomChoice(window.location.search);
+  const showRoom = room3d && choice.room;
   const durations = useMemo(
     () =>
       timeline.map((i) => {
         const ms = seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat));
         // In the room a banishment is staged beat by beat; playing waits for the mask to be turned over.
         const s = steps[i]!;
-        return room3d && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(ms, BANISH_MS) : ms;
+        return showRoom && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(ms, BANISH_MS) : ms;
       }),
-    [timeline, views, log, steps, seat, room3d],
+    [timeline, views, log, steps, seat, showRoom],
   );
   const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
   const at = Math.min(pos, timeline.length - 1);
@@ -119,7 +122,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const seats = seatsAt(log, steps, index);
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
   // The 3D room shows the public table and a seat's view (the all-seeing room and the result are still drawn flat).
-  const scene = room3d && step.kind !== 'result' && !spectating ? (sv ?? tableSceneView(log, steps, index, view)) : null;
+  const scene = showRoom && step.kind !== 'result' && !spectating ? (sv ?? tableSceneView(log, steps, index, view)) : null;
   const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
   const said = sv ? roomAnnouncement(sv) : announcement(view);
   const world = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
@@ -156,6 +159,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
             view={world}
             onSit={sitAt}
             label={seat !== null ? `The room from ${seat}'s chair` : 'The round table'}
+            choice={choice}
             fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={`The room from ${seat}'s chair`} /></div> : <Table seats={seats} view={view} />}
           />
         ) : (

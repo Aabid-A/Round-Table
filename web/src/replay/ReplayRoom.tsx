@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
-import { SceneBoundary, useRoomChoice } from '../scene/host.js';
+import { SceneBoundary, type RoomChoice } from '../scene/host.js';
 import type { WorldView } from '../scene/world.js';
 
 const RoomScene = lazy(() => import('../scene/RoomScene.js'));
@@ -11,11 +11,13 @@ interface Props {
   /** Clicking a figure sits the viewer in that seat. */
   onSit: (seat: number) => void;
   label: string;
+  /** The page's choice of room (useRoomChoice): the page needs it too, to pace and word a staged moment only when the room shows it. */
+  choice: RoomChoice;
 }
 
 /** The replay in the 3D room. Every figure but the viewer's own can be clicked to sit in that seat; the keys and the View list still work. */
-export function ReplayRoom({ view, fallback, onSit, label }: Props) {
-  const { room, quality, onFrame, onLost } = useRoomChoice(window.location.search);
+export function ReplayRoom({ view, fallback, onSit, label, choice }: Props) {
+  const { room, quality, onFrame, onLost } = choice;
   const [hovered, setHovered] = useState<number | null>(null);
   if (!room) return <>{fallback}</>;
   const choosable = view.figures.filter((f) => f.index !== view.you).map((f) => f.index);

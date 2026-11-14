@@ -128,3 +128,14 @@ test('loads a log named in the address, and says when it is missing', async ({ p
   await page.goto('/?log=missing-game');
   await expect(page.getByRole('alert')).toContainText('No log named "missing-game"');
 });
+
+test('the flat replay says a banishment in full at once, as its card does (the room’s beat-by-beat words are the room’s alone)', async ({ page }) => {
+  await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
+  await page.goto('/?log=sample&fallback=1');
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  for (let i = 0; i < 36; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('section')).toContainText('Banishment');
+  await expect(page.getByTestId('card')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).not.toContainText('chair is pushed back');
+});
