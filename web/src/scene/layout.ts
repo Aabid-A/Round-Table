@@ -2,8 +2,19 @@ import { SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
-/** The angle of seat `i` around the table, from the player's own seat at 0 (nearest the camera, +z), going round clockwise seen from above. */
-export const seatAngle = (i: number): number => (i / SEATS) * Math.PI * 2;
+/**
+ * Where each seat is round the table, in degrees from the player's own seat at 0 (nearest the camera, +z), clockwise seen from above.
+ * The two seats beside you are given more room (58 degrees, the rest about 41), so from your chair the figure across the corner of
+ * the table is whole in a wide picture while the ones beside you stay out of it until you turn to them.
+ */
+const ANGLES = [0, 58, 99, 140, 180, 220, 261, 302] as const;
+
+/** The angle of seat `i` around the table, in radians (see ANGLES). */
+export const seatAngle = (i: number): number => (ANGLES[((i % SEATS) + SEATS) % SEATS]! * Math.PI) / 180;
+
+/** The seats beside yours sit a little back from the table, so they do not loom at the edges of your picture. */
+export const BESIDE_BACK = 0.25;
+const back = (i: number): number => (i === 1 || i === SEATS - 1 ? BESIDE_BACK : 0);
 
 export interface Pose {
   position: [number, number, number];
@@ -14,14 +25,14 @@ export interface Pose {
 /** Where a chair stands. The chair's front is +z in its own space; turning it by angle + PI faces the table's middle. */
 export function chairPose(i: number, pushedBack = 0): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R + pushedBack;
+  const r = SEAT_R + back(i) + pushedBack;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
 /** Where a seated figure's body is: on the chair, a little in front of its back. */
 export function figurePose(i: number): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R - 0.1;
+  const r = SEAT_R + back(i) - 0.1;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
