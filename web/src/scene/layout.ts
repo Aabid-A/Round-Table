@@ -9,12 +9,25 @@ export const SEATS = 8;
  */
 const ANGLES = [0, 58, 99, 140, 180, 220, 261, 302] as const;
 
-/** The angle of seat `i` around the table, in radians (see ANGLES). */
-export const seatAngle = (i: number): number => (ANGLES[((i % SEATS) + SEATS) % SEATS]! * Math.PI) / 180;
+/**
+ * How the seats are spaced: 'seated' when the camera sits in seat 0 (see ANGLES), 'even' when it sits in no chair (a spectator, the
+ * public table), so no seat is set apart. The World sets it before it draws; a page shows one kind of room at a time.
+ */
+export type Spacing = 'seated' | 'even';
+let spacing: Spacing = 'seated';
+export function setSpacing(s: Spacing): void {
+  spacing = s;
+}
+
+/** The angle of seat `i` around the table, in radians (see ANGLES and Spacing). */
+export const seatAngle = (i: number): number => {
+  const k = ((i % SEATS) + SEATS) % SEATS;
+  return spacing === 'even' ? (k / SEATS) * Math.PI * 2 : (ANGLES[k]! * Math.PI) / 180;
+};
 
 /** The seats beside yours sit a little back from the table, so they do not loom at the edges of your picture. */
 export const BESIDE_BACK = 0.25;
-const back = (i: number): number => (i === 1 || i === SEATS - 1 ? BESIDE_BACK : 0);
+const back = (i: number): number => (spacing === 'seated' && (i === 1 || i === SEATS - 1) ? BESIDE_BACK : 0);
 
 export interface Pose {
   position: [number, number, number];
@@ -130,10 +143,11 @@ export const NECK_MAX = 1.35;
 /**
  * Where the head at seat `seat` turns (relative to its own facing) to look at seat `look`, or at the middle of the table for null.
  * It turns toward its target but never so far from the viewer's seat that its mask is seen edge-on, and never past its own shoulders.
+ * With no viewer's seat (a camera that moves round the table) it only keeps within its shoulders.
  */
-export function headYaw(seat: number, look: number | null, viewer: number): number {
+export function headYaw(seat: number, look: number | null, viewer: number | null): number {
   const want = look === null || look === seat ? 0 : yawBetween(seat, look);
-  if (seat === viewer) return Math.max(-NECK_MAX, Math.min(NECK_MAX, want));
+  if (viewer === null || seat === viewer) return Math.max(-NECK_MAX, Math.min(NECK_MAX, want));
   const toViewer = yawBetween(seat, viewer);
   const off = Math.max(-MASK_MAX_OFF, Math.min(MASK_MAX_OFF, wrap(want - toViewer)));
   return Math.max(-NECK_MAX, Math.min(NECK_MAX, wrap(toViewer + off)));

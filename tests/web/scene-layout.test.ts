@@ -116,3 +116,19 @@ describe('the mask found at dawn', () => {
     }
   });
 });
+
+describe('a room seen from no chair', () => {
+  it('spaces all eight seats evenly and sets none back', async () => {
+    const { setSpacing } = await import('../../web/src/scene/layout.js');
+    setSpacing('even');
+    try {
+      for (let i = 0; i < SEATS; i++) {
+        expect(seatAngle(i)).toBeCloseTo((i / SEATS) * Math.PI * 2);
+        expect(Math.hypot(chairPose(i).position[0], chairPose(i).position[2])).toBeCloseTo(SEAT_R);
+      }
+    } finally {
+      setSpacing('seated');
+    }
+    expect(seatAngle(1)).toBeCloseTo((58 * Math.PI) / 180);
+  });
+});

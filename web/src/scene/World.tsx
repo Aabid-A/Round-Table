@@ -1,10 +1,11 @@
 import './three-jsx.js';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Director } from './camera/Director.js';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
-import { bearingFromEye, dawnMaskSpot } from './layout.js';
-import { DAWN_MASK_SCALE } from './models/dimensions.js';
+import { bearingFromEye, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
+import { BANISHED_REACH, DAWN_MASK_SCALE, DAWN_REACH } from './models/dimensions.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
 import { TableMask } from './actors/TableMask.js';
@@ -46,6 +47,9 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
   const resources = useMemo(() => new SceneResources(), []);
   useEffect(() => () => resources.disposeAll(), [resources]);
   // A seat is where a player sits as seen from the camera's chair; the mask is who they are. The two differ once the viewer's own seat is turned to the camera.
+  const firstPerson = view.you !== null;
+  // A camera in a chair sits in seat 0 with room either side; a camera in no chair sees eight evenly spaced seats. Set before anything below is placed.
+  setSpacing(firstPerson ? 'seated' : 'even');
   const maskOf = (seat: number): number => view.figures.find((f) => f.index === seat)?.mask ?? seat;
   const [litNow, setLitNow] = useState(CANDLES);
   useFrame(() => {
@@ -84,15 +88,19 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
             onPick={onPick}
           />
         ))}
-      <YourHands mask={maskOf(view.you)} pointAt={view.pointing?.from === view.you ? view.pointing.at : null} />
+      {view.you !== null ? <YourHands mask={maskOf(view.you)} pointAt={view.pointing?.from === view.you ? view.pointing.at : null} /> : null}
       {view.tokens.map((t, i) => (
         <Token key={`${t.owner}-${t.target}`} owner={t.owner} target={t.target} delay={i * 0.35} mask={maskOf(t.owner)} />
       ))}
       {/* by morning last night's mask has been cleared away; the one on the table is the one the night left */}
-      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} /> : null}
-      {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={dawnMaskSpot(view.dawn.victim)} scale={DAWN_MASK_SCALE} /> : null}
+      {!view.dawn && view.banish && (view.banish.stage === 'mask' || view.banish.stage === 'done') ? <TableMask seat={view.banish.seat} mask={maskOf(view.banish.seat)} role={view.banish.role} viewer={view.you} {...(firstPerson ? {} : { at: tablePoint(view.banish.seat, BANISHED_REACH) })} /> : null}
+      {view.dawn ? <TableMask seat={view.dawn.victim} mask={maskOf(view.dawn.victim)} role={view.dawn.role} viewer={view.you} at={firstPerson ? dawnMaskSpot(view.dawn.victim) : tablePoint(view.dawn.victim, DAWN_REACH)} scale={DAWN_MASK_SCALE} /> : null}
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
-      <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
+      {view.you !== null ? (
+  <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(dawnMaskSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
+      ) : (
+        <Director focus={view.shot?.focus ?? view.speaker ?? view.dawn?.victim ?? null} wide={view.shot?.wide ?? view.voting} cut={view.shot?.cut ?? false} />
+      )}
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
       <Effects quality={q} still={reduced} />

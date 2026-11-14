@@ -16,13 +16,16 @@ const TILT = 0.42;
  * wearer was: the inside is lined gold for a faithful and red for a traitor. The silhouette still says whose it was.
  */
 /** `at` sets where on the table it lies; by default it lies where a banished player's does (see layout.banishedMaskSpot). */
-export function TableMask({ seat, mask, role, viewer, at, scale = SCALE }: { seat: number; mask: number; role: Role | null; viewer: number; at?: [number, number, number]; scale?: number }) {
+export function TableMask({ seat, mask, role, viewer, at, scale = SCALE }: { seat: number; mask: number; role: Role | null; viewer: number | null; at?: [number, number, number]; scale?: number }) {
   const turn = useRef<THREE.Group>(null);
   const flip = useRef(0);
   const reduced = useReducedMotion();
   const p = at ?? banishedMaskSpot(seat);
-  const [vx, , vz] = figurePose(viewer).position;
-  useFrame((_, dt) => {
+  const [vx, , vz] = viewer === null ? [0, 0, 0] : figurePose(viewer).position;
+  const face = useRef<THREE.Group>(null);
+  useFrame(({ camera }, dt) => {
+    // Seen from no chair it leans toward the camera, wherever the camera is.
+    if (viewer === null && face.current) face.current.rotation.y = Math.atan2(camera.position.x - p[0], camera.position.z - p[2]);
     flip.current += ((role === null ? 0 : 1) - flip.current) * approach(dt, 2.2, reduced);
     if (!turn.current) return;
     // Lifted off the table as it goes over, and set down again.
@@ -31,7 +34,7 @@ export function TableMask({ seat, mask, role, viewer, at, scale = SCALE }: { sea
   });
   const colour = role === 'traitor' ? PALETTE.traitor : PALETTE.faithful;
   return (
-    <group position={[p[0], p[1] + 0.09, p[2]]} rotation-y={Math.atan2(vx - p[0], vz - p[2])}>
+    <group ref={face} position={[p[0], p[1] + 0.09, p[2]]} rotation-y={Math.atan2(vx - p[0], vz - p[2])}>
       <group rotation-x={-(Math.PI / 2 - TILT)}>
         <group ref={turn}>
           <MaskMesh index={mask} scale={scale} lining={role ? colour : null} />

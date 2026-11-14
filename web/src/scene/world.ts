@@ -27,8 +27,10 @@ export interface WorldBanish {
  */
 export interface WorldView {
   figures: WorldFigure[];
-  /** The seat the camera sits in. */
-  you: number;
+  /** The seat the camera sits in, in the first person. Null: the room is seen from no chair, through a director's camera. */
+  you: number | null;
+  /** Seen from no chair: where the director's camera looks (the seat holding the moment) and whether it pulls back or cuts. */
+  shot?: { focus: number | null; wide: boolean; cut: boolean };
   mood: WorldMood;
   /** How many candles are lit (the rest have been snuffed). */
   candlesLit: number;

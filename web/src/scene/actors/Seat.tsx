@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { chairPose, figurePose, headYaw, platePose, plateScale, plateShown, yawBetween } from '../layout.js';
+import { chairPose, figurePose, headYaw, platePose, plateScale, plateShown, seatAngle, tablePoint, yawBetween } from '../layout.js';
+import { TABLE_R } from '../models/dimensions.js';
 import { Chair } from '../models/Chair.js';
 import { MASKS } from '../models/masks.js';
 import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
@@ -16,7 +17,7 @@ export interface SeatProps {
   /** Look toward this seat (or null). */
   look: number | null;
   /** The seat the picture is seen from, which no mask turns its edge to. */
-  viewer: number;
+  viewer: number | null;
   speaking: boolean;
   /** The seat this figure points at, or null. */
   pointAt: number | null;
@@ -49,8 +50,11 @@ export function Seat(p: SeatProps) {
   }, [p.choosable]);
   const pose = chairPose(index);
   const fig = figurePose(index);
-  const plateP = platePose(index, p.viewer);
+  const plateP = p.viewer === null ? { position: tablePoint(index, TABLE_R - 0.2), facing: seatAngle(index) } : platePose(index, p.viewer);
+  const plateTurn = useRef<THREE.Group>(null);
   useFrame(({ camera }, dt) => {
+    // Seen from no chair, each plate turns to the camera as it moves round the table, so every name can be read.
+    if (p.viewer === null && plateTurn.current) plateTurn.current.rotation.y = Math.atan2(camera.position.x - plateP.position[0], camera.position.z - plateP.position[2]);
     // A plate that would be cut by the edge of the picture fades out whole, and comes back when it is whole again.
     if (plateGroup.current && iron.current && face.current) {
       const [l, r] = ends.current as [THREE.Vector3, THREE.Vector3];
@@ -67,7 +71,7 @@ export function Seat(p: SeatProps) {
     if (chair.current) chair.current.position.z = push.current;
   });
   // A figure the player's eye is on looks back at the player.
-  const look = p.hovered || p.selected ? p.viewer : p.look;
+  const look = (p.hovered || p.selected) && p.viewer !== null ? p.viewer : p.look;
   return (
     <>
       <group position={pose.position} rotation-y={pose.facing}>
@@ -79,7 +83,7 @@ export function Seat(p: SeatProps) {
         <Figure index={index} mask={p.figure.mask} lookYaw={headYaw(index, look, p.viewer)} speaking={p.speaking} pointYaw={p.pointAt === null ? null : yawBetween(index, p.pointAt)} hovered={p.hovered} selected={p.selected} leaving={p.gone ? 1 : 0} />
       </group>
       {/* the name plate: a block of dark iron leaning back on the table, lettered on its face */}
-      <group position={plateP.position} rotation-y={plateP.facing} scale={plateScale(index, p.viewer)}>
+      <group ref={plateTurn} position={plateP.position} rotation-y={plateP.facing} scale={p.viewer === null ? 1 : plateScale(index, p.viewer)}>
         <group ref={plateGroup} position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[PLATE_W + 0.02, PLATE_H + 0.016, 0.03]} />
