@@ -8,7 +8,8 @@ import { Html } from '@react-three/drei';
 import { figurePose } from './layout.js';
 import { Seat } from './actors/Seat.js';
 import { Token } from './actors/Token.js';
-import { DAWN_REACH, TableMask } from './actors/TableMask.js';
+import { TableMask } from './actors/TableMask.js';
+import { DAWN_REACH } from './models/dimensions.js';
 import { YourHands } from './actors/YourHands.js';
 import { Candle } from './models/Candle.js';
 import { CANDLE_SPOTS } from './models/candles.js';
@@ -113,7 +114,7 @@ function World({ view, quality, onHover, onPick }: { view: SliceView; quality: Q
       ) : null}
       <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.dawn ? (bearingTo(view.dawn.victim) + bearingToTable(view.dawn.victim, DAWN_REACH)) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.tokens.length > 0 && view.banish === null && view.mood === 'day'} />
       {/* while a figure speaks, its own words are the caption */}
-      <Caption text={view.speech ? null : view.announce} />
+      <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
       <Effects quality={q} still={reduced} />
     </ResourcesContext.Provider>
   );

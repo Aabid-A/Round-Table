@@ -6,6 +6,8 @@
   color: #e8dfcc;
 }
 .slice canvas {
+  /* a swipe on the room is a look, not a scroll or a back gesture */
+  touch-action: none;
   display: block;
   width: 100%;
   height: 100%;

@@ -60,10 +60,8 @@ export function Seat(p: SeatProps) {
       shown.current += (want - shown.current) * approach(dt, 8, reduced);
       const o = shown.current;
       plateGroup.current.visible = o > 0.01;
-      for (const m of [iron.current, face.current]) {
-        m.transparent = o < 0.995;
-        m.opacity = o;
-      }
+      iron.current.opacity = o;
+      face.current.opacity = o;
     }
     push.current += ((p.pushedBack ? 0.55 : 0) - push.current) * approach(dt, 3, reduced);
     if (chair.current) chair.current.position.z = push.current;
@@ -85,11 +83,11 @@ export function Seat(p: SeatProps) {
         <group ref={plateGroup} position={[0, PLATE_H / 2 + 0.004, 0]} rotation-x={-0.3}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[PLATE_W + 0.02, PLATE_H + 0.016, 0.03]} />
-            <meshStandardMaterial ref={iron} color={PALETTE.iron} roughness={0.5} metalness={0.6} />
+            <meshStandardMaterial ref={iron} color={PALETTE.iron} roughness={0.5} metalness={0.6} transparent />
           </mesh>
           <mesh position={[0, 0, 0.0155]}>
             <planeGeometry args={[PLATE_W, PLATE_H]} />
-            <meshStandardMaterial ref={face} map={plate} roughness={0.6} emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.selected ? 1 : p.hovered ? 0.7 : 0.16} />
+            <meshStandardMaterial ref={face} map={plate} roughness={0.6} transparent emissive="#ffe6c0" emissiveMap={plate} emissiveIntensity={p.selected ? 1 : p.hovered ? 0.7 : 0.16} />
           </mesh>
         </group>
       </group>

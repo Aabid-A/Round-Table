@@ -5,6 +5,7 @@ import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { chairPose, tablePoint } from '../layout.js';
 import { CLUSTER_LIGHTS } from '../models/candles.js';
+import { DAWN_REACH } from '../models/dimensions.js';
 import type { SliceMood } from '../sliceView.js';
 import type { QualitySettings } from './quality.js';
 
@@ -48,7 +49,7 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
     const o = new THREE.Object3D();
     if (dawnSeat !== null) {
       const [cx, , cz] = chairPose(dawnSeat).position;
-      const [tx, , tz] = tablePoint(dawnSeat, 0.92); // where the mask lies (DAWN_REACH)
+      const [tx, , tz] = tablePoint(dawnSeat, DAWN_REACH);
       o.position.set((cx + tx) / 2, 0.9, (cz + tz) / 2);
     }
     return o;

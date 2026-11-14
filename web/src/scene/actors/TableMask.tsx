@@ -5,12 +5,9 @@ import type { Role } from '../../../../src/types.js';
 import { figurePose, tablePoint } from '../layout.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { approach, useReducedMotion } from '../motion.js';
+import { BANISHED_REACH } from '../models/dimensions.js';
 import { PALETTE } from '../palette.js';
 
-/** How far from the middle of the table a mask lies. A banished player's is left well in, on open wood clear of their name plate. */
-export const BANISHED_REACH = 0.28;
-/** The one found at dawn lies nearer its empty chair, so the morning light and the eye take in both together. */
-export const DAWN_REACH = 0.92;
 const SCALE = 0.2;
 /** How far the mask is tipped up from lying flat, toward the viewer, so it can be read from a seat. */
 const TILT = 0.42;

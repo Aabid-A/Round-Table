@@ -37,6 +37,8 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
   const reduced = useReducedMotion();
   const was = useRef<number | null>(null);
   const wasFree = useRef(free);
+  const wasOverview = useRef(overview);
+  const wasFocus = useRef(focus);
   const aspect = size.width / size.height;
   const tall = aspect < 1;
   const arc = yawArcFor(aspect);
@@ -109,10 +111,13 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
       cam.fov += (wantFov - cam.fov) * approach(dt, 2.2, reduced);
       cam.updateProjectionMatrix();
     }
-    // Reduced motion: whenever the camera's subject changes (a speaker begins or ends, a choice opens or is made) it cuts; it never pans by itself.
-    const cut = reduced && (toward !== was.current || free !== wasFree.current);
+    // Reduced motion: whenever the camera's subject changes (a speaker begins or ends, a choice opens or is made, a figure is chosen, the vote's wide view comes or goes) it cuts; it never pans by itself.
+    const cut = reduced && (toward !== was.current || free !== wasFree.current || overview !== wasOverview.current || focus !== wasFocus.current);
     was.current = toward;
     wasFree.current = free;
+    wasOverview.current = overview;
+    wasFocus.current = focus;
+    if (cut && s.finger === null) s.yaw = s.rest;
     // While a finger is down the look keeps up with it; otherwise it eases.
     const k = approach(dt, s.finger === null ? 2.6 : 14, cut);
     yaw.current += (wantYaw - yaw.current) * k;
