@@ -22,7 +22,7 @@ const WINDOW: [number, number, number] = [-4.5, 6, 6.5];
 /** How bright the fire is by mood. With the candles out the eye opens to it, so its glow carries across the table. */
 const FIRE = { day: 62, night: 125, dawn: 80 } as const;
 /** The fire's glow thrown back off the wall behind the player: warm, weak, and what lets a face be made out at night without turning it blue. */
-const BOUNCE = { day: 0, night: 9, dawn: 3 } as const;
+const BOUNCE = { day: 2.5, night: 9, dawn: 3 } as const;
 /** The grey of morning through the high window, over the whole table. The shaft on the empty chair is far brighter. */
 const MORNING = { day: 0, night: 0, dawn: 0.85 } as const;
 /** The faint cold light from above. At night it is what lets the masks and the empty chair be made out; it never lights the room. */
@@ -60,7 +60,7 @@ export function Lights({ mood, litCount, quality, dawnSeat }: Props) {
       if (!l) return;
       // The two candles of a cluster: how lit the pair is.
       const lit = Math.min(1, Math.max(0, litCount - c * 2) / 2) * 0.5 + Math.min(1, Math.max(0, litCount - c * 2 - 1)) * 0.5;
-      l.intensity = lit * (3.4 + (Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3) * flicker);
+      l.intensity = lit * (4.6 + (Math.sin(t * 9 + c * 3) * 0.5 + Math.sin(t * 23 + c) * 0.3) * flicker);
     });
     level.current.fire += (FIRE[mood] - level.current.fire) * k;
     if (fire.current) fire.current.intensity = level.current.fire * (1 + (Math.sin(t * 6.1) * 0.11 + Math.sin(t * 17) * 0.06) * flicker);

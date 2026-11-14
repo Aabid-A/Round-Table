@@ -63,7 +63,7 @@ export function Fireplace() {
       {[-0.4, -0.12, 0.16, 0.42].map((x, i) => (
         <mesh key={i} ref={(m) => void (tongues.current[i] = m)} position={[x, 0.55 + (i % 2) * 0.08, 0.12]}>
           <coneGeometry args={[0.2 - (i % 2) * 0.04, 0.9 + (i % 3) * 0.2, 10]} />
-          <meshStandardMaterial color={i % 2 ? PALETTE.flame : PALETTE.ember} emissive={i % 2 ? PALETTE.flame : PALETTE.ember} emissiveIntensity={3.2} toneMapped={false} transparent opacity={0.88} />
+          <meshStandardMaterial color={i % 2 ? PALETTE.flame : PALETTE.ember} emissive={i % 2 ? PALETTE.flame : PALETTE.ember} emissiveIntensity={1.7} transparent opacity={0.9} />
         </mesh>
       ))}
     </group>

@@ -6,7 +6,7 @@ import type { QualitySettings } from './quality.js';
 export function Effects({ quality, still = false }: { quality: QualitySettings; still?: boolean }) {
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
-      {quality.bloom ? <Bloom intensity={0.6} luminanceThreshold={0.92} luminanceSmoothing={0.35} mipmapBlur /> : <></>}
+      {quality.bloom ? <Bloom intensity={0.22} luminanceThreshold={1.15} luminanceSmoothing={0.25} mipmapBlur /> : <></>}
       {quality.depthOfField ? <DepthOfField worldFocusDistance={2.6} worldFocusRange={5} bokehScale={1.4} height={480} /> : <></>}
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       {quality.grain && !still ? <Noise blendFunction={BlendFunction.OVERLAY} opacity={0.1} /> : <></>}

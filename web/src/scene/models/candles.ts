@@ -32,5 +32,5 @@ export const CANDLE_SPOTS: CandleSpot[] = CLUSTERS.flatMap(([cx, cz], cluster) =
   }));
 });
 
-/** Where each cluster's light sits: over the middle of the pair, at flame height. */
-export const CLUSTER_LIGHTS: [number, number, number][] = CLUSTERS.map(([x, z]) => [x, TABLE_Y + 0.42, z]);
+/** Where each cluster's light sits: over the middle of the pair, a little above the flames, so the wax under it is not burnt white. */
+export const CLUSTER_LIGHTS: [number, number, number][] = CLUSTERS.map(([x, z]) => [x, TABLE_Y + 0.66, z]);
