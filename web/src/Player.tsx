@@ -121,8 +121,8 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
-  // The 3D room shows the public table and a seat's view (the all-seeing room and the result are still drawn flat).
-  const scene = showRoom && step.kind !== 'result' && !spectating ? (sv ?? tableSceneView(log, steps, index, view)) : null;
+  // The 3D room shows the public table, a seat's view and the all-seeing room (the result is still drawn flat).
+  const scene = showRoom && step.kind !== 'result' ? (sv ?? tableSceneView(log, steps, index, view)) : null;
   const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
   const said = sv ? roomAnnouncement(sv) : announcement(view);
   const world = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
@@ -158,9 +158,9 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
           <ReplayRoom
             view={world}
             onSit={sitAt}
-            label={seat !== null ? `The room from ${seat}'s chair` : 'The round table'}
+            label={seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table'}
             choice={choice}
-            fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={`The room from ${seat}'s chair`} /></div> : <Table seats={seats} view={view} />}
+            fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} /></div> : <Table seats={seats} view={view} />}
           />
         ) : (
           <Table seats={seats} view={view} />
