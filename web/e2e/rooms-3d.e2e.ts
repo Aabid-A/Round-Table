@@ -12,7 +12,7 @@ const sample = JSON.parse(readFileSync('tests/fixtures/sample-game.json', 'utf8'
 };
 
 test('a room’s seat plays in the 3D room, from your own chair, with the turn’s time on the table', async ({ page }) => {
-  await makeRoom(page, 'Quinn', '&seed=2&quality=low');
+  await makeRoom(page, 'Quinn', '&seed=2&quality=low', { room3d: true });
   await page.getByRole('button', { name: 'Start the game' }).click();
   // The first turn a seat is told anything in shows the room; the clock in words stays beside the form.
   const world = page.getByTestId('world');

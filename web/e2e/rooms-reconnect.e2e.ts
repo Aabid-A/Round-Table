@@ -66,7 +66,7 @@ test('when everyone walks away from a running game, the room closes and its code
 
   // After the abandon time (3 seconds) the room is gone: a new person is told no room has that code.
   await expect(async () => {
-    await page.goto(`/?mode=room&room=${code}`);
+    await page.goto(`/?mode=room&fallback=1&room=${code}`);
     await page.getByLabel('Your name at the table').fill('Rae');
     await page.getByRole('button', { name: 'Join room' }).click();
     await expect(page.getByRole('alert')).toContainText('No room has that code', { timeout: 2000 });
