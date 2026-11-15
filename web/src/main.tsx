@@ -21,7 +21,8 @@ import { TitleScreen } from './shell/TitleScreen.js';
 
 const search = window.location.search;
 // No address at all is the front door; ?mode=replay is the replay's file picker that used to live there.
-const isFrontDoor = new URLSearchParams(search).toString() === '';
+// The room's own settings (?quality=, ?fallback=1) do not make an address.
+const isFrontDoor = [...new URLSearchParams(search).keys()].every((k) => k === 'quality' || k === 'fallback');
 const page = isFrontDoor ? (
   <TitleScreen />
 ) : isCardPage(search) ? (

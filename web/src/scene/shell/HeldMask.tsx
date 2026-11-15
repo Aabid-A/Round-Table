@@ -9,7 +9,7 @@ import { PALETTE } from '../palette.js';
 
 /** How far in front of the eye the mask is held, and how far below it. */
 const AHEAD = 0.62;
-const BELOW = 0.2;
+const BELOW = 0.06;
 
 /**
  * Your role, told the way the room tells everything: your own mask held in your hands turns over, and its lining says what you are
