@@ -48,7 +48,7 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     revealed: s.status === 'alive' || (s.name === banishing && (step === 'pushback' || step === 'leave')) ? null : s.role,
     ...(s.mark === 'fellow' ? { fellow: true } : {}),
     // A living player's role above their seat: only for a viewer in no chair whose view holds it (the all-seeing room).
-    ...(from === null && s.status === 'alive' && s.role !== null ? { known: s.role } : {}),
+    ...(scene.viewer === null && s.status === 'alive' && s.role !== null ? { known: s.role } : {}),
   }));
   const looks = figures
     .sort((a, b) => a.index - b.index)
@@ -79,8 +79,8 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     dawn: dawn ? { victim: seatOf(dawn.victim), role: dawn.role } : null,
     whisper,
     recruit: stage?.kind === 'recruit' ? { from: seatOf(stage.from), to: seatOf(stage.to) } : null,
-    thought: from === null && scene.moment.thought && scene.moment.speaker && castIndex.has(scene.moment.speaker) ? { text: scene.moment.thought, speaker: seatOf(scene.moment.speaker) } : null,
-    whisperLines: scene.whispers.filter((w) => castIndex.has(w.from) && castIndex.has(w.to)).map((w) => ({ from: seatOf(w.from), to: seatOf(w.to) })),
+    thought: scene.viewer === null && scene.moment.thought && scene.moment.speaker && castIndex.has(scene.moment.speaker) ? { text: scene.moment.thought, speaker: seatOf(scene.moment.speaker) } : null,
+    whisperLines: scene.viewer !== null ? [] : scene.whispers.filter((w) => castIndex.has(w.from) && castIndex.has(w.to)).map((w) => ({ from: seatOf(w.from), to: seatOf(w.to) })),
     fallen: scene.seats.filter((s) => s.status !== 'alive' && !staged.has(s.name)).map((s) => ({ seat: seatOf(s.name), role: s.role })),
     choosable: [],
     hovered: null,

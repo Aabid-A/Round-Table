@@ -29,3 +29,20 @@ describe('where a speaker’s words go', () => {
     }
   });
 });
+
+describe('a private note beside the same speaker', () => {
+  const overlap = (a: { x: number; y: number }, b: { x: number; y: number }, box: { x: number; y: number }): boolean => Math.abs(a.x - b.x) < box.x && Math.abs(a.y - b.y) < box.y;
+  it('never lies over the speech, on a wide picture or a narrow one, wherever the speaker is', () => {
+    const half = { x: 0.06, y: 0.1 };
+    for (const box of [{ x: 0.48, y: 0.2 }, { x: 1.28, y: 0.3 }]) {
+      for (const hx of [-0.9, -0.5, -0.1, 0, 0.2, 0.7, 0.95]) {
+        for (const hy of [-0.2, 0, 0.3]) {
+          const head = { x: hx, y: hy };
+          const said = speechPlacement(head, half, box);
+          const noted = speechPlacement(head, half, box, true);
+          expect(overlap(said, noted, box), `box ${box.x} head ${hx},${hy}`).toBe(false);
+        }
+      }
+    }
+  });
+});
