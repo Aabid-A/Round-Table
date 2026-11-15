@@ -12,8 +12,10 @@ import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { FlatRoom } from './scene/FlatRoom.js';
 import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
-import { useBeat, useRoomChoice } from './scene/host.js';
+import { useBeat, useRoomChoice, useRoomSound } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
+import { Hud } from './shell/Hud.js';
+import { Shell } from './shell/Shell.js';
 import { momentWords } from './replay/momentWords.js';
 import { announcement, roomAnnouncement } from './replay/announce.js';
 import { tableSceneView } from './replay/tableScene.js';
@@ -49,6 +51,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
   // Whether the 3D room is actually on screen (not just wanted): the flat page keeps its own words and pace.
   const choice = useRoomChoice(window.location.search);
+  const sound = useRoomSound();
   const showRoom = room3d && choice.room;
   const durations = useMemo(
     () =>
@@ -119,6 +122,88 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
     if (name) sit(name);
   };
 
+  const viewPicker = (
+  <section className="sit" aria-label="Seat">
+    <div className="sit-row">
+      <label htmlFor="view-select">View</label>
+      <select
+        id="view-select"
+        value={seat ?? (spectating ? '@all' : '')}
+        onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
+      >
+        <option value="">The public table</option>
+        <option value="@all">All-seeing room (spoilers)</option>
+        {log.cast.map((c) => (
+          <option key={c.name} value={c.name}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+    <p className="hint">
+      {seat !== null
+        ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
+        : spectating
+          ? 'You see everything. Click a seat to see the game as that player. The camera follows the speaker; press A to come back here.'
+          : 'Choose the all-seeing room, or sit in a seat to see the game as that player: only what they were told.'}
+    </p>
+  </section>
+  );
+  const controls = (
+  <Controls
+    index={pos}
+    count={timeline.length}
+    playing={playing}
+    showNotes={showNotes}
+    notesLocked={perspective.kind !== 'table'}
+    onPrev={prev}
+    onNext={next}
+    onToggle={toggle}
+    onSeek={seek}
+    onNotes={setShowNotes}
+    {...(onReload ? { onReload } : {})}
+  />
+  );
+  const roomLabel = seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table';
+
+  if (world && step.kind !== 'result') {
+    // The game shell: the room fills the window, the phase top left, sound and the menu top right, the replay's controls in one bar.
+    return (
+      <Shell label="Round Table replay">
+        <main className="shell-app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
+          <ReplayRoom view={world} onSit={sitAt} label={roomLabel} choice={choice} fallback={null} />
+          <p className="sr-only" role="status" data-testid="announcement">
+            {playing ? '' : world.announce}
+          </p>
+          <h2 className="hud-phase" data-testid="section">
+            {sv ? sv.moment.title : step.section.title}
+            <span className="round"> · Round {step.section.round}</span>
+          </h2>
+          <Hud
+            muted={sound.muted}
+            onMute={sound.toggleMute}
+            menu={
+              <>
+                {onReload ? (
+                  <button type="button" className="hud-btn" onClick={onReload}>
+                    Load another log
+                  </button>
+                ) : null}
+                <a className="hud-btn" href="./">
+                  Back to the title
+                </a>
+              </>
+            }
+          />
+          <div className="shell-controls">
+            {controls}
+            {viewPicker}
+          </div>
+        </main>
+      </Shell>
+    );
+  }
+
   return (
     <main className="app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
       <header className="topbar">
@@ -155,44 +240,8 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
         )}
         {perspective.kind === 'table' && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
-      <section className="sit" aria-label="Seat">
-        <div className="sit-row">
-          <label htmlFor="view-select">View</label>
-          <select
-            id="view-select"
-            value={seat ?? (spectating ? '@all' : '')}
-            onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
-          >
-            <option value="">The public table</option>
-            <option value="@all">All-seeing room (spoilers)</option>
-            {log.cast.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <p className="hint">
-          {seat !== null
-            ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
-            : spectating
-              ? 'You see everything. Click a seat to see the game as that player. The camera follows the speaker; press A to come back here.'
-              : 'Choose the all-seeing room, or sit in a seat to see the game as that player: only what they were told.'}
-        </p>
-      </section>
-      <Controls
-        index={pos}
-        count={timeline.length}
-        playing={playing}
-        showNotes={showNotes}
-        notesLocked={perspective.kind !== 'table'}
-        onPrev={prev}
-        onNext={next}
-        onToggle={toggle}
-        onSeek={seek}
-        onNotes={setShowNotes}
-        {...(onReload ? { onReload } : {})}
-      />
+      {viewPicker}
+      {controls}
     </main>
   );
 }

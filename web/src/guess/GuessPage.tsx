@@ -7,6 +7,12 @@ import { loadFromName } from '../load.js';
 import { describeStep, stepDurationMs, type StepView } from '../replay/describe.js';
 import { buildSteps, seatsAt } from '../replay/timeline.js';
 import { Table } from '../Table.js';
+import { RecordRoom } from '../record/RecordRoom.js';
+import { announcement } from '../replay/announce.js';
+import { tableSceneView } from '../replay/tableScene.js';
+import { useRoomChoice, useRoomSound } from '../scene/host.js';
+import { Hud } from '../shell/Hud.js';
+import { Shell } from '../shell/Shell.js';
 import { EpisodesPage } from './EpisodesPage.js';
 import { pickEpisode } from './episodes.js';
 import { loadEpisodeIndex } from './loadIndex.js';
@@ -80,6 +86,8 @@ interface PlayerProps {
 function GuessPlayer({ log, name, episode }: PlayerProps) {
   const steps = useMemo(() => buildGuessSteps(log), [log]);
   const all = useMemo(() => buildSteps(log), [log]);
+  const choice = useRoomChoice(window.location.search);
+  const sound = useRoomSound();
   const setups = useMemo(() => pickSetups(log, steps), [log, steps]);
   const views = useMemo(() => steps.map((s) => (s.kind === 'play' ? describeStep(s.step, log) : EMPTY)), [steps, log]);
   const durations = useMemo(() => steps.map((s, i) => (s.kind === 'play' ? stepDurationMs(views[i]!) : s.kind === 'pick' ? 1000 : 0)), [steps, views]);
@@ -115,6 +123,46 @@ function GuessPlayer({ log, name, episode }: PlayerProps) {
   const round = step.kind === 'score' ? null : step.kind === 'pick' ? step.round : step.step.section.round;
   const setup = step.kind === 'pick' ? setups.find((s) => s.round === step.round) : undefined;
 
+  const playback = step.kind !== 'score' && (
+    <section className="controls" aria-label="Playback">
+      <div className="controls-row">
+        <button type="button" className="btn" onClick={prev} disabled={index === 0}>
+          Previous
+        </button>
+        <button type="button" className="btn btn-primary" onClick={toggle} disabled={!canNext}>
+          {playing ? 'Pause' : 'Play'}
+        </button>
+        <button type="button" className="btn" onClick={next} disabled={!canNext}>
+          Next
+        </button>
+        <span className="muted" aria-hidden="true">
+          {index + 1} / {steps.length}
+        </span>
+      </div>
+      <p className="hint">
+        {isLockedOut(index) ? 'Lock your picks to carry on.' : 'Space plays or pauses. Left and right arrows step. Private notes and roles stay hidden until the end.'}
+      </p>
+    </section>
+  );
+
+  if (choice.room && step.kind !== 'score' && all[step.at]?.kind !== 'result') {
+    // The game shell: the public table in the room, filling the window; the picks and the playback in one bar over it.
+    return (
+      <Shell label="Guess the traitor">
+        <RecordRoom scene={tableSceneView(log, all, step.at, views[index]!)} said={announcement(views[index]!)} stepKey={`guess:${index}`} choice={choice} label="The round table" fallback={null} />
+        <h2 className="hud-phase" data-testid="section">
+          {title}
+          {round !== null && <span className="round"> · Round {round}</span>}
+        </h2>
+        <Hud muted={sound.muted} onMute={sound.toggleMute} menu={<a className="hud-btn" href="./">Back to the title</a>} />
+        <div className="shell-controls">
+          {step.kind === 'pick' && setup ? <PickPanel key={step.round} setup={setup} locked={picks[step.round] ?? null} onLock={(names) => setPicks((p) => ({ ...p, [step.round]: names }))} /> : null}
+          {playback}
+        </div>
+      </Shell>
+    );
+  }
+
   return (
     <main className="app">
       <header className="topbar">
@@ -139,27 +187,7 @@ function GuessPlayer({ log, name, episode }: PlayerProps) {
         </div>
       )}
 
-      {step.kind !== 'score' && (
-        <section className="controls" aria-label="Playback">
-          <div className="controls-row">
-            <button type="button" className="btn" onClick={prev} disabled={index === 0}>
-              Previous
-            </button>
-            <button type="button" className="btn btn-primary" onClick={toggle} disabled={!canNext}>
-              {playing ? 'Pause' : 'Play'}
-            </button>
-            <button type="button" className="btn" onClick={next} disabled={!canNext}>
-              Next
-            </button>
-            <span className="muted" aria-hidden="true">
-              {index + 1} / {steps.length}
-            </span>
-          </div>
-          <p className="hint">
-            {isLockedOut(index) ? 'Lock your picks to carry on.' : 'Space plays or pauses. Left and right arrows step. Private notes and roles stay hidden until the end.'}
-          </p>
-        </section>
-      )}
+      {playback}
     </main>
   );
 }
