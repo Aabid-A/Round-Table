@@ -19,6 +19,8 @@ const MIN_PX = 290;
 const THOUGHT = { italic: true, colour: '#b8c4e6' };
 /** The most lines a private note takes in the room; the live region carries all of it. */
 const NOTE_LINES = 5;
+/** How large a note is beside what was said. */
+const NOTE_SIZE = 0.78;
 /** Half the width of a hooded head, in metres, to keep the words clear of the mask. */
 const HEAD_HALF = 0.2;
 
@@ -65,24 +67,25 @@ export function Speech({ text, speaker, note = null }: { text: string | null; sp
     const half = { x: Math.abs(tmp.side.x - head.x), y: Math.abs(tmp.side.x - head.x) * aspect };
     // A part of the picture, but never narrower than a short column of type: a room drawn in a small window still reads.
     const boxX = Math.min(NARROW, Math.max(narrow ? NARROW : WIDE, MIN_PX / size.width)) * 2;
-    const blockOf = (d: { aspect: number } | null) => (d ? { x: boxX, y: (boxX / d.aspect) * aspect } : null);
-    const column = stackBlocks(blockOf(said), blockOf(thought), 0.04);
+    // A note is written a size smaller than what was said: an aside, not the headline.
+    const blockOf = (d: { aspect: number } | null, k = 1) => (d ? { x: boxX * k, y: ((boxX * k) / d.aspect) * aspect } : null);
+    const column = stackBlocks(blockOf(said), blockOf(thought, NOTE_SIZE), 0.04);
     const c = speechPlacement(at, half, column.box);
     shown.current += (1 - shown.current) * approach(dt, 6, reduced);
-    const place = (mesh: THREE.Mesh | null, material: THREE.MeshStandardMaterial | null, d: { aspect: number } | null, dy: number): void => {
+    const place = (mesh: THREE.Mesh | null, material: THREE.MeshStandardMaterial | null, d: { aspect: number } | null, dy: number, k = 1): void => {
       if (!mesh || !material || !d) return;
       tmp.at.set(c.x, c.y + dy, 0.5).unproject(cam).sub(cam.position).normalize();
       mesh.position.copy(cam.position).addScaledVector(tmp.at, AHEAD);
       mesh.quaternion.copy(cam.quaternion);
       // Sized on the picture: so many device units wide, at the distance the words hang along their own line of sight.
       const along = AHEAD * tmp.at.dot(tmp.forward.set(0, 0, -1).applyQuaternion(cam.quaternion));
-      const w = boxX * along * Math.tan((cam.fov * Math.PI) / 360) * aspect;
+      const w = boxX * k * along * Math.tan((cam.fov * Math.PI) / 360) * aspect;
       mesh.scale.set(w, w / d.aspect, 1);
       material.opacity = shown.current;
       mesh.visible = shown.current > 0.01;
     };
     place(words.current, wordsMaterial.current, said, column.top);
-    place(noted.current, noteMaterial.current, thought, column.bottom);
+    place(noted.current, noteMaterial.current, thought, column.bottom, NOTE_SIZE);
   });
   if ((!said && !thought) || speaker === null) return null;
   return (

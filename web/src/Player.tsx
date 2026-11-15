@@ -41,7 +41,9 @@ const announcement = (view: StepView): string =>
 /** The moment alone, as the room's prompt says it: its title and what was said or done, without notes or whispers. */
 const momentWords = (view: SceneView): string => {
   const { title, speaker, text } = view.moment;
-  return text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title;
+  // An event's words often begin with its own title ("Recruitment. Esme offered…"): it is said once.
+  if (!text) return title;
+  return speaker ? `${title}. ${speaker}: ${text}` : text.startsWith(title) ? text : `${title}. ${text}`;
 };
 
 const roomAnnouncement = (view: SceneView): string => {
