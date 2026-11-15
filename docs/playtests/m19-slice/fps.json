@@ -1,0 +1,15 @@
+{
+  "how": "requestAnimationFrame deltas over 8 s at high quality, Chromium headless, WebGL2 through SwiftShader (software, no GPU)",
+  "1280x720": {
+    "frames": 5,
+    "fps": 0.63,
+    "medianMs": 1267,
+    "worstMs": 6000
+  },
+  "390x844": {
+    "frames": 15,
+    "fps": 1.88,
+    "medianMs": 567,
+    "worstMs": 1633
+  }
+}
