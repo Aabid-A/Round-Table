@@ -14,6 +14,7 @@ import { Room } from './scene/Room.js';
 import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
 import { useBeat, useRoomChoice } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
+import { momentWords } from './replay/momentWords.js';
 import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
@@ -38,14 +39,6 @@ const announcement = (view: StepView): string =>
  * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
  * panel and a line a screen reader cannot see.
  */
-/** The moment alone, as the room's prompt says it: its title and what was said or done, without notes or whispers. */
-const momentWords = (view: SceneView): string => {
-  const { title, speaker, text } = view.moment;
-  // An event's words often begin with its own title ("Recruitment. Esme offered…"): it is said once.
-  if (!text) return title;
-  return speaker ? `${title}. ${speaker}: ${text}` : text.startsWith(title) ? text : `${title}. ${text}`;
-};
-
 const roomAnnouncement = (view: SceneView): string => {
   const { title, speaker, text, thought } = view.moment;
   const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];

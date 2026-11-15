@@ -72,7 +72,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
       <Lights mood={view.mood} litCount={litNow} quality={q} dawnAt={dawnAt} hush={!!view.whisper || !!view.recruit || (view.whisperLines ?? []).length > 0} />
-      {view.mood === 'night' && (view.speech?.speaker ?? view.thought?.speaker) != null ? <SpeakerLight seat={(view.speech?.speaker ?? view.thought?.speaker)!} /> : null}
+      <SpeakerLight seat={view.speech?.speaker ?? view.thought?.speaker ?? null} on={view.mood === 'night'} />
       <HoverLight hovered={view.hovered} selected={view.selected} maskOf={maskOf} />
       <Hall />
       <Fireplace />

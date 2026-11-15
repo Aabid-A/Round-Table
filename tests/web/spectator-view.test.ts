@@ -95,3 +95,33 @@ describe('the all-seeing room in 3D', () => {
     expect(worldFromScene(spectatorView(log, steps, noted, ctx), '').thought?.text).toBeTruthy();
   });
 });
+
+describe('the all-seeing room’s prompt and shots', () => {
+  it('says an event once, without repeating its title, and says who speaks', async () => {
+    const { momentWords } = await import('../../web/src/replay/momentWords.js');
+    const base = { viewer: null, seats: [], night: false, whispers: [], camera: { focus: null, wide: false, cut: false } };
+    const m = (moment: object) => momentWords({ ...base, moment: { round: 1, thought: null, ...moment } } as never);
+    expect(m({ title: 'Recruitment', speaker: null, text: 'Recruitment. Esme offered Cleo a place.', kind: 'event' })).toBe('Recruitment. Esme offered Cleo a place.');
+    expect(m({ title: 'Breakfast', speaker: null, text: 'Esme was murdered.', kind: 'event' })).toBe('Breakfast. Esme was murdered.');
+    expect(m({ title: 'Round table', speaker: 'Dax', text: 'Let us not rush.', kind: 'speech' })).toBe('Round table. Dax: Let us not rush.');
+    expect(m({ title: 'Night', speaker: null, text: null, kind: 'none' })).toBe('Night');
+  });
+  it('holds a recruitment on the one recruited, pulls back for a whisper, and leaves a seat’s camera alone', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { buildContext } = await import('../../src/log/highlights/context.js');
+    const { buildSteps } = await import('../../web/src/replay/timeline.js');
+    const { spectatorView } = await import('../../web/src/perspective/spectatorView.js');
+    const { seatView } = await import('../../web/src/perspective/seatView.js');
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    const log = JSON.parse(readFileSync('tests/fixtures/sample-game.json', 'utf8'));
+    const steps = buildSteps(log);
+    const whisper = steps.findIndex((s) => s.kind === 'turn' && s.turn.phase === 'whispers' && (s.turn.action as { to?: string | null }).to);
+    expect(worldFromScene(spectatorView(log, steps, whisper, buildContext(log)), '').shot?.wide).toBe(true);
+    expect(worldFromScene(seatView(log, steps, whisper, 'Aria'), '').shot).toBeUndefined();
+    const recruitLog = await playMock(2);
+    const rs = buildSteps(recruitLog);
+    const r = rs.findIndex((s) => s.kind === 'event' && s.event.type === 'recruit');
+    const w = worldFromScene(spectatorView(recruitLog, rs, r, buildContext(recruitLog)), '');
+    expect(w.shot).toMatchObject({ focus: w.recruit!.to, wide: false });
+  });
+});
