@@ -74,3 +74,20 @@ test('a faithful sees no proposals, and the room speaks to a screen reader', asy
   await expect(world(page)).toHaveAttribute('data-proposals', '0');
   await expect(page.getByTestId('room-announcement')).not.toBeEmpty();
 });
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  test('the room sits above Confirm and never takes its tap', async ({ page }) => {
+    await startSolo(page, FAITHFUL);
+    await expect(world(page).locator('canvas')).toBeVisible({ timeout: 60_000 });
+    await expect(form(page)).toHaveAttribute('data-phase', 'whispers');
+    const roomBox = (await world(page).boundingBox())!;
+    const confirmBox = (await page.getByTestId('live-confirm').boundingBox())!;
+    expect(roomBox.y + roomBox.height).toBeLessThanOrEqual(confirmBox.y);
+    const before = await form(page).getAttribute('data-turn');
+    await form(page).getByLabel('Send no whisper').check();
+    await expect(page.getByTestId('live-send')).toBeEnabled();
+    await page.getByTestId('live-send').tap({ timeout: 10_000 });
+    await expect(form(page)).not.toHaveAttribute('data-turn', before ?? '', { timeout: 90_000 });
+  });
+});
