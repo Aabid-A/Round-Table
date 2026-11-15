@@ -12,7 +12,7 @@ const TOKEN = /^[0-9a-f-]{36}$/;
 
 /** Open the create form and make a room, ticking the options asked for. */
 async function makeRoomWith(page: Page, name: string, opts: { ghosts?: boolean; spectators?: boolean }, query = ''): Promise<string> {
-  await page.goto(`/?mode=room${query}`);
+  await page.goto(`/?mode=room&fallback=1${query}`);
   const create = page.getByRole('region', { name: 'Make a room' });
   await create.getByLabel('Your name at the table').fill(name);
   if (opts.ghosts) await create.getByTestId('ghosts-option').check();
@@ -56,7 +56,7 @@ test('the watch link shows the lobby, then the game, and the whole game when it 
   await makeRoomWith(page, 'Quinn', { spectators: true }, '&seed=5');
   const link = await page.getByTestId('watch-link').inputValue();
   const watcher = await (await browser.newContext()).newPage();
-  await watcher.goto(link);
+  await watcher.goto(`${link}&fallback=1`); // the flat all-seeing room (the 3D one is in rooms-3d.e2e.ts)
   await expect(watcher.getByTestId('watch-lobby')).toContainText('has not started');
 
   await page.getByRole('button', { name: 'Start the game' }).click();
@@ -100,7 +100,7 @@ test('a ghost sees every seat, hidden information included, and can move between
       }
     });
   });
-  await page.goto('/?mode=room');
+  await page.goto('/?mode=room&fallback=1');
   const create = page.getByRole('region', { name: 'Make a room' });
   await create.getByLabel('Your name at the table').fill('Aria2');
   await create.getByTestId('ghosts-option').check();

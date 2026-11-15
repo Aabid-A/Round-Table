@@ -1,4 +1,5 @@
-import { CANDLES, type SliceFigure, type SliceView } from '../scene/sliceView.js';
+import { CANDLES, type WorldFigure, type WorldView } from '../scene/world.js';
+import { choosePrompt, chosenPrompt, type InputKind } from '../scene/prompts.js';
 import { banished, dawnVictim, type SliceScript } from './script.js';
 
 /** Where the slice is. Some stages wait for the player; the rest end by themselves after a time (or when skipped). */
@@ -98,13 +99,13 @@ export function reduce(state: SliceState, action: Action, script: SliceScript): 
   }
 }
 
-/** The scene's input for this state. The role of a seat is in it only once the game has shown it. */
-export function viewOf(state: SliceState, script: SliceScript): SliceView {
+/** The scene's input for this state. The role of a seat is in it only once the game has shown it. `input` picks touch or key wording for the prompts. */
+export function viewOf(state: SliceState, script: SliceScript, input: InputKind = 'keys'): WorldView {
   const { stage } = state;
   const shown = state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end' || (stage.kind === 'banish' && stage.step === 'mask'));
   const gone = state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end' || (stage.kind === 'banish' && stage.step !== 'pushback'));
   const dawn = state.victim !== null && (stage.kind === 'dawn' || stage.kind === 'end');
-  const figures: SliceFigure[] = script.players.map((p) => ({
+  const figures: WorldFigure[] = script.players.map((p) => ({
     index: p.index,
     name: p.name,
     mask: p.index,
@@ -113,7 +114,7 @@ export function viewOf(state: SliceState, script: SliceScript): SliceView {
   }));
   const speech = stage.kind === 'speak' ? script.speeches[stage.i] : undefined;
   const speaker = speech?.speaker ?? null;
-  let pointing: SliceView['pointing'] = null;
+  let pointing: WorldView['pointing'] = null;
   if (speech) pointing = { from: speech.speaker, at: speech.suspect };
   if (stage.kind === 'pointed' && state.accused !== null) pointing = { from: script.you, at: state.accused };
   const looks: (number | null)[] = script.players.map((p) => {
@@ -122,7 +123,7 @@ export function viewOf(state: SliceState, script: SliceScript): SliceView {
     if (stage.kind === 'banish' && state.banished !== null) return state.banished;
     return null;
   });
-  const tokens: SliceView['tokens'] = [];
+  const tokens: WorldView['tokens'] = [];
   if (stage.kind === 'tally' || stage.kind === 'banish' || stage.kind === 'night') {
     for (const [owner, target] of Object.entries(script.aiVotes)) tokens.push({ owner: Number(owner), target });
     if (state.vote !== null) tokens.push({ owner: script.you, target: state.vote });
@@ -132,9 +133,9 @@ export function viewOf(state: SliceState, script: SliceScript): SliceView {
     switch (stage.kind) {
       case 'intro': return 'You sit at the round table. Seven masked figures sit with you. The candles are lit.';
       case 'speak': return `${names[speech!.speaker]} says: ${speech!.text} They point at ${names[speech!.suspect]}.`;
-      case 'accuse': return state.selected === null ? 'Your turn. Look at a figure and select them to accuse, or use the arrow keys and Enter.' : `${names[state.selected]} is chosen. Select them again (or press Enter) to accuse them, or look at someone else.`;
+      case 'accuse': return state.selected === null ? choosePrompt('Your turn.', 'accuse them', input) : chosenPrompt(names[state.selected]!, 'accuse them', input);
       case 'pointed': return `You point at ${names[state.accused ?? 0]}. The table turns to look.`;
-      case 'vote': return state.selected === null ? 'Time to vote. Look at a figure and select them to vote against them, or use the arrow keys and Enter.' : `${names[state.selected]} is chosen. Select them again (or press Enter) to slide your token to them, or look at someone else.`;
+      case 'vote': return state.selected === null ? choosePrompt('Time to vote.', 'vote against them', input) : chosenPrompt(names[state.selected]!, 'slide your token to them', input);
       case 'tally': return 'The tokens slide across the table.';
       case 'banish': return state.banished === null ? '' : stage.step === 'pushback' ? `${names[state.banished]}'s chair is pushed back.` : stage.step === 'leave' ? `${names[state.banished]} stands and leaves the table.` : `Their mask is turned over: a ${script.players[state.banished]!.role}.`;
       case 'night': return 'Night. The candles go out, one by one. Only the fire is left.';
@@ -151,6 +152,7 @@ export function viewOf(state: SliceState, script: SliceScript): SliceView {
     speech: speech ? { text: speech.text, speaker: speech.speaker } : null,
     pointing,
     looks,
+    voting: stage.kind === 'vote' || stage.kind === 'tally',
     tokens,
     banish: state.banished !== null && stage.kind === 'banish' ? { seat: state.banished, stage: stage.step, role: stage.step === 'mask' ? script.players[state.banished]!.role : null } : state.banished !== null && (stage.kind === 'night' || stage.kind === 'dawn' || stage.kind === 'end') ? { seat: state.banished, stage: 'done', role: script.players[state.banished]!.role } : null,
     dawn: dawn && state.victim !== null ? { victim: state.victim, role: script.players[state.victim]!.role } : null,

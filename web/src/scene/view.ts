@@ -24,6 +24,8 @@ export interface SceneMoment {
   /** The speaker's private notes, shown beside what they said. Only a viewer who may see everyone's notes gets this. */
   thought: string | null;
   kind: 'speech' | 'thought' | 'event' | 'none';
+  /** The seat the moment points at: the one a speaker accuses. Said aloud, so any viewer of the speech may know it. */
+  target?: string | null;
 }
 
 /** A whisper drawn as a line between two seats, with its text. Only a viewer who may see whispers between others gets these. */
@@ -50,6 +52,17 @@ export interface ScenePicking {
   options: string[];
   picked: string | null;
 }
+
+/**
+ * A moment the room stages, in place of a line of text: the murder found at dawn, a banishment with the mask turned over, the votes as
+ * tokens, a recruitment slid across the table, a whisper leaning in. Only a moment this viewer saw is ever set.
+ */
+export type SceneStage =
+  | { kind: 'dawn'; victim: string; role: Role | null }
+  | { kind: 'banish'; seat: string; role: Role; votes: { voter: string; target: string }[] }
+  | { kind: 'votes'; votes: { voter: string; target: string }[] }
+  | { kind: 'recruit'; from: string; to: string }
+  | { kind: 'whisper'; from: string; to: string };
 
 /** Where the camera looks. */
 export interface SceneCamera {
@@ -83,4 +96,6 @@ export interface SceneView {
   proposals?: SceneProposal[];
   timer?: SceneTimer | null;
   picking?: ScenePicking | null;
+  /** The moment the room stages now, if any (see SceneStage). */
+  stage?: SceneStage | null;
 }

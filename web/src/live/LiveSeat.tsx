@@ -5,8 +5,13 @@ import type { PublicPhase } from '../../../src/publicPhase.js';
 import { HumanForm, type FormState } from '../play/HumanForm.js';
 import { parsePrompt, type Knowledge } from '../perspective/knowledge.js';
 import { Room } from '../scene/Room.js';
+import { useChooseKeys } from '../scene/Choose.js';
+import { BANISH_BEAT_MS, BANISH_BEATS, banishWords, worldFromScene } from '../scene/fromScene.js';
+import { useBeat, useRoomChoice } from '../scene/host.js';
+import { momentWords } from '../replay/momentWords.js';
+import { LiveRoom } from './LiveRoom.js';
 import { newsToPlay, type LiveEvent } from './events.js';
-import { liveView, ringOrder } from './liveView.js';
+import { liveView, newsHoldMs, ringOrder } from './liveView.js';
 
 /** How long each piece of news stays up in the room. */
 export const BEAT_MS = 2800;
@@ -32,13 +37,16 @@ interface Props {
   onSubmit: (turn: LiveTurn, answer: HumanAnswer) => void;
   /** Shown beside the room when there is a turn (a clock in words, an error). */
   children?: React.ReactNode;
+  /** Show the room in 3D where it can be shown (the flat room stays as its fallback). */
+  room3d?: boolean;
 }
 
 /**
  * A live seat: the room seen from your own chair, and your turn made in it. Select a seat, then confirm; the ordinary form under
  * it is the accessible alternative and stays in step with the room. Everything it draws comes from this seat's own prompts.
  */
-export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
+export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false }: Props) {
+  const choice = useRoomChoice(window.location.search);
   const [mem, setMem] = useState<{ order: string[]; k: Knowledge | null; before: string[] | null }>({ order: [], k: null, before: null });
   const [reel, setReel] = useState<LiveEvent[]>([]);
   const [beatAt, setBeatAt] = useState(0);
@@ -74,9 +82,11 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
   }, [turn?.id]);
   useEffect(() => {
     if (beatAt >= reel.length) return;
-    const t = setTimeout(() => setBeatAt((i) => i + 1), BEAT_MS);
+    // In the 3D room a banishment is staged beat by beat: its news stays up until the mask has been turned over.
+    const ms = newsHoldMs(reel[beatAt], room3d && choice.room, BEAT_MS);
+    const t = setTimeout(() => setBeatAt((i) => i + 1), ms);
     return () => clearTimeout(t);
-  }, [reel, beatAt]);
+  }, [reel, beatAt, room3d, choice.room]);
   useEffect(() => {
     if (!turn || turn.timeoutMs === null) return setLeft(null);
     const end = Date.now() + turn.timeoutMs;
@@ -105,6 +115,14 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
         : null,
     [k, order, reel, beatAt, turn, publicPhase, picked, left],
   );
+  const shown = view && hold && !view.sleep ? { ...view, sleep: true, night: true } : view;
+  // A banishment in the room is staged beat by beat, as in the replay.
+  const beat = useBeat(shown?.stage?.kind === 'banish' ? `${turn?.id ?? ''}:${beatAt}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
+  const said = shown ? (shown.sleep ? 'Night. You sleep.' : momentWords(shown)) : '';
+  const world = room3d && choice.room && shown ? worldFromScene(shown, shown.stage?.kind === 'banish' ? banishWords(shown.stage.seat, beat, said) : said, beat) : null;
+  const nameAt = (seat: number): string | null => world?.figures.find((f) => f.index === seat)?.name ?? null;
+  // The keys choose among the seats the turn offers, and Enter confirms, as in the slice.
+  useChooseKeys(world?.choosable ?? [], world?.selected ?? null, (seat) => setPicked(nameAt(seat)), () => submit.current?.());
   const sleeps = view?.sleep === true;
   useEffect(() => {
     if (sleeps) startHold();
@@ -119,7 +137,11 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children }: Props) {
   return (
     <div className="live" data-testid="live-seat">
       <div className="live-room">
-        <Room view={hold && !view.sleep ? { ...view, sleep: true, night: true } : view} onPick={setPicked} label={`The room from your chair, ${k.name}`} />
+        {world ? (
+          <LiveRoom view={world} choice={choice} onPick={(seat) => setPicked(nameAt(seat))} label={`The room from your chair, ${k.name}`} fallback={<Room view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />} />
+        ) : (
+          <Room view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />
+        )}
       </div>
       {children}
       {turn && (

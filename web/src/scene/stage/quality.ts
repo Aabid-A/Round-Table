@@ -22,6 +22,16 @@ export const QUALITY: Record<Quality, QualitySettings> = {
 export const HIGH_MAX_MS = 25;
 export const MEDIUM_MAX_MS = 42;
 
+/** Slower than this (ms, under 10 fps) at the first frames, the machine is too slow for the room: the page shows its plain version. */
+export const TOO_SLOW_MS = 100;
+
+/** Whether the first frames say the room is too slow to show at all: their median is over TOO_SLOW_MS. */
+export function tooSlow(frameMs: number[]): boolean {
+  if (frameMs.length === 0) return false;
+  const sorted = [...frameMs].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)]! > TOO_SLOW_MS;
+}
+
 /** Pick a level from frame times measured while the scene runs at high: the median, so one slow frame does not decide. */
 export function chooseQuality(frameMs: number[]): Quality {
   if (frameMs.length === 0) return 'medium';

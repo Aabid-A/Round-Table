@@ -11,6 +11,11 @@ import { describeStep, stepDurationMs, type StepView } from './replay/describe.j
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
 import { Room } from './scene/Room.js';
+import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
+import { useBeat, useRoomChoice } from './scene/host.js';
+import { ReplayRoom } from './replay/ReplayRoom.js';
+import { momentWords } from './replay/momentWords.js';
+import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
 import { usePlayback } from './usePlayback.js';
@@ -22,6 +27,8 @@ interface Props {
   live?: boolean;
   /** What to show when the address does not say (a watcher opens in the all-seeing room). */
   initial?: Perspective;
+  /** Show the public table and the seats in the 3D room where it can be shown (the flat page stays as its fallback). */
+  room3d?: boolean;
 }
 
 const announcement = (view: StepView): string =>
@@ -41,7 +48,7 @@ const roomAnnouncement = (view: SceneView): string => {
 };
 
 /** Plays one game log like an episode. */
-export function Player({ log, onReload, live = false, initial }: Props) {
+export function Player({ log, onReload, live = false, initial, room3d = false }: Props) {
   const steps = useMemo(() => buildSteps(log, { partial: live }), [log, live]);
   const views = useMemo(() => steps.map((s) => describeStep(s, log)), [steps, log]);
   const [showNotes, setShowNotes] = useState(false);
@@ -55,9 +62,18 @@ export function Player({ log, onReload, live = false, initial }: Props) {
   const ctx = useMemo(() => buildContext(log), [log]);
   // The steps this viewer walks: all of them at the public table, a seat's own list when seated (see seatTimeline).
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
+  // Whether the 3D room is actually on screen (not just wanted): the flat page keeps its own words and pace.
+  const choice = useRoomChoice(window.location.search);
+  const showRoom = room3d && choice.room;
   const durations = useMemo(
-    () => timeline.map((i) => (seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat)))),
-    [timeline, views, log, steps, seat],
+    () =>
+      timeline.map((i) => {
+        const ms = seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat));
+        // In the room a banishment is staged beat by beat; playing waits for the mask to be turned over.
+        const s = steps[i]!;
+        return showRoom && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(ms, BANISH_MS) : ms;
+      }),
+    [timeline, views, log, steps, seat, showRoom],
   );
   const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
   const at = Math.min(pos, timeline.length - 1);
@@ -106,6 +122,17 @@ export function Player({ log, onReload, live = false, initial }: Props) {
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
+  // The 3D room shows the public table, a seat's view and the all-seeing room (the result is still drawn flat).
+  const scene = showRoom && step.kind !== 'result' ? (sv ?? tableSceneView(log, steps, index, view)) : null;
+  const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
+  const said = sv ? roomAnnouncement(sv) : announcement(view);
+  const built = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
+  // In the all-seeing room the notes and whispers are drawn in the room; its prompt says only the moment (the live region keeps all).
+  const world = built && spectating && !(scene?.stage?.kind === 'banish') ? { ...built, caption: momentWords(sv!) } : built;
+  const sitAt = (s: number): void => {
+    const name = world?.figures.find((f) => f.index === s)?.name;
+    if (name) sit(name);
+  };
 
   return (
     <main className="app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
@@ -117,19 +144,27 @@ export function Player({ log, onReload, live = false, initial }: Props) {
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : sv ? roomAnnouncement(sv) : announcement(view)}
+        {playing ? '' : world ? world.announce : sv ? roomAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {sv ? sv.moment.title : step.section.title}
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
-        {sv ? (
+        {sv && !world ? (
           <div className="seat-room">
             <Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
+        ) : world ? (
+          <ReplayRoom
+            view={world}
+            onSit={sitAt}
+            label={seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table'}
+            choice={choice}
+            fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} /></div> : <Table seats={seats} view={view} />}
+          />
         ) : (
           <Table seats={seats} view={view} />
         )}

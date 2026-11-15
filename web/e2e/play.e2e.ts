@@ -1,3 +1,4 @@
+// The solo page's forms and flow, on the flat room (the 3D room's fallback); play-3d.e2e.ts covers the room.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -30,7 +31,7 @@ async function playThrough(page: Page, note = 'my note'): Promise<number> {
 }
 
 async function startPractice(page: Page, name = 'Sam', query = 'seed=5'): Promise<void> {
-  await page.goto(`/?mode=play&${query}`);
+  await page.goto(`/?mode=play&fallback=1&${query}`);
   await page.getByLabel(/Your name at the table/).fill(name);
   await page.getByRole('button', { name: 'Take a seat' }).click();
 }
@@ -56,7 +57,7 @@ async function smartOpenRouter(page: Page, human: string): Promise<void> {
 }
 
 test('the setup checks the name, and real models need a key, seven models and a cap', async ({ page }) => {
-  await page.goto('/?mode=play');
+  await page.goto('/?mode=play&fallback=1');
   await expect(page.getByRole('heading', { level: 1, name: 'Take a seat' })).toBeVisible();
   await page.getByLabel(/Your name at the table/).fill('Aria');
   await page.getByRole('button', { name: 'Take a seat' }).click();
@@ -147,7 +148,7 @@ test('quit really stops the game: no further calls to OpenRouter after it', asyn
     await new Promise((r) => setTimeout(r, 20));
     await route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.0001 } }), contentType: 'application/json' }).catch(() => undefined);
   });
-  await page.goto('/?mode=play&seed=5');
+  await page.goto('/?mode=play&seed=5&fallback=1');
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
@@ -173,7 +174,7 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
   await page.route(OPENROUTER, (route) =>
     route.fulfill({ body: JSON.stringify({ choices: [{ message: { content: 'no json' } }], usage: { total_tokens: 5, cost: 0.6 } }), contentType: 'application/json' }),
   );
-  await page.goto('/?mode=play&seed=5');
+  await page.goto('/?mode=play&seed=5&fallback=1');
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill(KEY);
@@ -210,7 +211,7 @@ test('real models: the key goes only to OpenRouter, is not stored or shown, and 
 
 test('real models: what the AIs privately wrote about you is listed, and a card downloads as a 1200x675 PNG', async ({ page }) => {
   await smartOpenRouter(page, 'Sam');
-  await page.goto('/?mode=play&seed=5');
+  await page.goto('/?mode=play&seed=5&fallback=1');
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
@@ -230,7 +231,7 @@ test('real models: what the AIs privately wrote about you is listed, and a card 
 
 test('a long list of notes about you shows the first six, and the rest on request', async ({ page }) => {
   await smartOpenRouter(page, 'Sam');
-  await page.goto('/?mode=play&seed=5');
+  await page.goto('/?mode=play&seed=5&fallback=1');
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByLabel(/Real models through OpenRouter/).check();
   await page.getByLabel('Your OpenRouter key').fill('k');
@@ -264,7 +265,7 @@ test('a practice game with no AI naming you says so, and play again returns to t
 });
 
 test('the note card keeps a very long word and a very long note inside its box', async ({ page }) => {
-  await page.goto('/?mode=play');
+  await page.goto('/?mode=play&fallback=1');
   const result = await page.evaluate(async () => {
     const url = '/src/play/noteCard.ts'; // the dev server serves source modules, so the test can call the real drawing code
     const { drawNoteCard, NOTE_CARD } = (await import(/* @vite-ignore */ url)) as typeof import('../src/play/noteCard.js');
