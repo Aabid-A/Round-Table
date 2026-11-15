@@ -1,6 +1,6 @@
 # M19 step 2 playtest: the replay and the perspective replay in the 3D room
 
-**How it was run.** Vite dev server, Chromium headless with WebGL2 through **SwiftShader (software rendering, no GPU on this machine)**. The sample game (`tests/fixtures/sample-game.json`) and, for a recruitment, the mock game of seed 2 (Esme recruits Cleo; the sample game has none). Each moment was reached the way a viewer reaches it: open the address, step with the arrow keys. Stills are of the room as it sits on the replay page, at 390x844 (`p-*`) and 1280x720 (`d-*`), high quality. Every look described here was seen in a still.
+**How it was run.** Vite dev server, Chromium headless with WebGL2 through **SwiftShader (software rendering, no GPU on this machine)**. The sample game (`tests/fixtures/sample-game.json`) and, for a recruitment, the mock game of seed 2 (Esme recruits Cleo; the sample game has none). Each moment was reached the way a viewer reaches it: open the address, step with the arrow keys. Stills are of the room as it sits on the replay page, at 390x844 (`p-*`) and 1280x720 (`d-*`), high quality. The stills and the video set `?quality=`, which skips the frame-time probe; on this software renderer the probe would otherwise have shown the flat page (first frames under 10 fps). Every look described here was seen in a still.
 
 **Files.** Fourteen stills: `1-dawn` (the public table at breakfast), `2-whisper-to-you` (seated as Dax as whispers reach him), `3-accusation` (the public table, Dax accuses), `4-vote-tokens` (the public table, the vote counted), `5-banishment` (the public table, Aria banished, the mask turned over), `6-recruitment` (seated as Cleo, recruited by Esme), `7-seated-accusation` (seated as Aria, another player accuses). `m19-replay-cut.webm`: 30 s, the public replay playing on its own from the first night to the first banishment at medium quality, sped up (the renderer made about three frames a second). `fps.json`: frame rates.
 
@@ -18,7 +18,7 @@
 3. **Told apart at a glance without names?** Yes for every mask that faces the camera. A figure seen from behind across the director's shot (Bram in `d-3`) shows only its hood and cape colour.
 4. **Flat card, default material or evenly lit?** The name plates are lettered iron plates; no default materials; the room is not evenly lit.
 5. **Text unreadable, clipped or floating free?** Speech is beside its speaker. Event words (breakfast, the vote result, the banishment) are a caption over the table and can lie over plates. Three whispers that arrive together make a long block (`d-2`, `p-2`); the words, with their test ids, are the mock game's.
-6. **Anticipation, response, settle?** Hovering a figure lifts it and lights it; a click sits you there and the camera moves into that chair. The banishment and the recruitment are moments with a start, a movement and a rest.
+6. **Anticipation, response, settle?** In the code, hovering a figure lifts it and lights it, and a click sits you in that chair: the view cuts into it and the look turns. Hover and click were tested in the browser but not captured in a still or the video. The banishment and the recruitment are moments with a start, a movement and a rest.
 7. **Frozen figure? Camera snap or drift?** None seen. The director glides between shots and cuts on events.
 
 ## Second opinion on the stills
