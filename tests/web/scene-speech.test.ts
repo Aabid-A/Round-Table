@@ -30,19 +30,17 @@ describe('where a speaker’s words go', () => {
   });
 });
 
-describe('a private note beside the same speaker', () => {
-  const overlap = (a: { x: number; y: number }, b: { x: number; y: number }, box: { x: number; y: number }): boolean => Math.abs(a.x - b.x) < box.x && Math.abs(a.y - b.y) < box.y;
-  it('never lies over the speech, on a wide picture or a narrow one, wherever the speaker is', () => {
-    const half = { x: 0.06, y: 0.1 };
-    for (const box of [{ x: 0.48, y: 0.2 }, { x: 1.28, y: 0.3 }]) {
-      for (const hx of [-0.9, -0.5, -0.1, 0, 0.2, 0.7, 0.95]) {
-        for (const hy of [-0.2, 0, 0.3]) {
-          const head = { x: hx, y: hy };
-          const said = speechPlacement(head, half, box);
-          const noted = speechPlacement(head, half, box, true);
-          expect(overlap(said, noted, box), `box ${box.x} head ${hx},${hy}`).toBe(false);
-        }
-      }
+describe('the speech and the notes as one column', () => {
+  it('puts the notes wholly under the speech, inside the whole, whatever their heights', async () => {
+    const { stackBlocks } = await import('../../web/src/scene/stage/speech.js');
+    for (const [sh, nh] of [[0.64, 0.19], [0.19, 0.64], [0.3, 0.3]] as const) {
+      const s = stackBlocks({ x: 0.48, y: sh }, { x: 0.48, y: nh }, 0.04);
+      expect(s.box.y).toBeCloseTo(sh + nh + 0.04);
+      // The speech's bottom edge is above the notes' top edge, by the gap.
+      expect(s.top - sh / 2 - (s.bottom + nh / 2)).toBeCloseTo(0.04);
+      expect(s.top + sh / 2).toBeCloseTo(s.box.y / 2);
+      expect(s.bottom - nh / 2).toBeCloseTo(-s.box.y / 2);
     }
+    expect(stackBlocks({ x: 0.48, y: 0.3 }, null, 0.04)).toEqual({ box: { x: 0.48, y: 0.3 }, top: 0, bottom: -0.15 });
   });
 });

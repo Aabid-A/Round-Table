@@ -112,8 +112,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       {view.recruit ? <Recruit key={`${view.recruit.from}-${view.recruit.to}`} from={view.recruit.from} to={view.recruit.to} mask={maskOf(view.recruit.from)} /> : null}
       {view.figures.filter((f) => f.present && f.known).map((f) => <RoleSigil key={`role-${f.mask}`} seat={f.index} role={f.known!} />)}
       {(view.whisperLines ?? []).map((w) => <WhisperLine key={`w-${w.from}-${w.to}`} from={w.from} to={w.to} />)}
-      <Speech text={view.thought?.text ?? null} speaker={view.thought?.speaker ?? null} thought />
-      <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
+      <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? view.thought?.speaker ?? null} note={view.thought?.text ?? null} />
       {view.you !== null ? (
   <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.whisper && view.whisper.from !== view.you ? bearingTo(view.whisper.from) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(restingSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
       ) : (
