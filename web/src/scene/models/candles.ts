@@ -12,7 +12,7 @@ export interface CandleSpot {
  * stands in front of a mask or a name plate.
  */
 const CLUSTERS: [number, number][] = [
-  [0.867, 0.598],
+  [0.74, 0.42],
   [0.41, -0.5],
   [-0.33, 0.1],
 ];
@@ -27,7 +27,8 @@ export const CANDLE_SPOTS: CandleSpot[] = CLUSTERS.flatMap(([cx, cz], cluster) =
   const spread = cluster === 0 ? 0 : 0.045;
   return [-1, 1].map((side, k) => ({
     position: [cx + (ax * 0.09 - az * spread) * side, TABLE_Y, cz + (az * 0.09 + ax * spread) * side] as [number, number, number],
-    height: 0.2 + 0.1 * ((cluster + k) % 3),
+    // The pair nearest the player stands short, so its flames stay under the masks across the table.
+    height: cluster === 0 ? 0.1 + 0.04 * k : 0.2 + 0.1 * ((cluster + k) % 3),
     cluster,
   }));
 });

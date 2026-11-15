@@ -15,7 +15,7 @@ interface Props {
   free: boolean;
   /** The seat the player has chosen. In a tall window the camera turns to it, so a choice made by keyboard is seen. */
   focus: number | null;
-  /** The moment is about the whole table (the vote): a tall window widens to take it in. */
+  /** The moment is about the whole table (the vote): a tall window leans in over the table to take it in. */
   overview: boolean;
 }
 
@@ -39,6 +39,8 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
   const wasFree = useRef(free);
   const wasOverview = useRef(overview);
   const wasFocus = useRef(focus);
+  // How far a tall window has leaned in over the table for the vote (0 seated, 1 leaning in).
+  const lean = useRef(0);
   const aspect = size.width / size.height;
   const tall = aspect < 1;
   const arc = yawArcFor(aspect);
@@ -92,19 +94,21 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
   useEffect(() => {
     if (toward !== null) swipe.current.rest = 0;
   }, [toward]);
+  // Once the choice is made, a tall window comes back to the middle of the table to watch the tokens slide.
   useEffect(() => {
     if (tall && focus !== null) swipe.current.rest = clamp(bearingTo(focus), -SWIPE_MAX, SWIPE_MAX);
-  }, [tall, focus]);
+    else if (tall && overview) swipe.current.rest = 0;
+  }, [tall, focus, overview]);
   useFrame(({ clock }, dt) => {
     // With motion reduced there is no breathing sway, and the turn toward a speaker is a cut. The look still follows the pointer: that is the player's own movement.
     const t = clock.elapsedTime * idle(reduced);
     const s = swipe.current;
     if (s.finger === null) s.yaw += (s.rest - s.yaw) * approach(dt, 5, reduced);
-    // A wide window keeps most of the table in view and only leans toward a speaker; a tall one turns to face them.
-    const lean = toward === null ? 0 : tall ? clamp(toward, -SWIPE_MAX, SWIPE_MAX) : clamp(toward * 0.72, -0.85, 0.85);
-    const wantYaw = lean + s.yaw + pointer.current.x * arc * (free ? 1 : 0.35);
+    // A wide window keeps most of the table in view and leans toward a speaker across it; one beside you is turned to fully, so they are whole and not cut by the edge.
+    const turn = toward === null ? 0 : tall || Math.abs(toward) > 0.8 ? clamp(toward, -SWIPE_MAX, SWIPE_MAX) : clamp(toward * 0.72, -0.85, 0.85);
+    const wantYaw = turn + s.yaw + pointer.current.x * arc * (free ? 1 : 0.35);
     const wide = tall && overview;
-    const wantPitch = wide ? OVERVIEW.pitch : restPitchFor(aspect) + (free ? -pointer.current.y * PITCH_ARC : 0);
+    const wantPitch = wide ? OVERVIEW.pitch - pointer.current.y * PITCH_ARC * 0.5 : restPitchFor(aspect) + (free ? -pointer.current.y * PITCH_ARC : 0);
     const cam = camera as THREE.PerspectiveCamera;
     const wantFov = wide ? OVERVIEW.fov : fovFor(aspect);
     if (Math.abs(cam.fov - wantFov) > 0.01) {
@@ -120,9 +124,10 @@ export function FirstPerson({ toward, free, focus, overview }: Props) {
     if (cut && s.finger === null) s.yaw = s.rest;
     // While a finger is down the look keeps up with it; otherwise it eases.
     const k = approach(dt, s.finger === null ? 2.6 : 14, cut);
+    lean.current += ((wide ? 1 : 0) - lean.current) * approach(dt, 2.2, cut);
     yaw.current += (wantYaw - yaw.current) * k;
     pitch.current += (wantPitch - pitch.current) * k;
-    camera.position.set(EYE[0] + Math.sin(t * 0.37) * 0.006, EYE[1] + Math.sin(t * 0.9) * 0.007, EYE[2]);
+    camera.position.set(EYE[0] + Math.sin(t * 0.37) * 0.006, EYE[1] + lean.current * OVERVIEW.rise + Math.sin(t * 0.9) * 0.007, EYE[2] - lean.current * OVERVIEW.forward);
     // Looking across the table (toward -z), then turned by the head's yaw and pitch.
     camera.quaternion.setFromEuler(new THREE.Euler(pitch.current, -yaw.current, Math.sin(t * 0.4) * 0.002, 'YXZ'));
     // The debug hook a test reads: where the head is turned.

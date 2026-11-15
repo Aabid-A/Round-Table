@@ -1,9 +1,33 @@
-import { SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
+import { BANISHED_MASK_HALF, BANISHED_REACH, DAWN_MASK_HALF, DAWN_REACH, EYE_Z, PLATE_W, SEAT_R, TABLE_R, TABLE_Y } from './models/dimensions.js';
 
 export const SEATS = 8;
 
-/** The angle of seat `i` around the table, from the player's own seat at 0 (nearest the camera, +z), going round clockwise seen from above. */
-export const seatAngle = (i: number): number => (i / SEATS) * Math.PI * 2;
+/**
+ * Where each seat is round the table, in degrees from the player's own seat at 0 (nearest the camera, +z), clockwise seen from above.
+ * The two seats beside you are given more room (58 degrees, the rest about 41), so from your chair the figure across the corner of
+ * the table is whole in a wide picture while the ones beside you stay out of it until you turn to them.
+ */
+const ANGLES = [0, 58, 99, 140, 180, 220, 261, 302] as const;
+
+/**
+ * How the seats are spaced: 'seated' when the camera sits in seat 0 (see ANGLES), 'even' when it sits in no chair (a spectator, the
+ * public table), so no seat is set apart. The World sets it before it draws; a page shows one kind of room at a time.
+ */
+export type Spacing = 'seated' | 'even';
+let spacing: Spacing = 'seated';
+export function setSpacing(s: Spacing): void {
+  spacing = s;
+}
+
+/** The angle of seat `i` around the table, in radians (see ANGLES and Spacing). */
+export const seatAngle = (i: number): number => {
+  const k = ((i % SEATS) + SEATS) % SEATS;
+  return spacing === 'even' ? (k / SEATS) * Math.PI * 2 : (ANGLES[k]! * Math.PI) / 180;
+};
+
+/** The seats beside yours sit a little back from the table, so they do not loom at the edges of your picture. */
+export const BESIDE_BACK = 0.25;
+const back = (i: number): number => (spacing === 'seated' && (i === 1 || i === SEATS - 1) ? BESIDE_BACK : 0);
 
 export interface Pose {
   position: [number, number, number];
@@ -14,14 +38,14 @@ export interface Pose {
 /** Where a chair stands. The chair's front is +z in its own space; turning it by angle + PI faces the table's middle. */
 export function chairPose(i: number, pushedBack = 0): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R + pushedBack;
+  const r = SEAT_R + back(i) + pushedBack;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
 /** Where a seated figure's body is: on the chair, a little in front of its back. */
 export function figurePose(i: number): Pose {
   const a = seatAngle(i);
-  const r = SEAT_R - 0.1;
+  const r = SEAT_R + back(i) - 0.1;
   return { position: [Math.sin(a) * r, 0, Math.cos(a) * r], facing: a + Math.PI };
 }
 
@@ -29,6 +53,59 @@ export function figurePose(i: number): Pose {
 export function tablePoint(i: number, r: number): [number, number, number] {
   const a = seatAngle(i);
   return [Math.sin(a) * r, TABLE_Y, Math.cos(a) * r];
+}
+
+/**
+ * Where a mask left on the table lies: `reach` from the middle toward its seat, moved along the table's edge toward the middle of
+ * your view just far enough that, from your seat, the mask (`half` either side of its middle) and its name plate do not cover each
+ * other, with a little room between them.
+ */
+export function maskSpot(i: number, reach: number, half: number): [number, number, number] {
+  const a = seatAngle(i);
+  const [x, y, z] = tablePoint(i, reach);
+  // Along the edge, the way that brings it toward the line straight across the table (the seat across goes to your left).
+  const tx = Math.cos(a);
+  const tz = -Math.sin(a);
+  const toMiddle = Math.abs(x + tx * 0.01) < Math.abs(x) || (Math.abs(x) < 1e-6 && tx < 0) ? 1 : -1;
+  const plate = platePose(i, 0).position;
+  const plateSpan = span(plate, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
+  let spot: [number, number, number] = [x, y, z];
+  for (let aside = 0; aside <= 0.6; aside += 0.01) {
+    spot = [x + tx * aside * toMiddle, y, z + tz * aside * toMiddle];
+    const m = span(spot, half);
+    if (m[1] < plateSpan[0] - MASK_GAP || plateSpan[1] < m[0] - MASK_GAP) break;
+  }
+  return spot;
+}
+
+/** The mask found at dawn: near the empty chair, so the morning light and the eye take in both together. */
+export const dawnMaskSpot = (i: number): [number, number, number] => maskSpot(i, DAWN_REACH, DAWN_MASK_HALF);
+
+/**
+ * A banished player's mask, turned over to show the role: in the middle of the table on your side, leaning toward the banished
+ * player's place, so the reveal is near and read at a glance and lies beside no other player's name.
+ */
+export function banishedMaskSpot(i: number): [number, number, number] {
+  const a = seatAngle(i);
+  return [Math.sin(a) * BANISHED_REACH, TABLE_Y, 0.8 + Math.cos(a) * 0.1];
+}
+
+/** How far a banished player's mask is tipped up: a little less than others, so near you it stays below the names across the table. */
+export const BANISHED_TILT = 0.3;
+
+/** Room left between a mask on the table and its plate as you see them, in radians. */
+const MASK_GAP = 0.02;
+
+/** How far across your view something reaches (radians, positive right), from its middle `p` and its half width `half`. */
+function span(p: [number, number, number], half: number): [number, number] {
+  const b = bearingFromEye(p);
+  const w = Math.atan(half / Math.hypot(p[0], EYE_Z - p[2]));
+  return [b - w, b + w];
+}
+
+/** Whether something at `p` is seen from your eye (radians across, positive right). */
+export function bearingFromEye(p: [number, number, number]): number {
+  return Math.atan2(p[0], EYE_Z - p[2]);
 }
 
 /**
@@ -52,9 +129,10 @@ export function plateScale(i: number, viewer: number): number {
  * How much of a name plate to show, from where its two ends fall across the picture (-1 at the left edge, 1 at the right): all of it
  * while it is whole and clear of the edge, none of it by the time an end would touch the edge. A name is never left half cut off.
  */
-export function plateShown(left: number, right: number, behind = false): number {
+export function plateShown(left: number, right: number, behind = false, up = 0): number {
   if (behind) return 0;
-  const margin = 1 - Math.max(Math.abs(left), Math.abs(right));
+  // `up` is the plate's height on the picture (-1 bottom, 1 top): a plate at the top or bottom edge fades too.
+  const margin = Math.min(1 - Math.max(Math.abs(left), Math.abs(right)), (0.9 - Math.abs(up)) * 0.5);
   return Math.max(0, Math.min(1, margin / 0.08));
 }
 
@@ -75,10 +153,11 @@ export const NECK_MAX = 1.35;
 /**
  * Where the head at seat `seat` turns (relative to its own facing) to look at seat `look`, or at the middle of the table for null.
  * It turns toward its target but never so far from the viewer's seat that its mask is seen edge-on, and never past its own shoulders.
+ * With no viewer's seat (a camera that moves round the table) it only keeps within its shoulders.
  */
-export function headYaw(seat: number, look: number | null, viewer: number): number {
+export function headYaw(seat: number, look: number | null, viewer: number | null): number {
   const want = look === null || look === seat ? 0 : yawBetween(seat, look);
-  if (seat === viewer) return Math.max(-NECK_MAX, Math.min(NECK_MAX, want));
+  if (viewer === null || seat === viewer) return Math.max(-NECK_MAX, Math.min(NECK_MAX, want));
   const toViewer = yawBetween(seat, viewer);
   const off = Math.max(-MASK_MAX_OFF, Math.min(MASK_MAX_OFF, wrap(want - toViewer)));
   return Math.max(-NECK_MAX, Math.min(NECK_MAX, wrap(toViewer + off)));
