@@ -25,11 +25,11 @@ export interface MaskDesign {
 export const MASKS: readonly MaskDesign[] = [
   { shape: 'oval', emblem: 'star', colour: ACCENTS[0], tint: 0.4, shade: 1, eyes: 0.27 },
   { shape: 'crest', emblem: 'ring', colour: ACCENTS[1], tint: 0.6, shade: 0.9, eyes: 0.3 },
-  { shape: 'sun', emblem: 'bar', colour: ACCENTS[2], tint: 0.85, shade: 0.9, eyes: 0.24 },
+  { shape: 'sun', emblem: 'bar', colour: ACCENTS[2], tint: 0.85, shade: 0.72, eyes: 0.24 },
   { shape: 'diamond', emblem: 'dots', colour: ACCENTS[3], tint: 0.6, shade: 1, eyes: 0.27 },
-  { shape: 'slab', emblem: 'cross', colour: ACCENTS[4], tint: 0.7, shade: 0.7, eyes: 0.34 },
+  { shape: 'slab', emblem: 'cross', colour: ACCENTS[4], tint: 0.8, shade: 1, eyes: 0.34 },
   { shape: 'long', emblem: 'drop', colour: ACCENTS[5], tint: 0.55, shade: 1, eyes: 0.16 },
-  { shape: 'horned', emblem: 'wave', colour: ACCENTS[6], tint: 0.8, shade: 0.85, eyes: 0.22 },
+  { shape: 'horned', emblem: 'wave', colour: ACCENTS[6], tint: 0.8, shade: 1, eyes: 0.22 },
   { shape: 'heart', emblem: 'tri', colour: ACCENTS[7], tint: 0.15, shade: 1, eyes: 0.32 },
 ];
 

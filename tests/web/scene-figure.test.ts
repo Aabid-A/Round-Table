@@ -3,7 +3,7 @@ import type { BufferGeometry } from 'three';
 import { figurePose, headYaw, MASK_MAX_OFF, NECK_MAX, SEATS, yawBetween } from '../../web/src/scene/layout.js';
 import { cloakGeometry, cuffBandGeometry, hoodGeometry, mantleGeometry, sleeveGeometry } from '../../web/src/scene/models/cloak.js';
 import { folds, keyed } from '../../web/src/scene/models/cloth.js';
-import { handGeometry } from '../../web/src/scene/models/hand.js';
+import { boneProfile, handGeometry } from '../../web/src/scene/models/hand.js';
 
 const wrap = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -92,12 +92,44 @@ describe('a hand', () => {
   it('is a shaped hand about as long as a hand, and longer when it points than a fist would be', () => {
     const rest = bounds(handGeometry('rest'));
     const point = bounds(handGeometry('point'));
-    expect(rest.max[2]).toBeGreaterThan(0.15);
+    // At rest the fingers arch, so the hand reaches a little less far than when it points.
+    expect(rest.max[2]).toBeGreaterThan(0.14);
     expect(rest.max[2]).toBeLessThan(0.22);
     // Wider than a finger: it has a palm and a thumb.
     expect(rest.max[0]! - rest.min[0]!).toBeGreaterThan(0.07);
     expect(point.max[2]).toBeGreaterThan(0.15);
-    // The folded fingers of a pointing hand hang below the palm.
-    expect(point.min[1]).toBeLessThan(rest.min[1]! - 0.01);
+    // The folded fingers of a pointing hand hang well below the palm (whose underside is about 1.4 cm down).
+    expect(point.min[1]).toBeLessThan(-0.03);
+  });
+});
+
+describe('your resting hand', () => {
+  it('lies on the table: fingertips and the heel of the hand within a few millimetres of the wood, none of it below', async () => {
+    const THREE = await import('three');
+    const { HAND_SCALE, REST_POSE } = await import('../../web/src/scene/actors/handRest.js');
+    const g = handGeometry('rest');
+    const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(REST_POSE.pitch, 0, 0, 'YXZ')).multiply(new THREE.Matrix4().makeScale(HAND_SCALE, HAND_SCALE, HAND_SCALE));
+    const v = new THREE.Vector3();
+    let lowest = Infinity;
+    const pos = g.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) lowest = Math.min(lowest, v.fromBufferAttribute(pos, i).applyMatrix4(m).y);
+    const aboveTable = REST_POSE.lift + lowest;
+    expect(aboveTable).toBeGreaterThan(-0.002);
+    expect(aboveTable).toBeLessThan(0.008);
+  });
+});
+
+describe('a finger bone', () => {
+  it('is waisted between its joints, not a tube of one width', () => {
+    const p = boneProfile(0.009, 0.04, false);
+    const at = (y: number): number => p.reduce((best, q) => (Math.abs(q[1] - y) < Math.abs(best[1] - y) ? q : best))[0];
+    expect(at(0.02)).toBeLessThan(at(0) * 0.9);
+    expect(at(0.04)).toBeGreaterThan(at(0.02));
+  });
+  it('ends a finger in a tip narrower than its joint', () => {
+    const p = boneProfile(0.009, 0.02, true);
+    const radii = p.filter(([, y]) => y > 0.02).map(([r]) => r);
+    expect(Math.max(...radii)).toBeLessThan(0.009 * 0.7);
+    expect(p[p.length - 1]![0]).toBe(0);
   });
 });

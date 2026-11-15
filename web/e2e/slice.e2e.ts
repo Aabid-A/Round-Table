@@ -144,6 +144,33 @@ test('if the graphics context is lost, the plain version takes over with the lis
   await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'pointed');
 });
 
+test('a figure’s words are drawn in the room beside it, with no bubble on the page', async ({ page }) => {
+  await page.goto('/?mode=slice&quality=low');
+  const canvas = page.getByTestId('slice').locator('canvas');
+  await expect(canvas).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(page.getByTestId('slice')).toHaveAttribute('data-stage', 'speak');
+  await expect(canvas).toHaveAttribute('data-speaker', /^[1-7]$/, { timeout: 15_000 });
+  await expect(page.getByTestId('speech')).toHaveCount(0);
+  await expect(page.locator('.slice-caption')).toContainText('says:');
+});
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  test('the prompts say tap and never mention arrow keys or Enter', async ({ page }) => {
+    await page.goto('/?mode=slice&quality=low');
+    await expect(page.getByTestId('slice').locator('canvas')).toBeVisible({ timeout: 60_000 });
+    for (let i = 0; i < 40 && (await stage(page)) !== 'accuse'; i++) {
+      await page.getByRole('button', { name: 'Skip' }).tap();
+      await page.waitForTimeout(60);
+    }
+    await expect(page.locator('.slice-caption')).toContainText('Tap a figure');
+    await expect(page.locator('.slice-caption')).not.toContainText(/arrow|Enter/);
+    await page.getByText('Choose from a list').tap();
+    await expect(page.getByRole('form', { name: 'Choose a figure' })).not.toContainText(/arrow/i);
+  });
+});
+
 test('on a phone held upright you swipe to look around, and a swipe does not choose', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?mode=slice&quality=low');

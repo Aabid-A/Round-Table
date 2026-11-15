@@ -503,3 +503,16 @@ h3 {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* The replay's 3D room: a dark window onto the hall, as wide as the flat table it replaces. */
+.world-room {
+  position: relative;
+  width: 100%;
+  height: min(72vh, 620px);
+  min-height: 360px;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: #06070b;
+}
+/* a sideways swipe looks round the room; an upward one still scrolls the page */
+.world-room canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }

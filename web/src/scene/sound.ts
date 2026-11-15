@@ -1,4 +1,6 @@
-import type { Cue } from './cues.js';
+import type { Cue } from './cue.js';
+
+export type { Cue };
 
 const KEY = 'round-table-slice-muted';
 
