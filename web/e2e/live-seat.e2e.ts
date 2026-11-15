@@ -9,8 +9,9 @@ const FAITHFUL = 5;
 const WHISPERED = 6;
 const TRAITOR = 1;
 
+// These tests cover the flat room (the CSS room), the 3D room's fallback; play-3d.e2e.ts covers the room.
 async function startSolo(page: Page, seed: number): Promise<void> {
-  await page.goto(`/?mode=play&seed=${seed}`);
+  await page.goto(`/?mode=play&seed=${seed}&fallback=1`);
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByRole('button', { name: 'Take a seat' }).click();
   await expect(page.getByTestId('turn-form')).toBeVisible();
@@ -165,11 +166,12 @@ test('while you play as a faithful, no living seat shows a role and no AI note i
   await expect(page.getByTestId('end')).toBeVisible();
 });
 
-test('reduced motion: nothing glides or fades in the room', async ({ page }) => {
+test('reduced motion: the flat room, where nothing glides or fades', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await startSolo(page, FAITHFUL);
-  await expect(page.locator('.room-stage')).toHaveCSS('transition-duration', '0s');
-  await expect(page.locator('.room-seat .room-stand').first()).toHaveCSS('transition-duration', '0s');
+  await expect(page.getByTestId('world')).toHaveCount(0);
+  await expect(page.getByTestId('room')).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.room-seat .room-chair').first()).toHaveCSS('transition-duration', '0s');
   await expect(page.getByTestId('room-sleep')).toHaveCSS('animation-name', 'none');
 });
 

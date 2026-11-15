@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { together, type Disposable } from '../resources.js';
+import { PLATE_H, PLATE_W } from './dimensions.js';
+
+export { PLATE_H, PLATE_W };
 
 export type Maps = { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } & Disposable;
 
@@ -95,10 +98,6 @@ export function woodMaps(base: string, repeat = 2): Maps {
   return together({ map: finish(c, repeat, true), bump: finish(b, repeat, false) });
 }
 
-/** The shape of a name plate's face, in metres. */
-export const PLATE_W = 0.4;
-export const PLATE_H = 0.135;
-
 /**
  * The face of a name plate: bone-white lettering on dark iron under a bar of the seat's colour. Drawn large (1024 across) with
  * mipmaps and anisotropic filtering, so the letters stay crisp from across the table and at a slant.
@@ -129,10 +128,9 @@ export function plateTexture(name: string, accent: string): THREE.CanvasTexture 
  * A caption as lit letters with nothing behind them: the words in bone white, and a soft dark edge so they read over bright wood.
  * Returns the picture of the letters, a matching mask of where they are, and the picture's width over its height.
  */
-export function captionTexture(lines: string[]): { texture: THREE.CanvasTexture; alpha: THREE.CanvasTexture; aspect: number } {
+export function captionTexture(lines: string[], w = 1536, style: { italic?: boolean; colour?: string } = {}): { texture: THREE.CanvasTexture; alpha: THREE.CanvasTexture; aspect: number } {
   const size = 78;
   const lead = size * 1.32;
-  const w = 1536;
   const h = Math.ceil(lines.length * lead + size * 0.7);
   const draw = (mask: boolean): THREE.CanvasTexture => {
     const c = document.createElement('canvas');
@@ -141,7 +139,7 @@ export function captionTexture(lines: string[]): { texture: THREE.CanvasTexture;
     const g = c.getContext('2d')!;
     g.fillStyle = '#000';
     g.fillRect(0, 0, w, h);
-    g.font = `600 ${size}px system-ui, "Segoe UI", Helvetica, Arial, sans-serif`;
+    g.font = `${style.italic ? 'italic 500' : '600'} ${size}px system-ui, "Segoe UI", Helvetica, Arial, sans-serif`;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     lines.forEach((line, i) => {
@@ -156,7 +154,7 @@ export function captionTexture(lines: string[]): { texture: THREE.CanvasTexture;
         g.shadowBlur = 0;
         g.fillStyle = '#fff';
       } else {
-        g.fillStyle = '#f1e7d0';
+        g.fillStyle = style.colour ?? '#f1e7d0';
       }
       g.fillText(line, w / 2, y, w - 60);
     });

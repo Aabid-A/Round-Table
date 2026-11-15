@@ -5,9 +5,10 @@ const FIXTURE = 'tests/fixtures/sample-game.json';
 const log = JSON.parse(readFileSync(FIXTURE, 'utf8')) as { roles: Record<string, string>; cast: { name: string }[] };
 // In the sample game Aria is faithful and Bram and Cleo are the traitors.
 
+// These tests cover the flat version of the seated replay (the CSS room), which is the 3D room's fallback; replay-3d.e2e.ts covers the room.
 async function open(page: Page, query: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto(`/?log=sample${query}`);
+  await page.goto(`/?log=sample&fallback=1${query}`);
 }
 
 const stepText = (page: Page): Promise<string> => page.getByRole('slider', { name: 'Step' }).getAttribute('aria-valuetext').then((t) => t ?? '');
@@ -103,12 +104,14 @@ test('a step that is empty for the seat is stood on the nearest earlier one when
 test('the room keeps still under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await open(page, '&seat=Aria');
-  await expect(page.locator('.room-stage')).toHaveCSS('transition-duration', '0s');
+  await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Aria');
+  await expect(page.getByTestId('room')).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.room-seat').first()).toHaveCSS('transition-duration', '0s');
 });
 
 test('split view in recording mode: two seats side by side in 16:9, one above the other in 9:16, at one moment', async ({ page }) => {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto('/?mode=record&log=sample&aspect=16x9&seats=Aria,Bram&speed=0.05&from=14&to=30');
+  await page.goto('/?mode=record&log=sample&fallback=1&aspect=16x9&seats=Aria,Bram&speed=0.05&from=14&to=30');
   const rooms = page.getByTestId('room');
   await expect(rooms).toHaveCount(2);
   const [a, b] = [await rooms.nth(0).boundingBox(), await rooms.nth(1).boundingBox()];
@@ -120,7 +123,7 @@ test('split view in recording mode: two seats side by side in 16:9, one above th
   await expect(rooms.nth(0)).toHaveAttribute('data-viewer', 'Aria');
   await expect(rooms.nth(1)).toHaveAttribute('data-viewer', 'Bram');
 
-  await page.goto('/?mode=record&log=sample&aspect=9x16&seats=Aria,Bram&speed=0.05&from=14&to=30');
+  await page.goto('/?mode=record&log=sample&fallback=1&aspect=9x16&seats=Aria,Bram&speed=0.05&from=14&to=30');
   await expect(rooms).toHaveCount(2);
   const [c, d] = [await rooms.nth(0).boundingBox(), await rooms.nth(1).boundingBox()];
   expect(c!.x).toBeCloseTo(d!.x, 0);
@@ -129,9 +132,9 @@ test('split view in recording mode: two seats side by side in 16:9, one above th
 
 test('a clip of one seat, and a plain message for a seat that is not at the table', async ({ page }) => {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto('/?mode=record&log=sample&seat=Cleo&speed=0.05');
+  await page.goto('/?mode=record&log=sample&fallback=1&seat=Cleo&speed=0.05');
   await expect(page.getByTestId('room')).toHaveCount(1);
-  await page.goto('/?mode=record&log=sample&seats=Aria,Nobody');
+  await page.goto('/?mode=record&log=sample&fallback=1&seats=Aria,Nobody');
   await expect(page.getByRole('alert')).toContainText('There is no seat called Nobody');
 });
 
@@ -160,9 +163,9 @@ test('the text a screen reader is given while seated holds nothing the seat coul
 
 test('a clip from a seat carries no turn numbers, and a range with nothing for the seat says so', async ({ page }) => {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto('/?mode=record&log=sample&seat=Aria&speed=50');
+  await page.goto('/?mode=record&log=sample&fallback=1&seat=Aria&speed=50');
   await expect(page.locator('.rec')).toHaveAttribute('data-turn', '');
-  await page.goto('/?mode=record&log=sample&seat=Aria&from=1&to=1'); // the second of two night turns: nothing for a faithful
+  await page.goto('/?mode=record&log=sample&fallback=1&seat=Aria&from=1&to=1'); // the second of two night turns: nothing for a faithful
   await expect(page.getByRole('alert')).toContainText('Nothing between turn 1 and turn 1 is shown to Aria');
 });
 

@@ -114,6 +114,7 @@ export function PlayPage() {
         }
         publicPhase={pending ? publicPhase(pending.request.phase) : phase}
         onSubmit={(_, answer) => pending?.resolve(answer)}
+        room3d
       >
         {pending ? null : <Thinking />}
       </LiveSeat>

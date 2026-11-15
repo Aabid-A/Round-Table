@@ -1,8 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 
-/** Make a room with practice AIs (with aliases, if asked). Returns its code. */
-export async function makeRoom(page: Page, name: string, query = '', options: { aliases?: boolean } = {}): Promise<string> {
-  await page.goto(`/?mode=room${query}`);
+/**
+ * Make a room with practice AIs (with aliases, if asked). Returns its code. The page opens the flat room (`fallback=1`): a 3D room
+ * drawn by a software renderer cannot keep up with the test server's short turns. `room3d` opens the 3D room instead.
+ */
+export async function makeRoom(page: Page, name: string, query = '', options: { aliases?: boolean; room3d?: boolean } = {}): Promise<string> {
+  await page.goto(`/?mode=room${options.room3d ? '' : '&fallback=1'}${query}`);
   const create = page.getByRole('region', { name: 'Make a room' });
   await create.getByLabel('Your name at the table').fill(name);
   if (options.aliases) await create.getByLabel(/Human or AI\?/).check();
@@ -13,7 +16,7 @@ export async function makeRoom(page: Page, name: string, query = '', options: { 
 
 /** Join through an invite link, as a friend would. */
 export async function joinByInvite(page: Page, code: string, name: string): Promise<void> {
-  await page.goto(`/?mode=room&room=${code}`);
+  await page.goto(`/?mode=room&fallback=1&room=${code}`);
   const join = page.getByRole('region', { name: `Join room ${code}` });
   await join.getByLabel('Your name at the table').fill(name);
   await join.getByRole('button', { name: 'Join room' }).click();

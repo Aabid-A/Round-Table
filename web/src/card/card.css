@@ -7,6 +7,7 @@
   --card-model: 24px;
   --card-small: 20px;
   --card-quote: 34px;
+  --card-shot: 150px;
 }
 .share-card[data-size='1080x1350'] {
   --card-w: 1080px;
@@ -16,6 +17,7 @@
   --card-model: 28px;
   --card-small: 24px;
   --card-quote: 40px;
+  --card-shot: 470px;
 }
 
 .card-page {
@@ -99,4 +101,32 @@
 .share-thought {
   border: 2px dashed var(--hidden-border);
   background: var(--hidden-bg);
+}
+
+/* The moment in the room, with the player's name over it. Text alone where the room cannot be drawn. */
+.share-who[data-shot='true'] {
+  position: relative;
+  height: var(--card-shot);
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  background: #06070b;
+}
+.share-shot-room {
+  position: absolute;
+  inset: 0;
+}
+.share-shot-room canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.share-who[data-shot='true'] .share-name {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: var(--space-6) var(--space-5) var(--space-4);
+  background: linear-gradient(to top, rgb(6 7 11 / 0.85), rgb(6 7 11 / 0));
+  color: #f4efe6;
+}
+.share-who[data-shot='true'] .share-name p {
+  color: #d8cfc0;
 }

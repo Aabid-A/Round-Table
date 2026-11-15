@@ -3,7 +3,11 @@ import type { ServerMessage } from '../../../server/protocol.js';
 import type { PublicPhase } from '../../../src/publicPhase.js';
 import { liveView } from '../live/liveView.js';
 import { parsePrompt } from '../perspective/knowledge.js';
-import { Room } from '../scene/Room.js';
+import { FlatRoom } from '../scene/FlatRoom.js';
+import { worldFromScene } from '../scene/fromScene.js';
+import { useRoomChoice } from '../scene/host.js';
+import { momentWords } from '../replay/momentWords.js';
+import { LiveRoom } from '../live/LiveRoom.js';
 
 type GhostMessage = Extract<ServerMessage, { t: 'ghost' }>;
 
@@ -14,12 +18,16 @@ type GhostMessage = Extract<ServerMessage, { t: 'ghost' }>;
  */
 export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhase | null }) {
   const [picked, setPicked] = useState<string | null>(null);
+  const choice = useRoomChoice(window.location.search);
   const seat = ghost.seats.find((s) => s.name === picked) ?? ghost.seats.find((s) => s.name !== ghost.you && s.prompt !== null) ?? ghost.seats[0];
   const knowledge = seat?.prompt ? parsePrompt(seat.prompt) : null;
   // The phase everyone is told of names the moment. A ghost is watching, not sleeping: the night is dim but never a blackout.
   const view = knowledge
     ? { ...liveView({ me: knowledge.name, order: ghost.seats.map((s) => s.name), knowledge, beat: null, turn: null, publicPhase: phase, picked: null, timer: null }), sleep: false }
     : null;
+  // In the 3D room the ghost sits in the watched seat's chair and sees only what that seat was told.
+  const world = view && choice.room ? worldFromScene(view, momentWords(view)) : null;
+  const label = seat ? `The room as ${seat.name} sees it` : '';
 
   return (
     <section className="ghost" data-testid="ghost" aria-label="Watching as a ghost">
@@ -46,7 +54,11 @@ export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhas
       </div>
       {view && seat ? (
         <div className="live-room">
-          <Room view={view} label={`The room as ${seat.name} sees it`} />
+          {world ? (
+            <LiveRoom view={world} choice={choice} onPick={() => {}} label={label} fallback={<FlatRoom view={view} label={label} />} />
+          ) : (
+            <FlatRoom view={view} label={label} />
+          )}
         </div>
       ) : (
         <p className="notice" data-testid="ghost-empty">

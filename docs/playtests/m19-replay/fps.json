@@ -1,0 +1,15 @@
+{
+  "how": "requestAnimationFrame deltas over 8 s, the public replay table at high quality, Chromium headless, WebGL2 through SwiftShader (software, no GPU)",
+  "1280x720": {
+    "frames": 24,
+    "fps": 3,
+    "medianMs": 350,
+    "worstMs": 450
+  },
+  "390x844": {
+    "frames": 13,
+    "fps": 1.63,
+    "medianMs": 650,
+    "worstMs": 733
+  }
+}

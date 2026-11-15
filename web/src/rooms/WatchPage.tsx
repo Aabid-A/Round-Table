@@ -60,7 +60,7 @@ export function WatchPage() {
           {state.complete ? 'The game is over. This is all of it.' : 'Watching read-only, one full round behind the game. More arrives as each round ends.'}
         </p>
         <ErrorBoundary key={log.seed} fallback={(message) => <p className="notice notice-error">{message}</p>}>
-          <Player log={log} live={!state.complete} initial={{ kind: 'spectator' }} />
+          <Player log={log} live={!state.complete} initial={{ kind: 'spectator' }} room3d />
         </ErrorBoundary>
       </>
     );

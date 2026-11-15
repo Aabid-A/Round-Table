@@ -1,0 +1,250 @@
+/* The flat room: the fallback when the 3D room is not shown. Plain cards in a grid, in the page's own tokens. */
+.room {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-3);
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  padding: var(--space-3);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--text);
+}
+/* Night: the room is shaded, never black; everything stays readable. */
+.room[data-night='true'] {
+  background: color-mix(in srgb, var(--surface) 80%, #1d2240);
+}
+
+.room-caption {
+  display: grid;
+  gap: var(--space-1);
+}
+.room-kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.room-line {
+  margin: 0;
+}
+
+.room-body {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+.room-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.room-seat {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  justify-items: center;
+}
+
+.room-chair {
+  width: 100%;
+  min-height: var(--target);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.room-chair:not(:disabled) {
+  cursor: pointer;
+}
+.room-chair:not(:disabled):hover {
+  border-color: var(--accent);
+}
+.room-chair:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.room-chair[disabled] {
+  cursor: default;
+}
+.room-chair:disabled:not([data-empty='true']) {
+  opacity: 0.6;
+}
+.room-seat[data-mark='self'] .room-chair,
+.room-chair[aria-pressed='true'],
+.room-chair[data-self='true'],
+.room-seat[data-speaking='true'] .room-chair,
+.room-seat[data-leaning='true'] .room-chair {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+.room-seat[data-picked='true'] .room-chair {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.room-seat[data-mark='traitor'] .room-chair {
+  border-color: var(--danger);
+  border-width: 2px;
+}
+/* An empty chair: nobody sits there any more. */
+.room-chair[data-empty='true'] {
+  background: transparent;
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.room-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-model {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.8em;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-model:empty {
+  display: none;
+}
+.room-tag {
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  font-size: 0.8em;
+  font-weight: 600;
+  text-align: center;
+}
+.room-tag[data-role='traitor'],
+.room-flag[data-role='traitor'] {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.room-tag[data-role='faithful'],
+.room-flag[data-role='faithful'] {
+  color: var(--success);
+  border-color: var(--success);
+}
+.room-flag {
+  padding: 0 var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: 99px;
+  font-size: 0.8em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.room-proposal {
+  padding: 0 var(--space-2);
+  border-radius: 99px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.room-talk {
+  display: grid;
+  gap: var(--space-2);
+}
+.room-speech,
+.room-thought {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  line-height: 1.4;
+}
+.room-thought,
+.room-speech[data-kind='thought'] {
+  font-style: italic;
+  border-style: dashed;
+}
+.room-thought {
+  border-color: var(--hidden-border);
+  background: var(--hidden-bg);
+}
+.room-who {
+  font-size: 0.85em;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--accent);
+}
+.room-thought .room-who {
+  color: var(--hidden-border);
+}
+
+.room-links {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.room-link {
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid var(--accent);
+  background: var(--bg);
+}
+
+/* The turn timer. */
+.room-timer {
+  position: relative;
+  height: var(--space-5);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--bg);
+}
+.room-timer-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.room-timer[data-low='true'] .room-timer-bar {
+  background: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.room-timer-text {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* A faithful asleep: the room is covered until the night is over. */
+.room-sleep {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: #05060d;
+  color: #c9cdf2;
+  text-align: center;
+}

@@ -38,7 +38,8 @@ export async function renderCards(input: RenderCardsInput): Promise<string[]> {
   const written: string[] = [];
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
-    browser = await launchChromium();
+    // WebGL through the software renderer, so the card's picture of the room is drawn on a machine with no graphics card too.
+    browser = await launchChromium(['--enable-unsafe-swiftshader', '--use-angle=swiftshader']);
     for (const size of input.sizes) {
       const { width, height } = cardPixels(size);
       const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, colorScheme: 'light' });
@@ -47,8 +48,8 @@ export async function renderCards(input: RenderCardsInput): Promise<string[]> {
         await page.route(`**/games/${input.name}.json`, (route) =>
           route.fulfill({ body: JSON.stringify(input.log), contentType: 'application/json' }),
         );
-        await page.goto(`${url}?card=${input.turnId}&log=${encodeURIComponent(input.name)}&size=${size}`);
-        await page.locator('.card-page[data-ready="true"], [role="alert"]').first().waitFor({ timeout: 30_000 });
+        await page.goto(`${url}?card=${input.turnId}&log=${encodeURIComponent(input.name)}&size=${size}&quality=medium`); // a set quality skips the frame-time probe; medium draws a card in about 15 s on a software renderer, high in over a minute
+        await page.locator('.card-page[data-ready="true"], [role="alert"]').first().waitFor({ timeout: 120_000 });
         const alert = page.getByRole('alert');
         if (await alert.count()) throw new Error(await alert.innerText());
         const file = join(input.outDir, `${input.name}-turn-${input.turnId}-${size}.png`);

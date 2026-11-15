@@ -503,3 +503,87 @@ h3 {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* The replay's 3D room: a dark window onto the hall, as wide as the flat table it replaces. */
+.world-room {
+  position: relative;
+  width: 100%;
+  height: min(72vh, 620px);
+  min-height: 360px;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: #06070b;
+}
+/* In a live seat the room fills its own box, so it never runs over the Confirm row under it (on a phone it did, and took its taps). */
+.live-room > .world-room { height: 100%; min-height: 0; }
+/* a sideways swipe looks round the room; an upward one still scrolls the page */
+.world-room canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+
+/* Around the room, flat or 3D: the replay's seat chooser, a live seat's turn, a ghost's seats, the watcher's note. */
+/* In the replay page: the flat room takes the whole row, and the seat chooser sits under it. */
+.seat-room {
+  grid-column: 1 / -1;
+  height: min(70vh, 640px);
+  min-height: 360px;
+}
+.sit {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.sit-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sit select {
+  max-width: 100%;
+  min-height: var(--target);
+  padding: 0 var(--space-3);
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+}
+
+/* A live seat: the room, then your turn. */
+.live {
+  display: grid;
+  gap: var(--space-3);
+}
+.live-room {
+  height: min(60vh, 540px);
+  min-height: 340px;
+}
+.live-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.live-chosen {
+  margin: 0;
+}
+
+/* A ghost chooses which seat to watch. */
+.ghost {
+  display: grid;
+  gap: var(--space-3);
+}
+.ghost-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.ghost-seats .btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* The watcher's note sits over the replay, in the same column. */
+.watch-note {
+  width: min(100% - 2 * var(--space-4), var(--w-app));
+  margin: var(--space-3) auto 0;
+}
