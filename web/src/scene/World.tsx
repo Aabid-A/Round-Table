@@ -5,6 +5,8 @@ import { Director } from './camera/Director.js';
 import { Recruit } from './moments/Recruit.js';
 import { WhisperLine } from './moments/WhisperLine.js';
 import { RoleSigil } from './actors/RoleSigil.js';
+import { TurnCandle } from './actors/TurnCandle.js';
+import { ProposalMarks } from './moments/ProposalMarks.js';
 import { SpeakerLight } from './stage/SpeakerLight.js';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
@@ -71,7 +73,9 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
     <ResourcesContext.Provider value={resources}>
       <color attach="background" args={['#06070b']} />
       <fogExp2 attach="fog" args={['#07080d', 0.075]} />
-      <Lights mood={view.mood} litCount={litNow} quality={q} dawnAt={dawnAt} hush={!!view.whisper || !!view.recruit || (view.whisperLines ?? []).length > 0} />
+      <Lights mood={view.mood} litCount={litNow} quality={q} dawnAt={dawnAt} hush={!!view.whisper || !!view.recruit || (view.whisperLines ?? []).length > 0 || view.sleep === true} />
+      {view.timer && view.you !== null ? <TurnCandle leftMs={view.timer.leftMs} totalMs={view.timer.totalMs} /> : null}
+      {(view.proposals ?? []).length > 0 ? <ProposalMarks proposals={view.proposals!} /> : null}
       <SpeakerLight seat={view.speech?.speaker ?? view.thought?.speaker ?? null} on={view.mood === 'night'} />
       <HoverLight hovered={view.hovered} selected={view.selected} maskOf={maskOf} />
       <Hall />
