@@ -18,7 +18,7 @@
 
 1. **A stranger: 3D game or web page?** The room is a 3D game in a window on the replay page.
 2. **Mostly dark, light leading the eye?** Yes; at night the speaker's light now leads it (`d-1`, `p-1`).
-3. **Told apart at a glance without names?** Yes for the masks that face the camera; in the dark wide frames (dawn, recruitment) the far figures are mostly outlines.
+3. **Told apart at a glance without names?** Yes for the masks that face the camera; in the dark frames (the wide dawn, and the recruitment held on Cleo) the far figures are mostly outlines.
 4. **Flat card, default material or evenly lit?** No default materials; the room is not evenly lit. The name plates are lettered iron plates.
 5. **Text unreadable, clipped or floating free?** Speech and notes sit in one column beside the speaker. On a phone the wide shots' caption lies over the near plates. The notes carry the mock game's test ids ("MOCKNOTE-…"), which a real game's notes do not have.
 6. **Anticipation, response, settle?** Stepping cuts the director to the new shot; the whisper thread draws itself from whisperer to listener; the speaker light fades between speakers (from `471500c`).
@@ -37,6 +37,7 @@ Also: the whisper line showed only one end; the director now pulls back for a wh
 ## Falls short
 
 - On a phone the wide shots' caption lies over the near name plates.
+- The recruitment frames (`d-7`, `p-7`) are almost black apart from Cleo: a recruitment has no speaker, so the night speaker light does not reach it.
 - The role markers are small; the red blade can read as a pin.
 - The plate of a seat's neighbour still sits in front of the next figure (step 1's open point).
 - No frame rate from a real GPU.
