@@ -116,7 +116,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       )}
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
-      <Effects quality={q} still={reduced} />
+      <Effects quality={q} still={reduced} words={!!view.speech && view.speech.speaker !== view.you} />
     </ResourcesContext.Provider>
   );
 }

@@ -100,7 +100,7 @@ describe('the field of view', () => {
 describe('a mask on the table', () => {
   it('from your seat never covers its name plate: they are apart across the picture or up and down it', async () => {
     const { BANISHED_TILT, banishedMaskSpot, bearingFromEye, dawnMaskSpot, plateScale } = await import('../../web/src/scene/layout.js');
-    const { BANISHED_MASK_HALF, DAWN_MASK_HALF, DAWN_MASK_SCALE, EYE_Y, PLATE_H, PLATE_W, TABLE_Y } = await import('../../web/src/scene/models/dimensions.js');
+    const { BANISHED_MASK_HALF, DAWN_MASK_HALF, DAWN_MASK_SCALE, EYE_Y, PLATE_H, PLATE_W, TABLE_MASK_SCALE, TABLE_Y } = await import('../../web/src/scene/models/dimensions.js');
     const dist = (p: [number, number, number]): number => Math.hypot(p[0], EYE_Z - p[2]);
     const across = (p: [number, number, number], half: number): [number, number] => {
       const b = bearingFromEye(p);
@@ -111,7 +111,7 @@ describe('a mask on the table', () => {
     const apart = (a: [number, number], b: [number, number]): boolean => a[1] < b[0] || b[1] < a[0];
     // A mask lies 0.09 above the wood, tipped toward you, and stands up to about its scale above that.
     const dawnTop = TABLE_Y + 0.09 + DAWN_MASK_SCALE * 1.05;
-    const banishedTop = TABLE_Y + 0.09 + 0.2 * 1.05 * Math.sin(BANISHED_TILT) + 0.02;
+    const banishedTop = TABLE_Y + 0.09 + TABLE_MASK_SCALE * 1.05 * Math.sin(BANISHED_TILT) + 0.02;
     for (let i = 1; i < SEATS; i++) {
       const plate = platePose(i, 0).position;
       const pa = across(plate, ((PLATE_W + 0.02) / 2) * plateScale(i, 0));
