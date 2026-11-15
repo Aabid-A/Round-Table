@@ -29,7 +29,7 @@ import { Lights } from './stage/Lights.js';
 import { QUALITY, type Quality } from './stage/quality.js';
 import { useReducedMotion } from './motion.js';
 import { ResourcesContext, SceneResources } from './resources.js';
-import { CANDLES, type WorldView } from './world.js';
+import { CANDLES, type WorldView } from './worldView.js';
 
 /** Eases how many candles are lit: a candle goes out over a moment, one after another, and comes back faster. */
 function useLitCount(target: number): { current: number } {

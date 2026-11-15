@@ -1,6 +1,6 @@
 import { SEATS } from './layout.js';
 import type { SceneView } from './view.js';
-import { CANDLES, type WorldBanish, type WorldView } from './world.js';
+import { CANDLES, type WorldBanish, type WorldView } from './worldView.js';
 
 /** How many times each name comes up. */
 function countBy(names: string[]): Map<string, number> {

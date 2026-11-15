@@ -1,5 +1,5 @@
 import { MASKS } from '../scene/models/masks.js';
-import type { WorldView } from '../scene/world.js';
+import type { WorldView } from '../scene/worldView.js';
 
 /** The same moment as plain markup, for a browser without WebGL or a person who asks for it (?fallback=1): who is at the table, and what is happening. */
 export function SliceFallback({ view, reason }: { view: WorldView; reason: string }) {

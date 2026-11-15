@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChooseList, useChooseKeys } from '../scene/Choose.js';
 import type { Action } from './machine.js';
 import type { InputKind } from '../scene/prompts.js';
-import type { WorldView } from '../scene/world.js';
+import type { WorldView } from '../scene/worldView.js';
 
 interface Props {
   view: WorldView;

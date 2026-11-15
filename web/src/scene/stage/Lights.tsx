@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { idle, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { CLUSTER_LIGHTS } from '../models/candles.js';
-import type { WorldMood } from '../world.js';
+import type { WorldMood } from '../worldView.js';
 import type { QualitySettings } from './quality.js';
 
 interface Props {

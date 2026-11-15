@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { speechPlacement } from '../../web/src/scene/stage/speech.js';
+import { speechPlacement } from '../../web/src/scene/stage/speechText.js';
 
 const inside = (c: { x: number; y: number }, box: { x: number; y: number }): boolean => c.x - box.x / 2 >= -1 && c.x + box.x / 2 <= 1 && c.y - box.y / 2 >= -1 && c.y + box.y / 2 <= 1;
 
@@ -32,7 +32,7 @@ describe('where a speaker’s words go', () => {
 
 describe('the speech and the notes as one column', () => {
   it('puts the notes wholly under the speech, inside the whole, whatever their heights', async () => {
-    const { stackBlocks } = await import('../../web/src/scene/stage/speech.js');
+    const { stackBlocks } = await import('../../web/src/scene/stage/speechText.js');
     for (const [sh, nh] of [[0.64, 0.19], [0.19, 0.64], [0.3, 0.3]] as const) {
       const s = stackBlocks({ x: 0.48, y: sh }, { x: 0.48, y: nh }, 0.04);
       expect(s.box.y).toBeCloseTo(sh + nh + 0.04);

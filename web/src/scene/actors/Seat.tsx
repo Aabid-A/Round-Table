@@ -9,7 +9,7 @@ import { PLATE_H, PLATE_W, plateTexture } from '../models/textures.js';
 import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 import { useResource } from '../resources.js';
-import type { WorldFigure } from '../world.js';
+import type { WorldFigure } from '../worldView.js';
 import { Figure } from './Figure.js';
 
 export interface SeatProps {

@@ -5,8 +5,8 @@ import { figurePose } from '../layout.js';
 import { HEAD_Y } from '../models/cloak.js';
 import { captionTexture } from '../models/textures.js';
 import { approach, useReducedMotion } from '../motion.js';
-import { wrapCaption } from './caption.js';
-import { speechPlacement, stackBlocks } from './speech.js';
+import { wrapCaption } from './captionText.js';
+import { speechPlacement, stackBlocks } from './speechText.js';
 
 /** How far in front of the eye the words hang. (The depth of field is off while they show: it would blur them by what lies behind.) */
 const AHEAD = 2.6;

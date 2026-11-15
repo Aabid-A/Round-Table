@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { SceneBoundary, type RoomChoice } from '../scene/host.js';
-import type { WorldView } from '../scene/world.js';
+import type { WorldView } from '../scene/worldView.js';
 
 const RoomScene = lazy(() => import('../scene/RoomScene.js'));
 

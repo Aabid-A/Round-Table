@@ -1,4 +1,4 @@
-import { CANDLES, type WorldFigure, type WorldView } from '../scene/world.js';
+import { CANDLES, type WorldFigure, type WorldView } from '../scene/worldView.js';
 import { choosePrompt, chosenPrompt, type InputKind } from '../scene/prompts.js';
 import { banished, dawnVictim, type SliceScript } from './script.js';
 

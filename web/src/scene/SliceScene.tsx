@@ -1,6 +1,6 @@
 import { SceneCanvas } from './SceneCanvas.js';
 import type { Quality } from './stage/quality.js';
-import type { WorldView } from './world.js';
+import type { WorldView } from './worldView.js';
 import { World } from './World.js';
 
 interface Props {
