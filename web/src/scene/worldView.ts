@@ -72,6 +72,14 @@ export interface WorldView {
   fallen?: { seat: number; role: Role | null }[];
   /** Words for the prompt in the room, when they differ from `announce` (the all-seeing room draws notes and whispers in the room, so its caption leaves them out). */
   caption?: string;
+  /** The title screen: no chair, the camera drifting slowly round the empty table. */
+  drift?: boolean;
+  /** Your role told at the start: your mask turns over in your hands. Only ever your own role and the partners your prompt names. */
+  reveal?: { role: Role; partners: string[] } | null;
+  /** The game is over: every player's mask lies turned over before their chair. Only set once the result is public. */
+  ending?: { seat: number; role: Role }[];
+  /** Your name being lettered on the plate before you (the setup in the room). */
+  plate?: string | null;
   /** Words for the HUD and the live region: what is happening and what the player may do. Only what this viewer may know. */
   announce: string;
 }
