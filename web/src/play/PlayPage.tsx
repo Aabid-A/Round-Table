@@ -5,18 +5,21 @@ import type { PromptRequest } from '../../../src/players/player.js';
 import { publicPhase, type PublicPhase } from '../../../src/publicPhase.js';
 import { finalRoles } from '../replay/timeline.js';
 import { LiveSeat } from '../live/LiveSeat.js';
+import { Player } from '../Player.js';
+import { useRoomChoice } from '../scene/host.js';
+import { ShellEnd, ShellSetup } from './ShellScreens.js';
 import { emptyAnswer, type HumanAnswer } from './human.js';
 import { noteCardPng } from './noteCard.js';
 import { aiFallbacks, notesAbout, type NoteAboutYou } from './notes.js';
 import { saveBlob } from '../download.js';
 import { END_REASONS, WINNER } from '../result.js';
-import { seedFromSearch } from './params.js';
-import { nameProblem, parseModels, runSolo, type SoloSetup } from './solo.js';
+import { checkSetup } from './setupCheck.js';
+import { runSolo, type SoloSetup } from './solo.js';
 
 type Screen =
   | { kind: 'setup'; error: string | null }
   | { kind: 'playing'; human: string }
-  | { kind: 'done'; human: string; log: GameLog }
+  | { kind: 'done'; human: string; log: GameLog; show: 'end' | 'details' | 'replay' }
   | { kind: 'failed'; message: string };
 
 interface Pending {
@@ -31,6 +34,8 @@ const REASONS: Record<string, string> = { ...END_REASONS, cost_cap: 'The game wa
 
 /** ?mode=play: take a seat at the table against seven AIs, in this tab. */
 export function PlayPage() {
+  // The game shell (the room filling the window) where the 3D room can be shown; the plain pages otherwise.
+  const choice = useRoomChoice(window.location.search);
   const [screen, setScreen] = useState<Screen>({ kind: 'setup', error: null });
   const [pending, setPending] = useState<Pending | null>(null);
   const [phase, setPhase] = useState<PublicPhase | null>(null);
@@ -56,7 +61,7 @@ export function PlayPage() {
       if (run.current === id) setPhase(p);
     }).then(
       (log) => {
-        if (run.current === id) setScreen({ kind: 'done', human: setup.humanName, log });
+        if (run.current === id) setScreen({ kind: 'done', human: setup.humanName, log, show: 'end' });
       },
       (e: unknown) => {
         if (run.current === id) setScreen({ kind: 'failed', message: e instanceof Error ? e.message : String(e) });
@@ -84,7 +89,7 @@ export function PlayPage() {
     };
   }, []);
 
-  if (screen.kind === 'setup') return <Setup error={screen.error} onStart={start} />;
+  if (screen.kind === 'setup') return choice.room ? <ShellSetup choice={choice} error={screen.error} onStart={start} /> : <Setup error={screen.error} onStart={start} />;
   if (screen.kind === 'failed') {
     return (
       <main className="loader">
@@ -99,7 +104,12 @@ export function PlayPage() {
       </main>
     );
   }
-  if (screen.kind === 'done') return <EndScreen human={screen.human} log={screen.log} onAgain={quit} />;
+  if (screen.kind === 'done') {
+    const show = (v: 'end' | 'details' | 'replay'): void => setScreen({ ...screen, show: v });
+    if (screen.show === 'replay') return <Player log={screen.log} onReload={() => show('end')} room3d />;
+    if (choice.room && screen.show === 'end') return <ShellEnd choice={choice} human={screen.human} log={screen.log} onAgain={quit} onReplay={() => show('replay')} onDetails={() => show('details')} />;
+    return <EndScreen human={screen.human} log={screen.log} onAgain={quit} />;
+  }
   return (
     <main className="app play">
       <header className="topbar">
@@ -115,6 +125,13 @@ export function PlayPage() {
         publicPhase={pending ? publicPhase(pending.request.phase) : phase}
         onSubmit={(_, answer) => pending?.resolve(answer)}
         room3d
+        shell={{
+          menu: (
+            <button type="button" className="hud-btn" onClick={quit}>
+              Quit this game
+            </button>
+          ),
+        }}
       >
         {pending ? null : <Thinking />}
       </LiveSeat>
@@ -148,18 +165,10 @@ function Setup({ error, onStart }: { error: string | null; onStart: (s: SoloSetu
   const [problem, setProblem] = useState<string | null>(error);
 
   const submit = (): void => {
-    const nameError = nameProblem(name);
-    if (nameError) return setProblem(nameError);
-    const seed = seedFromSearch(window.location.search);
-    if (!real) return onStart({ humanName: name, seed, ai: { kind: 'mock' } });
-    const parsed = parseModels(models);
-    if (!parsed.ok) return setProblem(parsed.message);
-    if (key.trim() === '') return setProblem('Paste your OpenRouter key.');
-    const maxCostUsd = Number(cap);
-    if (!(Number.isFinite(maxCostUsd) && maxCostUsd > 0)) return setProblem('The spend cap must be a number above 0.');
-    const apiKey = key;
-    setKey(''); // the key is no longer in the page; the game holds the only copy, in memory
-    onStart({ humanName: name, seed, ai: { kind: 'openrouter', apiKey, models: parsed.models }, maxCostUsd });
+    const r = checkSetup({ name, real, key, models, cap });
+    if (!r.ok) return setProblem(r.message);
+    if (real) setKey(''); // the key is no longer in the page; the game holds the only copy, in memory
+    onStart(r.setup);
   };
 
   return (
