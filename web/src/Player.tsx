@@ -10,7 +10,15 @@ import { positionAtOrBefore, seatStepMs, seatTimeline, seatView } from './perspe
 import { describeStep, stepDurationMs, type StepView } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
-import { Room } from './scene/Room.js';
+import { FlatRoom } from './scene/FlatRoom.js';
+import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
+import { useBeat, useRoomChoice, useRoomSound } from './scene/host.js';
+import { ReplayRoom } from './replay/ReplayRoom.js';
+import { Hud } from './shell/Hud.js';
+import { Shell } from './shell/Shell.js';
+import { momentWords } from './replay/momentWords.js';
+import { announcement, roomAnnouncement } from './replay/announce.js';
+import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
 import { usePlayback } from './usePlayback.js';
@@ -22,26 +30,12 @@ interface Props {
   live?: boolean;
   /** What to show when the address does not say (a watcher opens in the all-seeing room). */
   initial?: Perspective;
+  /** Show the public table and the seats in the 3D room where it can be shown (the flat page stays as its fallback). */
+  room3d?: boolean;
 }
 
-const announcement = (view: StepView): string =>
-  view.card ? `${view.card.title}. ${view.card.body}` : view.bubble && view.speaker ? `${view.speaker}: ${view.bubble.text}` : '';
-
-/**
- * What a screen reader is told in the room: only what the view holds, never the public step. A seat's view has no notes and no
- * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
- * panel and a line a screen reader cannot see.
- */
-const roomAnnouncement = (view: SceneView): string => {
-  const { title, speaker, text, thought } = view.moment;
-  const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];
-  if (thought) parts.push(`Private notes: ${thought}`);
-  for (const w of view.whispers) parts.push(`Whisper from ${w.from} to ${w.to}: ${w.text}`);
-  return parts.join('. ');
-};
-
 /** Plays one game log like an episode. */
-export function Player({ log, onReload, live = false, initial }: Props) {
+export function Player({ log, onReload, live = false, initial, room3d = false }: Props) {
   const steps = useMemo(() => buildSteps(log, { partial: live }), [log, live]);
   const views = useMemo(() => steps.map((s) => describeStep(s, log)), [steps, log]);
   const [showNotes, setShowNotes] = useState(false);
@@ -55,9 +49,19 @@ export function Player({ log, onReload, live = false, initial }: Props) {
   const ctx = useMemo(() => buildContext(log), [log]);
   // The steps this viewer walks: all of them at the public table, a seat's own list when seated (see seatTimeline).
   const timeline = useMemo(() => (seat === null ? steps.map((_, i) => i) : seatTimeline(log, steps, seat)), [log, steps, seat]);
+  // Whether the 3D room is actually on screen (not just wanted): the flat page keeps its own words and pace.
+  const choice = useRoomChoice(window.location.search);
+  const sound = useRoomSound();
+  const showRoom = room3d && choice.room;
   const durations = useMemo(
-    () => timeline.map((i) => (seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat)))),
-    [timeline, views, log, steps, seat],
+    () =>
+      timeline.map((i) => {
+        const ms = seat === null ? stepDurationMs(views[i]!) : seatStepMs(seatView(log, steps, i, seat));
+        // In the room a banishment is staged beat by beat; playing waits for the mask to be turned over.
+        const s = steps[i]!;
+        return showRoom && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(ms, BANISH_MS) : ms;
+      }),
+    [timeline, views, log, steps, seat, showRoom],
   );
   const { index: pos, playing, seek, jump, next, prev, toggle, restart } = usePlayback(durations);
   const at = Math.min(pos, timeline.length - 1);
@@ -106,6 +110,103 @@ export function Player({ log, onReload, live = false, initial }: Props) {
   const view = views[index]!;
   const seats = seatsAt(log, steps, index);
   const sv = seat !== null ? seatView(log, steps, index, seat) : spectating ? spectatorView(log, steps, index, ctx) : null;
+  // The 3D room shows the public table, a seat's view and the all-seeing room (the result is still drawn flat).
+  const scene = showRoom && step.kind !== 'result' ? (sv ?? tableSceneView(log, steps, index, view)) : null;
+  const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
+  const said = sv ? roomAnnouncement(sv) : announcement(view);
+  const built = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
+  // In the all-seeing room the notes and whispers are drawn in the room; its prompt says only the moment (the live region keeps all).
+  const world = built && spectating && !(scene?.stage?.kind === 'banish') ? { ...built, caption: momentWords(sv!) } : built;
+  const sitAt = (s: number): void => {
+    const name = world?.figures.find((f) => f.index === s)?.name;
+    if (name) sit(name);
+  };
+
+  const viewPicker = (
+  <section className="sit" aria-label="Seat">
+    <div className="sit-row">
+      <label htmlFor="view-select">View</label>
+      <select
+        id="view-select"
+        value={seat ?? (spectating ? '@all' : '')}
+        onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
+      >
+        <option value="">The public table</option>
+        <option value="@all">All-seeing room (spoilers)</option>
+        {log.cast.map((c) => (
+          <option key={c.name} value={c.name}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+    <p className="hint">
+      {seat !== null
+        ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
+        : spectating
+          ? 'You see everything. Click a seat to see the game as that player. The camera follows the speaker; press A to come back here.'
+          : 'Choose the all-seeing room, or sit in a seat to see the game as that player: only what they were told.'}
+    </p>
+  </section>
+  );
+  const controls = (
+  <Controls
+    index={pos}
+    count={timeline.length}
+    playing={playing}
+    showNotes={showNotes}
+    notesLocked={perspective.kind !== 'table'}
+    onPrev={prev}
+    onNext={next}
+    onToggle={toggle}
+    onSeek={seek}
+    onNotes={setShowNotes}
+    {...(onReload ? { onReload } : {})}
+  />
+  );
+  const roomLabel = seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table';
+
+  if (world && step.kind !== 'result') {
+    // The game shell: the room fills the window, the phase top left, sound and the menu top right, the replay's controls in one bar.
+    return (
+      <Shell label="Round Table replay">
+        <main className="shell-app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
+          <ReplayRoom view={world} onSit={sitAt} label={roomLabel} choice={choice} fallback={null} />
+          <p className="sr-only" role="status" data-testid="announcement">
+            {playing ? '' : world.announce}
+          </p>
+          <h2 className="hud-phase" data-testid="section">
+            {sv ? sv.moment.title : step.section.title}
+            <span className="round"> · Round {step.section.round}</span>
+          </h2>
+          <Hud
+            muted={sound.muted}
+            onMute={sound.toggleMute}
+            menu={
+              <>
+                {onReload ? (
+                  <button type="button" className="hud-btn" onClick={onReload}>
+                    Load another log
+                  </button>
+                ) : null}
+                <a className="hud-btn" href="./">
+                  Back to the title
+                </a>
+              </>
+            }
+          />
+          <div className="shell-controls">
+            <p className="shell-label">
+              {live ? '' : `seed ${log.seed} · `}
+              {log.cast.length} players
+            </p>
+            {controls}
+            {viewPicker}
+          </div>
+        </main>
+      </Shell>
+    );
+  }
 
   return (
     <main className="app" data-step={seat === null && !spectating ? index : pos} data-seat={seat ?? ''} data-view={perspective.kind}>
@@ -117,62 +218,34 @@ export function Player({ log, onReload, live = false, initial }: Props) {
       </header>
       {/* Spoken when stepping by hand; silent during autoplay so it does not talk over itself. */}
       <p className="sr-only" role="status" data-testid="announcement">
-        {playing ? '' : sv ? roomAnnouncement(sv) : announcement(view)}
+        {playing ? '' : world ? world.announce : sv ? roomAnnouncement(sv) : announcement(view)}
       </p>
       <h2 className="section-title" data-testid="section">
         {sv ? sv.moment.title : step.section.title}
         {step.kind !== 'result' && <span className="round">Round {step.section.round}</span>}
       </h2>
       <div className="layout">
-        {sv ? (
+        {sv && !world ? (
           <div className="seat-room">
-            <Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
+            <FlatRoom view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
+        ) : world ? (
+          <ReplayRoom
+            view={world}
+            onSit={sitAt}
+            label={seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table'}
+            choice={choice}
+            fallback={sv ? <div className="seat-room"><FlatRoom view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} /></div> : <Table seats={seats} view={view} />}
+          />
         ) : (
           <Table seats={seats} view={view} />
         )}
         {perspective.kind === 'table' && step.kind !== 'result' && <Details view={view} showNotes={showNotes} />}
       </div>
-      <section className="sit" aria-label="Seat">
-        <div className="sit-row">
-          <label htmlFor="view-select">View</label>
-          <select
-            id="view-select"
-            value={seat ?? (spectating ? '@all' : '')}
-            onChange={(e) => (e.target.value === '@all' ? choose({ kind: 'spectator' }) : sit(e.target.value === '' ? null : e.target.value))}
-          >
-            <option value="">The public table</option>
-            <option value="@all">All-seeing room (spoilers)</option>
-            {log.cast.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <p className="hint">
-          {seat !== null
-            ? `You see only what ${seat} knew. Press A for the all-seeing room, or choose another view; the game stays at this moment.`
-            : spectating
-              ? 'You see everything. Click a seat to see the game as that player. The camera follows the speaker; press A to come back here.'
-              : 'Choose the all-seeing room, or sit in a seat to see the game as that player: only what they were told.'}
-        </p>
-      </section>
-      <Controls
-        index={pos}
-        count={timeline.length}
-        playing={playing}
-        showNotes={showNotes}
-        notesLocked={perspective.kind !== 'table'}
-        onPrev={prev}
-        onNext={next}
-        onToggle={toggle}
-        onSeek={seek}
-        onNotes={setShowNotes}
-        {...(onReload ? { onReload } : {})}
-      />
+      {viewPicker}
+      {controls}
     </main>
   );
 }

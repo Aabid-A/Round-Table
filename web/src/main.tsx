@@ -13,12 +13,19 @@ import { isPlayMode } from './play/params.js';
 import { RoomPage } from './rooms/RoomPage.js';
 import { isRoomMode, isWatchMode } from './rooms/params.js';
 import { WatchPage } from './rooms/WatchPage.js';
+import './scene/hud.css';
 import './slice/slice.css';
 import { SlicePage } from './slice/SlicePage.js';
 import { isSliceMode } from './slice/params.js';
+import { TitleScreen } from './shell/TitleScreen.js';
 
 const search = window.location.search;
-const page = isCardPage(search) ? (
+// No address at all is the front door; ?mode=replay is the replay's file picker that used to live there.
+// The room's own settings (?quality=, ?fallback=1) do not make an address.
+const isFrontDoor = [...new URLSearchParams(search).keys()].every((k) => k === 'quality' || k === 'fallback');
+const page = isFrontDoor ? (
+  <TitleScreen />
+) : isCardPage(search) ? (
   <CardPage />
 ) : isGuessMode(search) ? (
   <GuessPage />

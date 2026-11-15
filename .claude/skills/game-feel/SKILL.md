@@ -38,6 +38,22 @@ The player acts on things in the room and the room answers. Follow
 10. **Never trap the player.** Every animation that blocks input is under
     1.5 s or skippable. Reduced motion swaps moves for cuts and fades.
 
+## Shell
+
+The frame around the room. Code: `web/src/shell/`.
+
+1. **Full screen.** In solo, rooms, replay, spectator and guess the room fills the window: no page title, no cream page, no scrolling, dark behind everything.
+2. **Title screen.** The front door is the hall: the camera drifts slowly round the table, "Round Table", and Play, Play with friends, Watch an episode. The `?mode=` addresses still work.
+3. **Setup in the world.** You letter your name on the plate at your seat. Opponents are practice AIs by default; real models sit behind one small "Use real AI models" control that opens the key panel.
+4. **Role reveal.** Your mask turns over in your hands with your role and, for a traitor, your partner. It is held until you click.
+5. **Acting.** Click a figure to choose. One input bar over the bottom of the scene takes speech or a whisper, with Send. No Confirm button and no fields below the canvas.
+6. **Journal.** "What you know" is a panel opened by a button and the J key, sliding over the scene.
+7. **HUD.** Phase and round top left, the turn candle on the table, sound and the menu top right. Nothing else.
+8. **Ending.** The masks turn over at the table, then the result, then Play again, Watch the replay, Share.
+9. **Phone.** The same, full screen; the input bar sits above the keyboard and nothing covers Send.
+
+The form stays, folded away, as the screen reader's path, and the flat pages stay as the fallback.
+
 ## Hidden information
 
 Feel never leaks. A figure's idle behaviour, timing or sound must not differ

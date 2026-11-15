@@ -3,8 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 const FIXTURE = 'tests/fixtures/sample-game.json';
 
+// These tests cover the flat replay table, which is the 3D room's fallback; replay-3d.e2e.ts covers the room.
 async function openFixture(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?mode=replay&fallback=1');
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
   await expect(page.getByTestId('section')).toContainText('Night');
 }
@@ -99,7 +100,7 @@ test('a log that parses but cannot be drawn shows a message instead of a blank p
   // The murder event passes the shape check but has no proposals, so drawing it throws.
   const broken = JSON.parse(readFileSync(FIXTURE, 'utf8'));
   delete broken.events.find((e: { type: string }) => e.type === 'murder').proposals;
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await page.locator('input[type=file]').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(broken)) });
   // Every step is described up front, so the error shows as soon as the log is opened.
   await expect(page.getByRole('alert')).toContainText('This log could not be shown');
@@ -110,7 +111,7 @@ test('a log that parses but cannot be drawn shows a message instead of a blank p
 });
 
 test('rejects a log with another schemaVersion with a clear message', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await page.locator('input[type=file]').setInputFiles({
     name: 'old.json',
     mimeType: 'application/json',
@@ -126,4 +127,15 @@ test('loads a log named in the address, and says when it is missing', async ({ p
   await expect(page.getByTestId('section')).toContainText('Night');
   await page.goto('/?log=missing-game');
   await expect(page.getByRole('alert')).toContainText('No log named "missing-game"');
+});
+
+test('the flat replay says a banishment in full at once, as its card does (the room’s beat-by-beat words are the room’s alone)', async ({ page }) => {
+  await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
+  await page.goto('/?log=sample&fallback=1');
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  for (let i = 0; i < 36; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('section')).toContainText('Banishment');
+  await expect(page.getByTestId('card')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).not.toContainText('chair is pushed back');
 });

@@ -4,6 +4,7 @@ import type { GameLog } from '../../../src/engine/types.js';
 import { loadFromName } from '../load.js';
 import { Card } from './Card.js';
 import { parseCardParams } from './params.js';
+import { useRoomChoice } from '../scene/host.js';
 
 type State = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; log: GameLog };
 
@@ -14,6 +15,9 @@ type State = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 
 export function CardPage() {
   const parsed = parseCardParams(window.location.search);
   const [state, setState] = useState<State>(parsed.ok ? { kind: 'loading' } : { kind: 'error', message: parsed.message });
+  // The card is finished once its picture is drawn (or there is none), so a screenshot taken at data-ready has it.
+  const [drawn, setDrawn] = useState(false);
+  const choice = useRoomChoice(window.location.search);
 
   useEffect(() => {
     document.title = 'Round Table card';
@@ -33,8 +37,8 @@ export function CardPage() {
   }
   if (state.kind === 'loading') return <p className="rec-error" role="status">Loading the card…</p>;
   return (
-    <div className="card-page" data-ready="true">
-      <Card log={state.log} logName={parsed.params.log} turnId={parsed.params.turn} size={parsed.params.size} />
+    <div className="card-page" data-ready={drawn}>
+      <Card log={state.log} logName={parsed.params.log} turnId={parsed.params.turn} size={parsed.params.size} choice={choice} onReady={() => setDrawn(true)} />
     </div>
   );
 }

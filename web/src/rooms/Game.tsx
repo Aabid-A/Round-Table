@@ -73,6 +73,14 @@ export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLe
         <Ghost ghost={ghost} phase={phase} />
       ) : (
         <LiveSeat
+          room3d
+          shell={{
+            menu: (
+              <button type="button" className="hud-btn" onClick={onLeave}>
+                Leave game (fallback moves are made for your seat)
+              </button>
+            ),
+          }}
           turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}
           publicPhase={turn ? publicPhase(turn.phase) : phase}
           onSubmit={(t, answer) => {
@@ -80,6 +88,16 @@ export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLe
             onAnswer(t.id, answer);
           }}
         >
+          {offline && (
+            <p className="notice notice-error" role="alert" data-testid="offline-in-room">
+              You are offline. Reconnecting…
+            </p>
+          )}
+          {timedOut && (
+            <p className="notice" role="status" data-testid="timed-out-in-room">
+              You ran out of time on your last turn, so a fallback move was made for you.
+            </p>
+          )}
           {open && turn ? (
             <>
               <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />

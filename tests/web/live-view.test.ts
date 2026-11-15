@@ -140,3 +140,83 @@ describe('liveView for a ghost watching a seat', () => {
     expect({ ...asleep, sleep: false }.sleep).toBe(false); // the ghost view turns it off
   });
 });
+
+describe('a live seat in the 3D room', () => {
+  it('never gives the room a spectator field, a role it does not hold, or night proposals unless a traitor (8 games, every turn of every seat)', async () => {
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    let checked = 0;
+    for (let seed = 1; seed <= 8; seed++) {
+      const log = await playMock(seed);
+      for (const c of log.cast) {
+        const order = orderFor(log, c.name);
+        for (const t of log.turns.filter((x) => x.player === c.name)) {
+          const view = liveView(snapshotAt(log, t, order));
+          const w = worldFromScene(view, '');
+          expect(w.you).toBe(0);
+          for (const f of w.figures) {
+            expect(f.known).toBeUndefined();
+            if (f.revealed !== null) expect(f.revealed).toBe(view.seats.find((s) => s.name === f.name)!.role);
+            if (f.present && f.index !== 0) expect(f.revealed).toBeNull();
+          }
+          expect(w.thought ?? null).toBeNull();
+          expect(w.whisperLines ?? []).toEqual([]);
+          if ((w.proposals ?? []).length > 0) expect(parsePrompt(t.attempts[0]!.prompt)!.role).toBe('traitor');
+          // Choosing in the room offers only the turn's own options.
+          for (const s of w.choosable) expect(view.picking!.options).toContain(w.figures.find((f) => f.index === s)!.name);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(200);
+  });
+});
+
+describe('a live seat’s staged news', () => {
+  it('stages dawn and a banishment with a role only from the seat’s own prompt, and a whisper only to this seat', async () => {
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    let dawns = 0;
+    let whispers = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const log = await playMock(seed);
+      for (const c of log.cast) {
+        const order = orderFor(log, c.name);
+        for (const t of log.turns.filter((x) => x.player === c.name)) {
+          const base = snapshotAt(log, t, order);
+          const k = base.knowledge!;
+          for (const line of k.history) {
+            const beat = parseHistoryLine(line);
+            const view = liveView({ ...base, beat });
+            const st = view.stage;
+            if (st?.kind === 'dawn') {
+              dawns++;
+              expect(st.role).toBe(k.out.find((o) => o.name === st.victim)?.role ?? null);
+            }
+            if (st?.kind === 'banish') expect(st.role).toBe(k.out.find((o) => o.name === st.seat)!.role);
+            const w = worldFromScene(view, '');
+            if (w.whisper) {
+              whispers++;
+              expect(w.whisper.to).toBe(0);
+              expect(beat.kind).toBe('whisper_in');
+            }
+          }
+        }
+      }
+    }
+    expect(dawns).toBeGreaterThan(0);
+    expect(whispers).toBeGreaterThan(0);
+  });
+});
+
+describe('how long a line of news stays up', () => {
+  it('holds a banishment in the 3D room until its mask has turned, and leaves everything else (and the flat room) as it was', async () => {
+    const { newsHoldMs } = await import('../../web/src/live/liveView.js');
+    const { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS } = await import('../../web/src/scene/fromScene.js');
+    const banished = { kind: 'banished' as const, player: 'Dax' };
+    expect(newsHoldMs(banished, true, 2800)).toBe(BANISH_MS);
+    expect(BANISH_MS).toBeGreaterThan(2 * BANISH_BEAT_MS); // the beat in which the mask turns over
+    expect(BANISH_BEATS[2]).toBe('mask');
+    expect(newsHoldMs(banished, false, 2800)).toBe(2800);
+    expect(newsHoldMs({ kind: 'breakfast', victim: 'Aria' }, true, 2800)).toBe(2800);
+    expect(newsHoldMs(undefined, true, 2800)).toBe(2800);
+  });
+});

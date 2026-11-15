@@ -46,7 +46,7 @@ async function toPickOrScore(page: Page): Promise<void> {
 
 test('plays public steps only, stops at a pick, and will not go on until the picks are locked', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await expect(page.getByRole('heading', { level: 1, name: 'Guess the traitor' })).toBeVisible();
   await expect(page.getByText('Episode 1')).toBeVisible();
   await toPick(page);
@@ -65,7 +65,7 @@ test('plays public steps only, stops at a pick, and will not go on until the pic
 
 test('after locking, keyboard focus moves to the locked message instead of being lost', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample');
+  await page.goto('/?fallback=1&mode=guess&log=sample');
   await toPick(page);
   const boxes = page.locator('.pick-option input');
   await boxes.nth(0).check();
@@ -78,7 +78,7 @@ test('after locking, keyboard focus moves to the locked message instead of being
 
 test('picking: the right number, no more, and the lock button waits', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample');
+  await page.goto('/?fallback=1&mode=guess&log=sample');
   await toPick(page);
   const lockButton = page.getByRole('button', { name: 'Lock my picks' });
   await expect(lockButton).toBeDisabled();
@@ -95,7 +95,7 @@ test('picking: the right number, no more, and the lock button waits', async ({ p
 
 test('arrow keys do not move the episode while you are in the picking form', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample');
+  await page.goto('/?fallback=1&mode=guess&log=sample');
   await toPick(page);
   await page.locator('.pick-option input').first().focus();
   await page.keyboard.press('ArrowLeft');
@@ -105,7 +105,7 @@ test('arrow keys do not move the episode while you are in the picking form', asy
 
 test('you can go back to earlier steps but a locked pick stays locked', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample');
+  await page.goto('/?fallback=1&mode=guess&log=sample');
   await toPick(page);
   await lock(page, (n) => traitors.includes(n));
   await next(page).click();
@@ -116,7 +116,7 @@ test('you can go back to earlier steps but a locked pick stays locked', async ({
 
 test('all the right picks give an all-green score, the reveal and no missed section', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await toScore(page, (n) => traitors.includes(n));
   const heading = await page.getByRole('heading', { level: 2, name: /You found/ }).innerText();
   const [, got, of] = /found (\d+) of (\d+)/.exec(heading)!;
@@ -130,7 +130,7 @@ test('all the right picks give an all-green score, the reveal and no missed sect
 
 test('wrong picks show the missed traitors with what they said and privately thought', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await toScore(page, (n) => !traitors.includes(n));
   const row = await page.getByTestId('emoji-row').innerText();
   expect(row).toContain('⬛');
@@ -143,7 +143,7 @@ test('wrong picks show the missed traitors with what they said and privately tho
 
 test('the share text has the episode number, the row and the link, and names no one', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await toScore(page, (n) => traitors.includes(n));
   const text = await page.getByTestId('share-text').innerText();
   expect(text).toMatch(/^Round Table #1 🟩+ \d+\/\d+\nhttp:\/\/localhost:5183\/\?mode=guess&log=sample&episode=1$/u);
@@ -154,7 +154,7 @@ test('the share text has the episode number, the row and the link, and names no 
 test('copy puts the share text on the clipboard', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await toScore(page, (n) => traitors.includes(n));
   await page.getByRole('button', { name: 'Copy result' }).click();
   await expect(page.getByTestId('share-note')).toHaveText('Copied.');
@@ -163,7 +163,7 @@ test('copy puts the share text on the clipboard', async ({ page, context }) => {
 
 test('download card saves a 1200x675 PNG', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   await toScore(page, (n) => traitors.includes(n));
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download card' }).click()]);
   expect(download.suggestedFilename()).toBe('round-table-1-result.png');
@@ -174,7 +174,7 @@ test('download card saves a 1200x675 PNG', async ({ page }) => {
 
 test('watch again starts over with fresh picks', async ({ page }) => {
   await routes(page);
-  await page.goto('/?mode=guess&log=sample');
+  await page.goto('/?fallback=1&mode=guess&log=sample');
   await toScore(page, (n) => traitors.includes(n));
   await page.getByRole('button', { name: 'Watch again' }).click();
   await expect(page.getByTestId('score')).toHaveCount(0);
@@ -202,7 +202,7 @@ test('?mode=guess with no episode shows the list', async ({ page }) => {
 test("today's episode is the same for the same date and moves on the next day", async ({ page }) => {
   await routes(page);
   const labelFor = async (date: string): Promise<string> => {
-    await page.goto(`/?mode=guess&episode=today&date=${date}`);
+    await page.goto(`/?fallback=1&mode=guess&episode=today&date=${date}`);
     await expect(page.getByRole('heading', { level: 1, name: 'Guess the traitor' })).toBeVisible();
     return page.locator('.topbar .muted').innerText();
   };
@@ -237,7 +237,7 @@ test('an episode with no vote has nothing to guess and says so, with no 0/0', as
   short.turns = short.turns.filter((t: { phase: string }) => t.phase === 'night' || t.phase === 'round_table').slice(0, 10);
   short.events = [];
   await page.route('**/games/sample.json', (r) => r.fulfill({ body: JSON.stringify(short), contentType: 'application/json' }));
-  await page.goto('/?mode=guess&log=sample&episode=1');
+  await page.goto('/?fallback=1&mode=guess&log=sample&episode=1');
   for (let i = 0; i < 60 && !(await page.getByTestId('score').count()); i++) await next(page).click();
   await expect(page.getByRole('heading', { level: 2, name: 'There was nothing to guess in this episode' })).toBeVisible();
   expect(await page.getByTestId('share-text').innerText()).toMatch(/^Round Table #1: nothing to guess in this one\n/);
@@ -245,6 +245,6 @@ test('an episode with no vote has nothing to guess and says so, with no 0/0', as
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
 });

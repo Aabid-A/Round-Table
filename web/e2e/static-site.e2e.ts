@@ -78,7 +78,7 @@ test('the episode list shows the two episodes', async ({ page }) => {
 
 test('the guess page plays an episode by number', async ({ page }) => {
   const errors = watchErrors(page);
-  await page.goto(`${origin}${FOLDER}?mode=guess&episode=1`);
+  await page.goto(`${origin}${FOLDER}?mode=guess&episode=1&fallback=1`); // the flat page; the guess game in the room is tested in guess-3d
   await expect(page.getByRole('heading', { level: 1, name: 'Guess the traitor' })).toBeVisible();
   await expect(page.locator('.topbar .muted')).toHaveText('Episode 1');
   // The episode itself loaded: the first round table is on screen (an unreadable log shows an error instead).

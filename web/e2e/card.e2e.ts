@@ -10,7 +10,7 @@ const turn = log.turns.find((t) => t.phase === 'round_table')!;
 
 async function open(page: Page, query: string, body?: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => (body ? route.fulfill({ body, contentType: 'application/json' }) : route.fulfill({ path: FIXTURE })));
-  await page.goto(`/?${query}`);
+  await page.goto(`/?fallback=1&${query}`); // the text card; the card with its picture of the room is in card-3d.e2e.ts
 }
 
 test('draws the 1200x675 card at exactly that size, with the quote, the thought and where it came from', async ({ page }) => {
@@ -112,7 +112,7 @@ test('says what is wrong with the URL, an unknown turn and a missing log', async
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
   await page.route('**/stats.json', (route) => route.fulfill({ status: 404, body: '' }));
   await page.goto('/?page=stats');

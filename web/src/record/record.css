@@ -210,7 +210,7 @@
 }
 .rec-seat-label {
   position: absolute;
-  top: 1.4cqmin;
+  bottom: 1.4cqmin;
   left: 1.6cqmin;
   z-index: 5;
   margin: 0;
@@ -223,6 +223,17 @@
   font-size: max(13px, 2.4cqmin);
 }
 /* The seat label sits top left, so the speech panel starts below it. */
-.rec-seat-view .room-talk {
-  top: 9cqmin;
+/* The clip in the 3D room: the canvas fills its camera's box, with nothing laid over it. */
+.rec-world {
+  position: absolute;
+  inset: 0;
+  background: #06070b;
+}
+.rec-world canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.rec-stage:has(.rec-world) {
+  background: #06070b;
 }

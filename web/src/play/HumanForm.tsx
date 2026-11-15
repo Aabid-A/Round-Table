@@ -2,6 +2,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { PromptRequest } from '../../../src/players/player.js';
 import { emptyAnswer, formFor, isComplete, splitPrompt, type HumanAnswer } from './human.js';
 
+/** Passed as `picked` to choose the form's "none" answer (no whisper, no offer) from outside it. */
+export const PICK_NONE = '\u0000none';
+
 /** What the room outside the form needs to know about it. */
 export interface FormState {
   ready: boolean;
@@ -19,13 +22,15 @@ interface Props {
   onState?: (state: FormState) => void;
   /** Filled in with a function that sends the answer, for a button outside the form. */
   submitRef?: { current: (() => void) | null };
+  /** Words typed outside the form (the input bar over the room): the speech, and the whisper or the reason. */
+  outside?: { speech: string; message: string };
   /** Which of the human's turns this is, from 1. */
   turn: number;
   onSubmit: (answer: HumanAnswer) => void;
 }
 
 /** One of the human's turns: what you know, the task, and the form for that phase. */
-export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, submitRef }: Props) {
+export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, submitRef, outside }: Props) {
   const id = useId();
   const spec = formFor(request.phase, request.options);
   const { context, task } = splitPrompt(request.user);
@@ -47,10 +52,16 @@ export function HumanForm({ request, turn, onSubmit, picked, onPicked, onState, 
   // A seat picked in the room is this form's choice. (Only a seat the form offers; anything else is ignored.)
   useEffect(() => {
     if (picked === undefined || picked === a.choice) return;
-    if (picked === null) setA((x) => ({ ...x, choice: null })), setChosen(false);
+    if (picked === PICK_NONE) {
+      if (spec.noneLabel !== null) setA((x) => ({ ...x, choice: null })), setChosen(true);
+    } else if (picked === null) setA((x) => ({ ...x, choice: null })), setChosen(false);
     else if (spec.choices.some((c) => c.value === picked)) setA((x) => ({ ...x, choice: picked })), setChosen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
+  // Words typed in the input bar are this form's words.
+  useEffect(() => {
+    if (outside) setA((x) => ({ ...x, speech: outside.speech, message: outside.message }));
+  }, [outside?.speech, outside?.message]);
   const missing = ready
     ? null
     : !chosen || (a.choice === null && spec.noneLabel === null)
