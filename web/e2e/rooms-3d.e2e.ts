@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { makeRoom } from './rooms-helpers.js';
+import { makeRoom, playTurns } from './rooms-helpers.js';
 
 test.setTimeout(180_000);
 const SANDBOX_CHROMIUM = '/opt/pw-browsers/chromium';
@@ -63,4 +63,25 @@ test('a ghost watches from the chosen seat’s chair in the 3D room (scripted se
   await ghost.getByTestId('ghost-seat').filter({ hasText: 'Dax' }).click();
   await expect(page.getByRole('group', { name: 'The room as Dax sees it' })).toBeVisible();
   await expect(page.getByTestId('turn-form')).toHaveCount(0);
+});
+
+test('the watch link shows the game in the 3D all-seeing room, every role over its seat', async ({ page, browser }) => {
+  // The host plays in the flat room, so the game keeps up with the test server's short turns.
+  await page.goto('/?mode=room&fallback=1&seed=5');
+  const create = page.getByRole('region', { name: 'Make a room' });
+  await create.getByLabel('Your name at the table').fill('Quinn');
+  await create.getByTestId('spectators-option').check();
+  await create.getByRole('button', { name: 'Make room' }).click();
+  const link = await page.getByTestId('watch-link').inputValue();
+  await page.getByRole('button', { name: 'Start the game' }).click();
+  await playTurns(page, 'NOTE-FROM-QUINN');
+  await expect(page.getByTestId('room-end')).toBeVisible();
+
+  const watcher = await (await browser.newContext()).newPage();
+  await watcher.goto(`${link}&quality=low`);
+  await expect(watcher.getByTestId('watch-note')).toContainText('The game is over', { timeout: 15_000 });
+  const world = watcher.getByTestId('world');
+  await expect(world.locator('canvas')).toBeVisible({ timeout: 60_000 });
+  await expect(world).toHaveAttribute('data-first', 'false');
+  await expect(world).toHaveAttribute('data-roles', '8');
 });
