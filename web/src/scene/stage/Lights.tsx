@@ -52,7 +52,7 @@ export function Lights({ mood, litCount, quality, dawnAt, hush = false }: Props)
     const k = 1 - Math.exp(-dt * 1.4);
     // Sinking for a private moment takes a breath; coming back is quicker.
     level.current.quiet += ((hush ? 1 : 0) - level.current.quiet) * (1 - Math.exp(-dt * (hush ? 1.6 : 3)));
-    const dim = 1 - level.current.quiet * 0.6;
+    const dim = 1 - level.current.quiet * 0.45;
     clusters.current.forEach((l, c) => {
       if (!l) return;
       // The two candles of a cluster: how lit the pair is.

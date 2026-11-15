@@ -63,10 +63,12 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     figures: figures.sort((a, b) => a.index - b.index),
     you: from === null ? null : 0,
     ...(from === null ? { shot: { focus: seatOrNull(scene.camera.focus), wide: scene.camera.wide, cut: scene.camera.cut } } : {}),
-    mood: scene.night ? 'night' : dawn ? 'dawn' : 'day',
-    candlesLit: scene.night || dawn ? 0 : CANDLES,
+    // A recruitment is done in the dark: the candles are out for it.
+    mood: scene.night || stage?.kind === 'recruit' ? 'night' : dawn ? 'dawn' : 'day',
+    candlesLit: scene.night || dawn || stage?.kind === 'recruit' ? 0 : CANDLES,
     speaker: speaking,
-    speech: speaking !== null && scene.moment.text ? { text: scene.moment.text, speaker: speaking } : null,
+    // A whisper's words are said beside the one who leans in to say them, not written over the room.
+    speech: speaking !== null && scene.moment.text ? { text: scene.moment.text, speaker: speaking } : whisper && whisper.from !== 0 && scene.moment.text ? { text: scene.moment.text, speaker: whisper.from } : null,
     pointing: speaking !== null && target !== null && target !== speaking ? { from: speaking, at: target } : null,
     looks,
     voting: stage?.kind === 'votes',

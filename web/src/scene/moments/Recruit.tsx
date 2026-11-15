@@ -4,14 +4,13 @@ import type * as THREE from 'three';
 import { tablePoint } from '../layout.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { useReducedMotion } from '../motion.js';
-import { PALETTE } from '../palette.js';
 
 /** How long the mask takes to cross the table, in seconds. */
 const CROSS = 2.4;
 
 /**
- * Recruitment: in the dark a second mask, face down so its red lining shows, is slid across the table from the traitor's place to
- * the one being offered it, and stops there. With motion reduced it is simply there.
+ * Recruitment: in the dark a second mask, face up so its shape reads, is slid across the table from the traitor's place to the one
+ * being offered it, and stops there. With motion reduced it is simply there.
  */
 export function Recruit({ from, to, mask }: { from: number; to: number; mask: number }) {
   const group = useRef<THREE.Group>(null);
@@ -31,9 +30,9 @@ export function Recruit({ from, to, mask }: { from: number; to: number; mask: nu
   });
   return (
     <group ref={group} visible={false}>
-      {/* face down: the lining is what shows */}
-      <group rotation-x={Math.PI / 2}>
-        <MaskMesh index={mask} scale={0.16} lining={PALETTE.traitor} />
+      {/* lying face up, tipped a little toward the one it is slid to */}
+      <group rotation-x={-Math.PI / 2 + 0.35}>
+        <MaskMesh index={mask} scale={0.18} />
       </group>
     </group>
   );

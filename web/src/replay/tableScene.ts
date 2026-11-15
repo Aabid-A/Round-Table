@@ -29,7 +29,7 @@ export function tableSceneView(log: GameLog, steps: Step[], index: number, view:
     night: step.section.title === 'Night',
     whispers: [],
     // Wide for the votes and the reveal at the end; on whoever acts otherwise, and on the one an event is about.
-    camera: { focus: view.speaker ?? view.target, wide: stage?.kind === 'votes' || step.kind === 'result', cut: step.kind === 'event' },
+    camera: { focus: view.speaker ?? view.target, wide: stage?.kind === 'votes' || stage?.kind === 'banish' || step.kind === 'result', cut: step.kind === 'event' },
     pov: 'third',
     stage,
   };

@@ -54,7 +54,7 @@ export function Caption({ text, waiting = false }: { text: string | null; waitin
   });
   if (!drawn) return null;
   return (
-    <mesh ref={mesh} renderOrder={10} visible={false}>
+    <mesh ref={mesh} renderOrder={1000} visible={false}>
       <planeGeometry args={[1, 1]} />
       {/* lit letters: they give their own light and take none, so they read the same by candle, by fire and at dawn; no fog dims them */}
       <meshStandardMaterial ref={material} color="#000" emissive="#fff" emissiveMap={drawn.texture} alphaMap={drawn.alpha} transparent opacity={0} depthTest={false} depthWrite={false} fog={false} />

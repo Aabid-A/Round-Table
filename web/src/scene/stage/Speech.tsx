@@ -68,7 +68,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
   });
   if (!drawn || speaker === null) return null;
   return (
-    <mesh ref={mesh} renderOrder={10} visible={false}>
+    <mesh ref={mesh} renderOrder={1000} visible={false}>
       <planeGeometry args={[1, 1]} />
       {/* lit letters, as the turn prompt: they give their own light, so they read by candle, by fire and at dawn */}
       <meshStandardMaterial ref={material} color="#000" emissive="#fff" emissiveMap={drawn.texture} alphaMap={drawn.alpha} transparent opacity={0} depthTest={false} depthWrite={false} fog={false} />
