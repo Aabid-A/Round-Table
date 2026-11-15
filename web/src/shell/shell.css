@@ -1,0 +1,549 @@
+/* The game shell: the room fills the window, dark behind everything, and the few flat controls lie over it. See game-feel, "Shell". */
+html.shell-on,
+html.shell-on body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #06070b;
+}
+.shell {
+  --hud-ink: #efe6d2;
+  --hud-dim: #cfc6b2;
+  --hud-gold: #e0b43a;
+  --hud-glass: rgb(8 9 13 / 0.72);
+  --kb: 0px;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  height: 100dvh;
+  overflow: hidden;
+  background: #06070b;
+  color: var(--hud-ink);
+  font: 500 15px/1.4 system-ui, sans-serif;
+}
+/* The room takes the whole window, edge to edge. */
+.shell .world-room,
+.shell .live-room > .world-room {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+}
+.shell .world-room canvas {
+  touch-action: none;
+}
+
+/* Top left: the phase and the round. */
+.hud-phase {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  z-index: 10;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--hud-glass);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.hud-phase span {
+  color: var(--hud-dim);
+  font-weight: 500;
+}
+/* Top right: journal, sound, menu. */
+.hud-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+.hud-btn,
+.inputbar-send,
+.title-actions a,
+.title-actions button {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgb(224 180 58 / 0.5);
+  background: var(--hud-glass);
+  color: var(--hud-ink);
+  font: 500 14px/1.2 system-ui, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+.hud-btn:hover:not(:disabled),
+.hud-btn:focus-visible,
+.inputbar-send:hover:not(:disabled),
+.inputbar-send:focus-visible,
+.title-actions a:hover,
+.title-actions a:focus-visible,
+.title-actions button:hover,
+.title-actions button:focus-visible {
+  border-color: var(--hud-gold);
+  outline: 2px solid var(--hud-gold);
+  outline-offset: 2px;
+}
+.hud-btn[aria-pressed='true'] {
+  border-color: var(--hud-gold);
+  background: rgb(224 180 58 / 0.18);
+}
+.hud-btn:disabled,
+.inputbar-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hud-menu {
+  position: absolute;
+  top: 64px;
+  right: 12px;
+  z-index: 12;
+  display: grid;
+  gap: 8px;
+  min-width: 200px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgb(224 180 58 / 0.35);
+  background: rgb(8 9 13 / 0.92);
+}
+.hud-menu .hud-btn {
+  width: 100%;
+  text-align: left;
+}
+
+/* A line of status over the bottom of the room while others act. */
+.shell-status {
+  position: absolute;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 10;
+  transform: translateX(-50%);
+  max-width: min(92vw, 640px);
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--hud-glass);
+  color: var(--hud-dim);
+  text-align: center;
+}
+.shell-status:focus {
+  outline: none;
+}
+
+/* The input bar: over the bottom of the room, above the keyboard on a phone. */
+.inputbar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--kb));
+  z-index: 11;
+  transform: translateX(-50%);
+  width: min(94vw, 760px);
+  box-sizing: border-box;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgb(224 180 58 / 0.35);
+  background: rgb(8 9 13 / 0.86);
+}
+.inputbar-ask {
+  margin: 0;
+  color: var(--hud-dim);
+}
+.inputbar-ask strong {
+  color: var(--hud-gold);
+}
+.inputbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+.inputbar-text {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgb(224 180 58 / 0.45);
+  background: rgb(0 0 0 / 0.5);
+  color: var(--hud-ink);
+  font: inherit;
+  font-size: 16px; /* 16px keeps a phone from zooming in when the field takes focus */
+}
+.inputbar-text:focus-visible {
+  outline: 2px solid var(--hud-gold);
+  outline-offset: 1px;
+}
+.inputbar-send {
+  margin-left: auto;
+  border-color: var(--hud-gold);
+  background: #b8902a;
+  color: #120e06;
+  font-weight: 700;
+}
+
+/* The journal slides over the left of the room. */
+.journal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 13;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: min(92vw, 420px);
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-right: 1px solid rgb(224 180 58 / 0.35);
+  background: rgb(8 9 13 / 0.94);
+  transform: translateX(-102%);
+  transition: transform 260ms ease;
+}
+.journal[data-open='true'] {
+  transform: none;
+}
+.journal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.journal h2 {
+  margin: 0;
+  color: var(--hud-gold);
+  font-size: 18px;
+}
+.journal pre {
+  margin: 12px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  font: 14px/1.5 system-ui, sans-serif;
+  color: var(--hud-ink);
+}
+
+/* The form, folded away: the path for a screen reader, and for anyone who prefers it. */
+.shell-form {
+  position: absolute;
+  left: 12px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 9;
+  max-width: min(92vw, 520px);
+  max-height: 70dvh;
+  overflow: auto;
+  border-radius: 10px;
+  background: rgb(8 9 13 / 0.92);
+  color: var(--hud-ink);
+}
+.shell-form > summary {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.shell-form > summary:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  display: block;
+  padding: 12px 14px;
+  outline: 2px solid var(--hud-gold);
+}
+.shell-form[open] {
+  padding: 12px;
+  border: 1px solid rgb(224 180 58 / 0.35);
+}
+.shell-form[open] > summary {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+  color: var(--hud-gold);
+}
+
+/* A moment held until you click: the role reveal, the end. */
+.shell-hold {
+  position: absolute;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  z-index: 11;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: min(94vw, 640px);
+}
+.shell-hold .inputbar-send {
+  margin: 0;
+}
+.shell-catch {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* The title screen. */
+.title {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 28px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+.title h1 {
+  margin: 0;
+  font: 600 clamp(44px, 9vw, 96px) / 1 Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.04em;
+  color: #f1e3bf;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.8), 0 0 40px rgb(224 180 58 / 0.25);
+}
+.title-actions {
+  display: grid;
+  gap: 10px;
+  width: min(80vw, 300px);
+  pointer-events: auto;
+}
+.title-actions a,
+.title-actions button {
+  display: block;
+  padding: 12px 18px;
+  font-size: 17px;
+  text-align: center;
+}
+.title-actions a:first-child {
+  border-color: var(--hud-gold);
+  background: #b8902a;
+  color: #120e06;
+  font-weight: 700;
+}
+.title-more {
+  pointer-events: auto;
+  color: var(--hud-dim);
+  font-size: 13px;
+}
+.title-more a {
+  color: var(--hud-dim);
+}
+
+/* The setup in the room: the plate you letter your name on, and the key panel. */
+.setup-plate {
+  position: absolute;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 11;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: min(94vw, 460px);
+}
+.setup-plate label {
+  color: var(--hud-dim);
+}
+.setup-plate input[type='text'] {
+  width: 100%;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 2px solid #5b5246;
+  background: linear-gradient(#3a342d, #24201c);
+  color: #f3e6c4;
+  font: 600 22px/1 Georgia, serif;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.setup-plate input[type='text']:focus-visible {
+  outline: 2px solid var(--hud-gold);
+  outline-offset: 2px;
+}
+.setup-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.setup-error {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgb(120 20 20 / 0.85);
+  color: #fff;
+}
+.keypanel {
+  position: absolute;
+  top: 64px;
+  right: 12px;
+  z-index: 12;
+  display: grid;
+  gap: 10px;
+  width: min(92vw, 380px);
+  max-height: calc(100dvh - 80px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgb(224 180 58 / 0.35);
+  background: rgb(8 9 13 / 0.94);
+}
+.keypanel label {
+  display: grid;
+  gap: 4px;
+  color: var(--hud-dim);
+  font-size: 14px;
+}
+.keypanel input,
+.keypanel textarea {
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgb(224 180 58 / 0.4);
+  background: rgb(0 0 0 / 0.5);
+  color: var(--hud-ink);
+  font: 15px/1.4 system-ui, sans-serif;
+}
+.keypanel .hint {
+  margin: 0;
+  color: #a9a291;
+  font-size: 13px;
+}
+
+/* The end: the result over the table, then what next. */
+.ending {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  z-index: 10;
+  transform: translateX(-50%);
+  width: min(92vw, 640px);
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+}
+.ending h1 {
+  margin: 0;
+  font: 600 clamp(32px, 6vw, 60px) / 1.1 Georgia, serif;
+  color: #f1e3bf;
+  text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
+}
+.ending p {
+  margin: 8px 0 0;
+  color: var(--hud-dim);
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.9);
+}
+
+/* Replay and spectator in the shell: the controls in one bar over the bottom. */
+.shell-controls {
+  position: absolute;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 11;
+  transform: translateX(-50%);
+  width: min(96vw, 820px);
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgb(224 180 58 / 0.3);
+  background: rgb(8 9 13 / 0.82);
+  color: var(--hud-ink);
+}
+.shell-controls .controls,
+.shell-controls .sit {
+  margin: 0;
+}
+.shell-controls .sit {
+  margin-top: 6px;
+}
+.shell-controls .btn,
+.shell-controls select {
+  background: rgb(0 0 0 / 0.45);
+  color: var(--hud-ink);
+  border-color: rgb(224 180 58 / 0.45);
+}
+
+@media (max-width: 600px) {
+  .hud-phase {
+    top: 10px;
+    left: 10px;
+    max-width: 44vw;
+    font-size: 13px;
+  }
+  .hud-bar {
+    top: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+  .hud-btn {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal {
+    transition: none;
+  }
+}
+.shell .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The end comes in order: the masks turn, then the result, then what next. */
+.ending {
+  animation: shell-rise 900ms ease 1.8s both;
+}
+.ending-actions {
+  animation: shell-rise 700ms ease 3s both;
+}
+@keyframes shell-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ending,
+  .ending-actions {
+    animation: none;
+  }
+}
+.hud-note {
+  margin: 0;
+  max-width: 260px;
+  color: var(--hud-dim);
+  font-size: 13px;
+}
+.ghost-shell .ghost-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
