@@ -11,7 +11,7 @@
 3. **Neighbours on the laptop.** The seats beside you now sit 58 degrees round (the rest about 41) and 0.25 m back. Seats 2 and 6 are whole in a 16:9 picture and the two beside you stay out of it until you turn (`d-2` to `d-6`). A neighbour who speaks is turned to fully, so they are whole and not cut by the edge.
 4. **Masks.** The slab mask across the table is a bright azure at full light; violet moved to a darker indigo; teal shifted toward green. Every saturated accent is at least 25 degrees of hue from the next, magenta and indigo 50. **Blur test:** seven separate blots (white heart, magenta horns, yellow bar, pale-blue slab, orange lozenge, dark indigo sun, green peak).
 5. **Hands.** Each finger bone is lathed: it swells at the joints and narrows between them, and each finger tapers to a tip with a nail. The resting fingers had been sunk into the table, leaving stubs; the hand is now tipped back so the arched fingers and the heel rest on the wood (a test holds it there).
-6. **Speech.** The boxed bubble is gone. A figure's words are the turn prompt's pale lit letters, hung beside its mask on the side toward the middle of the picture (`d-1`), above the mask on a phone where neither side has room (`p-1`), and at the distance the depth of field is focused on.
+6. **Speech.** The boxed bubble is gone. A figure's words are the turn prompt's pale lit letters, hung beside its mask on the side toward the middle of the picture (`d-1`), and above the mask on a phone where neither side has room (`p-1`). While a figure speaks the depth of field is off (it would blur the words by whatever lies behind them), and the words take no fog. `d-1-speech` was retaken at high quality after that change.
 7. **Dawn.** The victim's mask is moved along the table's edge just far enough to clear its plate as you see it, worked out for each seat (`d-9`, `p-9`). The banished mask, which had the same fault, now lies in the middle of the table on your side, tipped up a little less, below the names across the table (`d-7`, `p-7`).
 
 Then the slice's private parts moved into `web/src/scene/` for the other modes: the World composition, the WebGL canvas with its frame meter and lost-context watch, the host (fallback boundary, quality probe, reduced motion, sound), the synthesised sounds, and the choosing keys and list with their styles.
@@ -32,13 +32,15 @@ A context that had not built the scene was given the stills and `/art-direction`
 
 - **`p-9-dawn`: the murder did not read; the victim's mask was a pale smudge.** The dawn mask is drawn larger (scale 0.2) and every mask on the table is tipped further toward you. It is now a readable shape beside Cleo's plate; on a phone the dark pillar still takes much of the frame.
 - **`p-7-banishment`: the turned-over mask read as paper, and lay beside another player's place.** Fixed as above: in the middle of the table on your side, large, below the names.
-- **`d-1-speech`: the words were blurred by the depth of field and crossed by flames; the speaking neighbour loomed half cut off.** The words now hang at the focus distance, and a neighbour who speaks is turned to fully.
+- **`d-1-speech`: the words were blurred by the depth of field and crossed by flames; the speaking neighbour loomed half cut off.** A neighbour who speaks is now turned to fully, so they are whole (`d-1`, retaken: Aria speaks, whole and pointing). Gate A then showed that hanging the words at the focus distance changed nothing, because the blur reads the depth of what is behind them; a still confirmed it (the words ghosted over a figure). The depth of field is now off while a figure speaks, and the retaken `d-1` shows the words sharp. The words can still lie over the mask of a figure next to the speaker (Bram's, in `d-1`).
 
 Its other point is answered, not fixed: **the plate of the seat beside you sits in front of the next figure** (in `p-1` the speaker's plate reads "Aria" while the figure behind it is the next seat round). From your chair your neighbour sits out to the side beyond the table, so any plate on the table in front of them falls, as you see it, in front of the next seat. M18 had the same geometry. A fix (a plate on the chair, or none for the two beside you) is a design choice for the owner.
 
 ## Falls short
 
 - The neighbour's plate, above.
+- Speech can lie over the mask of a figure next to the speaker (`d-1`).
+- The depth of field is off while anyone speaks, so a close shot loses it for that time.
 - Portrait still shows one figure at a time outside the vote; you swipe for the rest.
 - Your sleeves still pass through the table's edge from below.
 - Still true from M18: a leaving figure glides away seated, a figure's pointing arm has no elbow.
