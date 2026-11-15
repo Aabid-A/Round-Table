@@ -20,7 +20,7 @@ export function LiveRoom({ view, choice, fallback, onPick, label }: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
   if (!room) return <>{fallback}</>;
   return (
-    <div className="world-room" data-testid="world" role="group" aria-label={label} data-figures={view.figures.filter((f) => f.present).length} data-quality={quality} data-first={view.you !== null} data-choosable={view.choosable.length} data-selected={view.selected ?? ''} data-sleep={view.sleep ? 'asleep' : ''} data-proposals={(view.proposals ?? []).reduce((n, p) => n + p.count, 0)} data-timer={view.timer ? 'shown' : ''}>
+    <div className="world-room" data-testid="world" role="group" aria-label={label} data-figures={view.figures.filter((f) => f.present).length} data-quality={quality} data-first={view.you !== null} data-choosable={view.choosable.length} data-selected={view.selected ?? ''} data-sleep={view.sleep ? 'asleep' : ''} data-proposals={(view.proposals ?? []).reduce((n, p) => n + p.count, 0)} data-timer={view.timer ? 'shown' : ''} data-moment={view.whisper ? 'whisper' : view.banish ? 'banish' : view.dawn ? 'dawn' : view.tokens.length > 0 ? 'votes' : view.speech ? 'speech' : ''}>
       <SceneBoundary fallback={fallback} onError={onLost}>
         <Suspense fallback={<p className="notice" role="status">Lighting the candles…</p>}>
           <RoomScene view={{ ...view, hovered: view.choosable.includes(hovered ?? -1) ? hovered : null }} quality={quality} onFrame={onFrame} onLost={onLost} onHover={setHovered} onPick={onPick} />
