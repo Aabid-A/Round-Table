@@ -4,9 +4,10 @@ import { expect, test, type Page } from '@playwright/test';
 const FIXTURE = 'tests/fixtures/sample-game.json';
 // In the sample game Bram and Cleo are the traitors; everyone else is faithful.
 
+// These tests cover the flat versions (the CSS room and the flat table), which the 3D room falls back to: dropping into a seat or back to the table now opens the room.
 async function open(page: Page, query: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto(`/?log=sample${query}`);
+  await page.goto(`/?log=sample&fallback=1${query}`);
 }
 
 async function walkTo(page: Page, title: string): Promise<void> {
