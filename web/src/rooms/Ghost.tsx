@@ -5,7 +5,9 @@ import { liveView } from '../live/liveView.js';
 import { parsePrompt } from '../perspective/knowledge.js';
 import { FlatRoom } from '../scene/FlatRoom.js';
 import { worldFromScene } from '../scene/fromScene.js';
-import { useRoomChoice } from '../scene/host.js';
+import { useRoomChoice, useRoomSound } from '../scene/host.js';
+import { Hud } from '../shell/Hud.js';
+import { Shell } from '../shell/Shell.js';
 import { momentWords } from '../replay/momentWords.js';
 import { LiveRoom } from '../live/LiveRoom.js';
 
@@ -19,6 +21,7 @@ type GhostMessage = Extract<ServerMessage, { t: 'ghost' }>;
 export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhase | null }) {
   const [picked, setPicked] = useState<string | null>(null);
   const choice = useRoomChoice(window.location.search);
+  const sound = useRoomSound();
   const seat = ghost.seats.find((s) => s.name === picked) ?? ghost.seats.find((s) => s.name !== ghost.you && s.prompt !== null) ?? ghost.seats[0];
   const knowledge = seat?.prompt ? parsePrompt(seat.prompt) : null;
   // The phase everyone is told of names the moment. A ghost is watching, not sleeping: the night is dim but never a blackout.
@@ -29,6 +32,36 @@ export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhas
   const world = view && choice.room ? worldFromScene(view, momentWords(view)) : null;
   const label = seat ? `The room as ${seat.name} sees it` : '';
 
+  const seatButtons = ghost.seats.map((s) => (
+    <button key={s.name} type="button" className={world ? 'hud-btn' : 'btn'} aria-pressed={s.name === seat?.name} data-testid="ghost-seat" data-name={s.name} onClick={() => setPicked(s.name)}>
+      {s.name}
+      {s.name === ghost.you ? ' (you)' : ''}
+      {s.status !== 'alive' ? ` (${s.status})` : ''}
+    </button>
+  ));
+
+  if (world && view && seat) {
+    // The game shell: the watched seat's room fills the window; the seats to watch from are one bar over it.
+    return (
+      <Shell label="Watching as a ghost">
+        <section className="ghost ghost-shell" data-testid="ghost" aria-label="Watching as a ghost">
+          <div className="live-room">
+            <LiveRoom view={world} choice={choice} onPick={() => {}} label={label} fallback={<FlatRoom view={view} label={label} />} />
+          </div>
+          <Hud phase={view.moment.title} round={view.moment.round} muted={sound.muted} onMute={sound.toggleMute} menu={<p className="hud-note">You are out of the game, watching as a ghost: you see what every seat knows, hidden information included.</p>} />
+          <div className="shell-controls">
+            <p className="sr-only" role="status">
+              You are out of the game, and watching as a ghost. You can see what every seat knows, hidden information included.
+            </p>
+            <div role="group" aria-label="Seats to watch" className="ghost-seats">
+              {seatButtons}
+            </div>
+          </div>
+        </section>
+      </Shell>
+    );
+  }
+
   return (
     <section className="ghost" data-testid="ghost" aria-label="Watching as a ghost">
       <p className="notice" role="status">
@@ -36,21 +69,7 @@ export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhas
         you.
       </p>
       <div role="group" aria-label="Seats to watch" className="ghost-seats">
-        {ghost.seats.map((s) => (
-          <button
-            key={s.name}
-            type="button"
-            className="btn"
-            aria-pressed={s.name === seat?.name}
-            data-testid="ghost-seat"
-            data-name={s.name}
-            onClick={() => setPicked(s.name)}
-          >
-            {s.name}
-            {s.name === ghost.you ? ' (you)' : ''}
-            {s.status !== 'alive' ? ` (${s.status})` : ''}
-          </button>
-        ))}
+        {seatButtons}
       </div>
       {view && seat ? (
         <div className="live-room">
