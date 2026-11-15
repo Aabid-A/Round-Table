@@ -170,3 +170,39 @@ describe('a live seat in the 3D room', () => {
     expect(checked).toBeGreaterThan(200);
   });
 });
+
+describe('a live seat’s staged news', () => {
+  it('stages dawn and a banishment with a role only from the seat’s own prompt, and a whisper only to this seat', async () => {
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    let dawns = 0;
+    let whispers = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const log = await playMock(seed);
+      for (const c of log.cast) {
+        const order = orderFor(log, c.name);
+        for (const t of log.turns.filter((x) => x.player === c.name)) {
+          const base = snapshotAt(log, t, order);
+          const k = base.knowledge!;
+          for (const line of k.history) {
+            const beat = parseHistoryLine(line);
+            const view = liveView({ ...base, beat });
+            const st = view.stage;
+            if (st?.kind === 'dawn') {
+              dawns++;
+              expect(st.role).toBe(k.out.find((o) => o.name === st.victim)?.role ?? null);
+            }
+            if (st?.kind === 'banish') expect(st.role).toBe(k.out.find((o) => o.name === st.seat)!.role);
+            const w = worldFromScene(view, '');
+            if (w.whisper) {
+              whispers++;
+              expect(w.whisper.to).toBe(0);
+              expect(beat.kind).toBe('whisper_in');
+            }
+          }
+        }
+      }
+    }
+    expect(dawns).toBeGreaterThan(0);
+    expect(whispers).toBeGreaterThan(0);
+  });
+});

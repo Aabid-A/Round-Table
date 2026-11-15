@@ -93,7 +93,7 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     whisperLines: scene.viewer !== null ? [] : scene.whispers.filter((w) => castIndex.has(w.from) && castIndex.has(w.to)).map((w) => ({ from: seatOf(w.from), to: seatOf(w.to) })),
     fallen: scene.seats.filter((s) => s.status !== 'alive' && !staged.has(s.name)).map((s) => ({ seat: seatOf(s.name), role: s.role })),
     // A live turn: the seats that may be chosen, and the one chosen so far. Choosing is done in the room.
-    choosable: (scene.picking?.options ?? []).filter((n) => castIndex.has(n)).map(seatOf),
+    choosable: scene.sleep ? [] : (scene.picking?.options ?? []).filter((n) => castIndex.has(n)).map(seatOf),
     hovered: null,
     selected: seatOrNull(scene.picking?.picked),
     timer: scene.timer ?? null,

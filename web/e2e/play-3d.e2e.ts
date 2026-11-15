@@ -34,7 +34,12 @@ test('you choose in the room with the keys: the arrows move the choice, Enter se
   await expect(form(page)).toHaveAttribute('data-phase', 'night');
   await expect(world(page)).not.toHaveAttribute('data-choosable', '0');
   const before = Number(await form(page).getAttribute('data-turn'));
-  await page.locator('body').focus();
+  // In the box of what you know (which scrolls), the arrows are the box's, not the room's.
+  await form(page).getByLabel('What you know so far').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(world(page)).toHaveAttribute('data-selected', '');
+  // Out of the box, the arrows choose in the room.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('ArrowRight');
   await expect(world(page)).toHaveAttribute('data-selected', /\d/);
   await expect(page.getByTestId('live-chosen')).toContainText('You chose');
@@ -61,4 +66,11 @@ test('with reduced motion the solo seat shows its flat room, not the 3D one', as
   await expect(page.getByTestId('turn-form')).toBeVisible();
   await expect(page.getByTestId('room')).toBeVisible();
   await expect(world(page)).toHaveCount(0);
+});
+
+test('a faithful sees no proposals, and the room speaks to a screen reader', async ({ page }) => {
+  await startSolo(page, FAITHFUL);
+  await expect(world(page).locator('canvas')).toBeVisible({ timeout: 60_000 });
+  await expect(world(page)).toHaveAttribute('data-proposals', '0');
+  await expect(page.getByTestId('room-announcement')).not.toBeEmpty();
 });

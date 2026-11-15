@@ -26,6 +26,8 @@ export function LiveRoom({ view, choice, fallback, onPick, label }: Props) {
           <RoomScene view={{ ...view, hovered: view.choosable.includes(hovered ?? -1) ? hovered : null }} quality={quality} onFrame={onFrame} onLost={onLost} onHover={setHovered} onPick={onPick} />
         </Suspense>
       </SceneBoundary>
+      {/* What the room shows, said to a screen reader: only this seat's own words. */}
+      <p className="sr-only" role="status" aria-live="polite" data-testid="room-announcement">{view.announce}</p>
     </div>
   );
 }

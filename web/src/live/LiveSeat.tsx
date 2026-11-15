@@ -6,8 +6,8 @@ import { HumanForm, type FormState } from '../play/HumanForm.js';
 import { parsePrompt, type Knowledge } from '../perspective/knowledge.js';
 import { Room } from '../scene/Room.js';
 import { useChooseKeys } from '../scene/Choose.js';
-import { worldFromScene } from '../scene/fromScene.js';
-import { useRoomChoice } from '../scene/host.js';
+import { BANISH_BEAT_MS, BANISH_BEATS, banishWords, worldFromScene } from '../scene/fromScene.js';
+import { useBeat, useRoomChoice } from '../scene/host.js';
 import { momentWords } from '../replay/momentWords.js';
 import { LiveRoom } from './LiveRoom.js';
 import { newsToPlay, type LiveEvent } from './events.js';
@@ -114,7 +114,10 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
     [k, order, reel, beatAt, turn, publicPhase, picked, left],
   );
   const shown = view && hold && !view.sleep ? { ...view, sleep: true, night: true } : view;
-  const world = room3d && choice.room && shown ? worldFromScene(shown, momentWords(shown)) : null;
+  // A banishment in the room is staged beat by beat, as in the replay.
+  const beat = useBeat(shown?.stage?.kind === 'banish' ? `${turn?.id ?? ''}:${beatAt}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
+  const said = shown ? (shown.sleep ? 'Night. You sleep.' : momentWords(shown)) : '';
+  const world = room3d && choice.room && shown ? worldFromScene(shown, shown.stage?.kind === 'banish' ? banishWords(shown.stage.seat, beat, said) : said, beat) : null;
   const nameAt = (seat: number): string | null => world?.figures.find((f) => f.index === seat)?.name ?? null;
   // The keys choose among the seats the turn offers, and Enter confirms, as in the slice.
   useChooseKeys(world?.choosable ?? [], world?.selected ?? null, (seat) => setPicked(nameAt(seat)), () => submit.current?.());
