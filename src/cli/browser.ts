@@ -11,11 +11,11 @@ export function chromiumLaunchOptions(): { executablePath?: string } {
   return existsSync(SANDBOX_CHROMIUM) ? { executablePath: SANDBOX_CHROMIUM } : {};
 }
 
-/** Launch Chromium. If it is missing, say how to get it instead of showing Playwright's raw error. */
-export async function launchChromium(): Promise<Browser> {
+/** Launch Chromium, with any extra command-line flags. If it is missing, say how to get it instead of showing Playwright's raw error. */
+export async function launchChromium(args: string[] = []): Promise<Browser> {
   const options = chromiumLaunchOptions();
   try {
-    return await chromium.launch(options);
+    return await chromium.launch({ ...options, args });
   } catch (e) {
     const where = options.executablePath ? ` at ${options.executablePath}` : '';
     const detail = e instanceof Error ? e.message.split('\n')[0] : String(e);
