@@ -45,7 +45,11 @@ describe('the room for a scene view', () => {
               if (f.revealed !== null) expect(f.revealed).toBe(scene.seats.find((s) => s.name === f.name)!.role);
               if (f.present && f.index !== 0) expect(f.revealed).toBeNull();
               expect(f.fellow).toBeUndefined();
+              expect(f.known).toBeUndefined();
             }
+            // Roles above seats, private notes and whisper lines are the all-seeing room's alone.
+            expect(w.thought ?? null).toBeNull();
+            expect(w.whisperLines ?? []).toEqual([]);
             if (w.whisper) expect(w.whisper.to).toBe(0);
             if (w.recruit) expect([w.recruit.from, w.recruit.to]).toContain(0);
             checked++;

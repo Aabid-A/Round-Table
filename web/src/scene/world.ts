@@ -10,6 +10,8 @@ export interface WorldFigure {
   revealed: Role | null;
   /** A fellow traitor this viewer was told about: their plate is edged in traitor red. Only ever set for a viewer who is a traitor. */
   fellow?: boolean;
+  /** A living player's role, shown above their seat. Only ever set for a spectator, who may see every role. */
+  known?: Role;
 }
 
 export type WorldMood = 'day' | 'night' | 'dawn';
@@ -56,6 +58,10 @@ export interface WorldView {
   whisper?: { from: number; to: number } | null;
   /** A recruitment: in the dark a second mask is slid across the table from the traitor to the one offered it. */
   recruit?: { from: number; to: number } | null;
+  /** The speaker's private notes, written in the air beside their mask. Only ever set for a spectator. */
+  thought?: { text: string; speaker: number } | null;
+  /** Whispers drawn as lines between the seats. Only ever set for a spectator. */
+  whisperLines?: { from: number; to: number }[];
   /** Players already out of the game, by seat: their masks lie on the table before their empty chairs, turned over when the role is known. */
   fallen?: { seat: number; role: Role | null }[];
   /** Words for the HUD and the live region: what is happening and what the player may do. Only what this viewer may know. */

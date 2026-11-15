@@ -22,6 +22,16 @@ describe('the public replay table in the room', () => {
       if (view.notes) expect(JSON.stringify(scene)).not.toContain(view.notes);
     });
   });
+  it('never shows a living role, a private note or a whisper line at the public table before the result', () => {
+    steps.forEach((step, i) => {
+      // At the result every role is public (and the page draws the result flat).
+      if (step.kind === 'result') return;
+      const w = worldFromScene(tableSceneView(sample, steps, i, describeStep(step, sample)), '');
+      for (const f of w.figures) expect(f.known, `step ${i} ${f.name}`).toBeUndefined();
+      expect(w.thought ?? null).toBeNull();
+      expect(w.whisperLines ?? []).toEqual([]);
+    });
+  });
   it('seats no one in a chair: the room is filmed by the director', () => {
     const w = worldFromScene(tableSceneView(sample, steps, 3, describeStep(steps[3]!, sample)), '');
     expect(w.you).toBeNull();

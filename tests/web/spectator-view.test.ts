@@ -75,3 +75,23 @@ describe('spectatorView', () => {
     });
   });
 });
+
+describe('the all-seeing room in 3D', () => {
+  it('shows every living role above its seat, the speaker’s notes beside them, and whispers as lines', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { buildContext } = await import('../../src/log/highlights/context.js');
+    const { buildSteps } = await import('../../web/src/replay/timeline.js');
+    const { spectatorView } = await import('../../web/src/perspective/spectatorView.js');
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    const log = JSON.parse(readFileSync('tests/fixtures/sample-game.json', 'utf8'));
+    const steps = buildSteps(log);
+    const ctx = buildContext(log);
+    const first = worldFromScene(spectatorView(log, steps, 0, ctx), '');
+    expect(first.figures.filter((f) => f.known).length).toBe(8);
+    expect(first.figures.filter((f) => f.known === 'traitor').map((f) => f.name).sort()).toEqual(['Bram', 'Cleo']);
+    const whisper = steps.findIndex((s) => s.kind === 'turn' && s.turn.phase === 'whispers' && (s.turn.action as { to?: string | null }).to);
+    expect(worldFromScene(spectatorView(log, steps, whisper, ctx), '').whisperLines).toHaveLength(1);
+    const noted = steps.findIndex((s) => s.kind === 'turn' && s.turn.phase === 'round_table' && s.turn.private_notes.trim() !== '');
+    expect(worldFromScene(spectatorView(log, steps, noted, ctx), '').thought?.text).toBeTruthy();
+  });
+});

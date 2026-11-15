@@ -5,6 +5,7 @@ import { describeStep } from '../replay/describe.js';
 import { seatsAt, type Step } from '../replay/timeline.js';
 import type { SceneMoment, SceneSeat, SceneView, SceneWhisper } from '../scene/view.js';
 import { directorShot } from './director.js';
+import { SEES_ALL, stageAt } from './stage.js';
 
 /** Everyone's role at the step: the starting roles, with each recruitment that has been accepted by then applied. */
 function rolesAt(log: GameLog, steps: Step[], index: number): Record<string, Role> {
@@ -41,6 +42,7 @@ export function spectatorView(log: GameLog, steps: Step[], index: number, ctx: C
     text,
     thought: described.notes,
     kind: described.bubble?.kind === 'speech' ? 'speech' : text ? 'event' : 'none',
+    target: step.kind === 'turn' && step.turn.phase === 'round_table' ? described.target : null,
   };
   const whispers: SceneWhisper[] = [];
   if (step.kind === 'turn' && step.turn.phase === 'whispers') {
@@ -48,5 +50,5 @@ export function spectatorView(log: GameLog, steps: Step[], index: number, ctx: C
     if (typeof a.to === 'string' && typeof a.message === 'string' && a.message !== '') whispers.push({ from: step.turn.player, to: a.to, text: a.message });
   }
   const shot = directorShot(ctx, step);
-  return { viewer: null, seats, moment, night: step.section.title === 'Night', whispers, camera: { focus: shot.focus, wide: shot.wide, cut: true } };
+  return { viewer: null, seats, moment, night: step.section.title === 'Night', whispers, camera: { focus: shot.focus, wide: shot.wide, cut: true }, pov: 'third', stage: stageAt(log, steps, index, SEES_ALL) };
 }
