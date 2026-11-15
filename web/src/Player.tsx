@@ -15,6 +15,7 @@ import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } 
 import { useBeat, useRoomChoice } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
 import { momentWords } from './replay/momentWords.js';
+import { announcement, roomAnnouncement } from './replay/announce.js';
 import { tableSceneView } from './replay/tableScene.js';
 import type { SceneView } from './scene/view.js';
 import { Table } from './Table.js';
@@ -30,22 +31,6 @@ interface Props {
   /** Show the public table and the seats in the 3D room where it can be shown (the flat page stays as its fallback). */
   room3d?: boolean;
 }
-
-const announcement = (view: StepView): string =>
-  view.card ? `${view.card.title}. ${view.card.body}` : view.bubble && view.speaker ? `${view.speaker}: ${view.bubble.text}` : '';
-
-/**
- * What a screen reader is told in the room: only what the view holds, never the public step. A seat's view has no notes and no
- * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
- * panel and a line a screen reader cannot see.
- */
-const roomAnnouncement = (view: SceneView): string => {
-  const { title, speaker, text, thought } = view.moment;
-  const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];
-  if (thought) parts.push(`Private notes: ${thought}`);
-  for (const w of view.whispers) parts.push(`Whisper from ${w.from} to ${w.to}: ${w.text}`);
-  return parts.join('. ');
-};
 
 /** Plays one game log like an episode. */
 export function Player({ log, onReload, live = false, initial, room3d = false }: Props) {
