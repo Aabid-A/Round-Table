@@ -7,6 +7,12 @@ import { buildContext } from '../../../src/log/highlights/context.js';
 import { seatStepMs, seatTimeline, seatView } from '../perspective/seatView.js';
 import { spectatorView } from '../perspective/spectatorView.js';
 import { Room } from '../scene/Room.js';
+import { BANISH_MS } from '../scene/fromScene.js';
+import { useRoomChoice } from '../scene/host.js';
+import { announcement, roomAnnouncement } from '../replay/announce.js';
+import { momentWords } from '../replay/momentWords.js';
+import { tableSceneView } from '../replay/tableScene.js';
+import { RecordRoom } from './RecordRoom.js';
 import { Table } from '../Table.js';
 import { usePlayback } from '../usePlayback.js';
 import { Faces } from './Faces.js';
@@ -23,6 +29,8 @@ interface Props {
 
 /** The clip camera: no controls, fixed aspect, autoplay at reading speed, one URL per clip. */
 export function RecordView({ log, params }: Props) {
+  // The clip is drawn in the 3D room where it can be; the flat clip stays as the fallback (see useRoomChoice).
+  const choice = useRoomChoice(window.location.search);
   const steps = useMemo(() => buildSteps(log), [log]);
   const range = useMemo(() => stepsForRange(steps, params.from, params.to), [steps, params.from, params.to]);
   const ctx = useMemo(() => buildContext(log), [log]);
@@ -42,9 +50,11 @@ export function RecordView({ log, params }: Props) {
         const base = params.seats
           ? Math.max(...params.seats.map((n) => (log.cast.some((c) => c.name === n) ? seatStepMs(seatView(log, steps, stepIndex.get(s) ?? 0, n)) : 0)))
           : stepDurationMs(views[i]!);
-        return Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(base / params.speed)));
+        // In the room a banishment is staged beat by beat: the clip holds it until the mask has been turned over.
+        const held = choice.room && s.kind === 'event' && s.event.type === 'banishment' ? Math.max(base, BANISH_MS) : base;
+        return Math.min(MAX_TIMEOUT_MS, Math.max(50, Math.round(held / params.speed)));
       }),
-    [clip, views, log, steps, stepIndex, params.speed, params.seats],
+    [clip, views, log, steps, stepIndex, params.speed, params.seats, choice.room],
   );
   const { index, playing } = usePlayback(durations, { autoStart: params.faces === null && clip.length > 0 });
 
@@ -87,13 +97,31 @@ export function RecordView({ log, params }: Props) {
   const done = !playing && index === clip.length - 1;
   const turnId = step.kind === 'turn' ? step.turn.id : '';
 
+  // Each camera is the room from one scene view, keyed by the step so a banishment is staged afresh each time it is reached.
+  const spectatorCamera = (at: number) => {
+    const sv = spectatorView(log, steps, at, ctx);
+    const label = 'The room, seen by a spectator';
+    return <RecordRoom scene={sv} said={roomAnnouncement(sv)} caption={momentWords(sv)} stepKey={`spectator:${at}`} choice={choice} label={label} fallback={<Room view={sv} label={label} />} />;
+  };
+  const seatCamera = (at: number, name: string) => {
+    const sv = seatView(log, steps, at, name);
+    const label = `The room from ${name}'s chair`;
+    const flat = (
+      <>
+        <Room view={sv} label={label} />
+        <p className="rec-seat-label">{name}</p>
+      </>
+    );
+    return <RecordRoom scene={sv} said={roomAnnouncement(sv)} stepKey={`${name}:${at}`} choice={choice} label={label} fallback={flat} />;
+  };
+
   if (params.spectator) {
     // The all-seeing room, with the director's camera. Nothing is hidden, so every turn id may be shown.
     return (
       <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId} data-view="spectator">
         <div className="rec-stage" data-testid="stage" data-mode="seats" data-count="1" role="region" aria-label="Round Table clip">
           <div className="rec-seat-view">
-            <Room view={spectatorView(log, steps, stepIndex.get(step) ?? 0, ctx)} label="The room, seen by a spectator" />
+            {spectatorCamera(stepIndex.get(step) ?? 0)}
           </div>
         </div>
       </div>
@@ -109,10 +137,26 @@ export function RecordView({ log, params }: Props) {
         <div className="rec-stage" data-testid="stage" data-mode="seats" data-count={params.seats.length} role="region" aria-label="Round Table clip">
           {params.seats.map((name) => (
             <div key={name} className="rec-seat-view" data-seat={name}>
-              <Room view={seatView(log, steps, at, name)} label={`The room from ${name}'s chair`} />
-              <p className="rec-seat-label">{name}</p>
+              {seatCamera(at, name)}
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  const at = stepIndex.get(step) ?? 0;
+  if (choice.room && (step.kind !== 'result' || at > 0)) {
+    // The public table in the room, filmed by the director: what was said is said in the room, with no caption laid over it.
+    // The result is said over the table as it stood at the last step, every role now shown.
+    const flat = <Table seats={seats} view={{ ...view, bubble: null, card: null }} />;
+    const scene = step.kind === 'result' ? { ...tableSceneView(log, steps, at - 1, describeStep(steps[at - 1]!, log)), stage: null, seats: seats.map((s) => ({ name: s.name, model: s.model, status: s.status, role: s.revealedRole, mark: null })) } : tableSceneView(log, steps, at, view);
+    return (
+      <div className="rec" data-aspect={params.aspect} data-done={done} data-step={index} data-turn={turnId} data-view="table">
+        <div className="rec-stage" data-testid="stage" data-mode="seats" data-count="1" role="region" aria-label="Round Table clip">
+          <div className="rec-seat-view">
+            <RecordRoom scene={scene} said={announcement(view)} stepKey={`table:${at}`} choice={choice} label="The round table" fallback={flat} />
+          </div>
         </div>
       </div>
     );
