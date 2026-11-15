@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { approach, useReducedMotion } from '../motion.js';
 import { TABLE_Y } from '../models/dimensions.js';
 import { captionTexture } from '../models/textures.js';
-import { captionHold, captionOpacity, wrapCaption } from './caption.js';
+import { captionHold, captionOpacity, wrapCaption } from './captionText.js';
 
 /** How far in front of the eye the words hang, and how far below the level of the eye. */
 const AHEAD = 1.75;

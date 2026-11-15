@@ -56,7 +56,7 @@ describe('reduced motion', () => {
 
 describe('the caption in the room', () => {
   it('breaks into lines at spaces, none longer than asked', async () => {
-    const { wrapCaption } = await import('../../web/src/scene/stage/caption.js');
+    const { wrapCaption } = await import('../../web/src/scene/stage/captionText.js');
     const lines = wrapCaption('Your turn. Look at a figure and select them to accuse, or use the arrow keys and Enter.', 24);
     expect(lines.length).toBeGreaterThan(2);
     for (const l of lines) expect(l.length).toBeLessThanOrEqual(24);
@@ -65,7 +65,7 @@ describe('the caption in the room', () => {
     expect(wrapCaption('', 24)).toEqual([]);
   });
   it('comes up, holds long enough to read, and fades away', async () => {
-    const { captionHold, captionOpacity } = await import('../../web/src/scene/stage/caption.js');
+    const { captionHold, captionOpacity } = await import('../../web/src/scene/stage/captionText.js');
     const hold = captionHold('Dawn. The chair is empty.');
     expect(hold).toBeGreaterThanOrEqual(4);
     expect(captionHold('x'.repeat(100))).toBeGreaterThan(hold);
