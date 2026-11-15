@@ -8,7 +8,7 @@ const log = JSON.parse(readFileSync(FIXTURE, 'utf8')) as {
 
 async function open(page: Page, query: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
-  await page.goto(`/?mode=record&log=sample${query}`);
+  await page.goto(`/?mode=record&log=sample&fallback=1${query}`); // the flat clip; the clip in the 3D room is in record-3d.e2e.ts
 }
 
 /** Records every value data-turn takes, in order, so a test can see what a clip played. */

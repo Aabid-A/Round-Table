@@ -95,7 +95,7 @@ test('click a seat to drop into that player’s view at the same moment; A retur
 test('recording mode: the all-seeing room in 16:9 and 9:16', async ({ page }) => {
   await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
   for (const [aspect, wide] of [['16x9', true], ['9x16', false]] as const) {
-    await page.goto(`/?mode=record&log=sample&view=spectator&aspect=${aspect}&speed=0.05&from=14&to=30`);
+    await page.goto(`/?mode=record&log=sample&fallback=1&view=spectator&aspect=${aspect}&speed=0.05&from=14&to=30`);
     const room = page.getByTestId('room');
     await expect(room).toBeVisible();
     await expect(page.getByRole('button')).toHaveCount(0); // a clip has no controls
