@@ -6,7 +6,7 @@ import { buildSteps, seatsAt } from '../replay/timeline.js';
 import { buildContext } from '../../../src/log/highlights/context.js';
 import { seatStepMs, seatTimeline, seatView } from '../perspective/seatView.js';
 import { spectatorView } from '../perspective/spectatorView.js';
-import { Room } from '../scene/Room.js';
+import { FlatRoom } from '../scene/FlatRoom.js';
 import { BANISH_MS } from '../scene/fromScene.js';
 import { useRoomChoice } from '../scene/host.js';
 import { announcement, roomAnnouncement } from '../replay/announce.js';
@@ -101,14 +101,14 @@ export function RecordView({ log, params }: Props) {
   const spectatorCamera = (at: number) => {
     const sv = spectatorView(log, steps, at, ctx);
     const label = 'The room, seen by a spectator';
-    return <RecordRoom scene={sv} said={roomAnnouncement(sv)} caption={momentWords(sv)} stepKey={`spectator:${at}`} choice={choice} label={label} fallback={<Room view={sv} label={label} />} />;
+    return <RecordRoom scene={sv} said={roomAnnouncement(sv)} caption={momentWords(sv)} stepKey={`spectator:${at}`} choice={choice} label={label} fallback={<FlatRoom view={sv} label={label} />} />;
   };
   const seatCamera = (at: number, name: string) => {
     const sv = seatView(log, steps, at, name);
     const label = `The room from ${name}'s chair`;
     const flat = (
       <>
-        <Room view={sv} label={label} />
+        <FlatRoom view={sv} label={label} />
         <p className="rec-seat-label">{name}</p>
       </>
     );

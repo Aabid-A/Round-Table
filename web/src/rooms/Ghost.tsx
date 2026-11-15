@@ -3,7 +3,7 @@ import type { ServerMessage } from '../../../server/protocol.js';
 import type { PublicPhase } from '../../../src/publicPhase.js';
 import { liveView } from '../live/liveView.js';
 import { parsePrompt } from '../perspective/knowledge.js';
-import { Room } from '../scene/Room.js';
+import { FlatRoom } from '../scene/FlatRoom.js';
 import { worldFromScene } from '../scene/fromScene.js';
 import { useRoomChoice } from '../scene/host.js';
 import { momentWords } from '../replay/momentWords.js';
@@ -55,9 +55,9 @@ export function Ghost({ ghost, phase }: { ghost: GhostMessage; phase: PublicPhas
       {view && seat ? (
         <div className="live-room">
           {world ? (
-            <LiveRoom view={world} choice={choice} onPick={() => {}} label={label} fallback={<Room view={view} label={label} />} />
+            <LiveRoom view={world} choice={choice} onPick={() => {}} label={label} fallback={<FlatRoom view={view} label={label} />} />
           ) : (
-            <Room view={view} label={label} />
+            <FlatRoom view={view} label={label} />
           )}
         </div>
       ) : (

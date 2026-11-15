@@ -4,7 +4,7 @@ import type { Phase } from '../../../src/types.js';
 import type { PublicPhase } from '../../../src/publicPhase.js';
 import { HumanForm, type FormState } from '../play/HumanForm.js';
 import { parsePrompt, type Knowledge } from '../perspective/knowledge.js';
-import { Room } from '../scene/Room.js';
+import { FlatRoom } from '../scene/FlatRoom.js';
 import { useChooseKeys } from '../scene/Choose.js';
 import { BANISH_BEAT_MS, BANISH_BEATS, banishWords, worldFromScene } from '../scene/fromScene.js';
 import { useBeat, useRoomChoice } from '../scene/host.js';
@@ -138,9 +138,9 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
     <div className="live" data-testid="live-seat">
       <div className="live-room">
         {world ? (
-          <LiveRoom view={world} choice={choice} onPick={(seat) => setPicked(nameAt(seat))} label={`The room from your chair, ${k.name}`} fallback={<Room view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />} />
+          <LiveRoom view={world} choice={choice} onPick={(seat) => setPicked(nameAt(seat))} label={`The room from your chair, ${k.name}`} fallback={<FlatRoom view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />} />
         ) : (
-          <Room view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />
+          <FlatRoom view={shown!} onPick={setPicked} label={`The room from your chair, ${k.name}`} />
         )}
       </div>
       {children}

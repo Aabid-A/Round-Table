@@ -104,7 +104,9 @@ test('a step that is empty for the seat is stood on the nearest earlier one when
 test('the room keeps still under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await open(page, '&seat=Aria');
-  await expect(page.locator('.room-stage')).toHaveCSS('transition-duration', '0s');
+  await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Aria');
+  await expect(page.getByTestId('room')).toHaveCSS('transition-duration', '0s');
+  await expect(page.locator('.room-seat').first()).toHaveCSS('transition-duration', '0s');
 });
 
 test('split view in recording mode: two seats side by side in 16:9, one above the other in 9:16, at one moment', async ({ page }) => {

@@ -10,7 +10,7 @@ import { positionAtOrBefore, seatStepMs, seatTimeline, seatView } from './perspe
 import { describeStep, stepDurationMs, type StepView } from './replay/describe.js';
 import { buildSteps, seatsAt } from './replay/timeline.js';
 import { ResultScreen } from './ResultScreen.js';
-import { Room } from './scene/Room.js';
+import { FlatRoom } from './scene/FlatRoom.js';
 import { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS, banishWords, worldFromScene } from './scene/fromScene.js';
 import { useBeat, useRoomChoice } from './scene/host.js';
 import { ReplayRoom } from './replay/ReplayRoom.js';
@@ -138,7 +138,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
       <div className="layout">
         {sv && !world ? (
           <div className="seat-room">
-            <Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
+            <FlatRoom view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} />
           </div>
         ) : step.kind === 'result' ? (
           <ResultScreen log={log} seats={seats} onRestart={restart} />
@@ -148,7 +148,7 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
             onSit={sitAt}
             label={seat !== null ? `The room from ${seat}'s chair` : spectating ? 'The room, seen by a spectator' : 'The round table'}
             choice={choice}
-            fallback={sv ? <div className="seat-room"><Room view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} /></div> : <Table seats={seats} view={view} />}
+            fallback={sv ? <div className="seat-room"><FlatRoom view={sv} onSit={sit} label={seat !== null ? `The room from ${seat}'s chair` : 'The room, seen by a spectator'} /></div> : <Table seats={seats} view={view} />}
           />
         ) : (
           <Table seats={seats} view={view} />

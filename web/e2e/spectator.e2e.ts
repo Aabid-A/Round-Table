@@ -105,13 +105,14 @@ test('recording mode: the all-seeing room in 16:9 and 9:16', async ({ page }) =>
   }
 });
 
-test('reduced motion: the light does not fade and a seat’s camera does not glide', async ({ page }) => {
+test('reduced motion: the flat room, where nothing fades or glides, all-seeing or from a seat', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await open(page, '&view=spectator');
-  await expect(page.locator('.room-light')).toHaveCSS('transition-duration', '0s'); // not already off because of a director's cut
+  await expect(page.getByTestId('room')).toHaveAttribute('data-night', /true|false/);
+  await expect(page.getByTestId('room')).toHaveCSS('transition-duration', '0s');
   await open(page, '&seat=Aria');
-  await expect(page.locator('.room-stage')).toHaveAttribute('style', /--turn/);
-  await expect(page.locator('.room-stage')).toHaveCSS('transition-duration', '0s');
+  await expect(page.getByTestId('room')).toHaveAttribute('data-viewer', 'Aria');
+  await expect(page.getByTestId('room')).toHaveCSS('transition-duration', '0s');
   await expect(page.locator('.room-seat').first()).toHaveCSS('transition-duration', '0s');
 });
 
