@@ -5,7 +5,7 @@ const FIXTURE = 'tests/fixtures/sample-game.json';
 
 // These tests cover the flat replay table, which is the 3D room's fallback; replay-3d.e2e.ts covers the room.
 async function openFixture(page: Page): Promise<void> {
-  await page.goto('/?fallback=1');
+  await page.goto('/?mode=replay&fallback=1');
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
   await expect(page.getByTestId('section')).toContainText('Night');
 }

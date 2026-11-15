@@ -18,8 +18,11 @@ test('a roomâ€™s seat plays in the 3D room, from your own chair, with the turnâ€
   const world = page.getByTestId('world');
   await expect(world.locator('canvas')).toBeVisible({ timeout: 60_000 });
   await expect(world).toHaveAttribute('data-first', 'true');
-  await expect(page.getByTestId('turn-form')).toBeVisible({ timeout: 30_000 });
+  // Past the role reveal to the turn, in the game shell: the candle on the table; the clock in words is in the folded form.
+  await page.getByTestId('take-seat').click({ timeout: 60_000 });
+  await expect(page.getByTestId('turn-form')).toBeAttached({ timeout: 30_000 });
   await expect(world).toHaveAttribute('data-timer', 'shown');
+  await expect(page.getByTestId('inputbar')).toBeVisible();
   await expect(page.getByTestId('clock')).toContainText('Time left');
 });
 
