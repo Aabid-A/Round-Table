@@ -10,7 +10,7 @@ const turn = log.turns.find((t) => t.phase === 'round_table')!;
 
 async function open(page: Page, query: string, body?: string): Promise<void> {
   await page.route('**/games/sample.json', (route) => (body ? route.fulfill({ body, contentType: 'application/json' }) : route.fulfill({ path: FIXTURE })));
-  await page.goto(`/?${query}`);
+  await page.goto(`/?fallback=1&${query}`); // the text card; the card with its picture of the room is in card-3d.e2e.ts
 }
 
 test('draws the 1200x675 card at exactly that size, with the quote, the thought and where it came from', async ({ page }) => {
