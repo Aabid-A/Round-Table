@@ -15,6 +15,8 @@ const WIDE = 0.24;
 const NARROW = 0.64;
 /** The narrowest the words go, in pixels. */
 const MIN_PX = 290;
+/** A private note is written differently in kind: slanting, in a cold grey-blue, on the other side of the mask. */
+const THOUGHT = { italic: true, colour: '#b8c4e6' };
 /** Half the width of a hooded head, in metres, to keep the words clear of the mask. */
 const HEAD_HALF = 0.2;
 
@@ -23,18 +25,18 @@ const HEAD_HALF = 0.2;
  * hang in front of the eye on the line toward the speaker, so they read at one size wherever the speaker sits, and they keep inside
  * the picture when the speaker is at its edge. The same words go to the live region for a screen reader.
  */
-export function Speech({ text, speaker }: { text: string | null; speaker: number | null }) {
+export function Speech({ text, speaker, thought = false }: { text: string | null; speaker: number | null; thought?: boolean }) {
   const { camera, size, gl } = useThree();
   const mesh = useRef<THREE.Mesh>(null);
   const material = useRef<THREE.MeshStandardMaterial>(null);
   const reduced = useReducedMotion();
   const narrow = size.width / size.height < 1;
-  const drawn = useMemo(() => (text ? captionTexture(wrapCaption(text, narrow ? 22 : 28), narrow ? 940 : 1180) : null), [text, narrow]);
+  const drawn = useMemo(() => (text ? captionTexture(wrapCaption(text, narrow ? 22 : 28), narrow ? 940 : 1180, thought ? THOUGHT : {}) : null), [text, narrow, thought]);
   useEffect(() => () => drawn?.texture.dispose(), [drawn]);
   useEffect(() => {
     // The debug hook a test reads: whose words are in the room.
-    gl.domElement.dataset.speaker = speaker === null || !text ? '' : String(speaker);
-  }, [gl, speaker, text]);
+    gl.domElement.dataset[thought ? 'thinker' : 'speaker'] = speaker === null || !text ? '' : String(speaker);
+  }, [gl, speaker, text, thought]);
   const shown = useRef(0);
   const tmp = useMemo(() => ({ head: new THREE.Vector3(), seen: new THREE.Vector3(), side: new THREE.Vector3(), right: new THREE.Vector3(), at: new THREE.Vector3(), forward: new THREE.Vector3() }), []);
   useEffect(() => void (shown.current = 0), [drawn]);
@@ -54,7 +56,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     // A part of the picture, but never narrower than a short column of type: a room drawn in a small window still reads.
     const boxX = Math.min(NARROW, Math.max(narrow ? NARROW : WIDE, MIN_PX / size.width)) * 2;
     const box = { x: boxX, y: (boxX / drawn.aspect) * aspect };
-    const c = speechPlacement(at, half, box);
+    const c = speechPlacement(at, half, box, thought);
     tmp.at.set(c.x, c.y, 0.5).unproject(cam).sub(cam.position).normalize();
     mesh.current.position.copy(cam.position).addScaledVector(tmp.at, AHEAD);
     mesh.current.quaternion.copy(cam.quaternion);

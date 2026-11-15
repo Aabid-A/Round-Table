@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Director } from './camera/Director.js';
 import { Recruit } from './moments/Recruit.js';
+import { WhisperLine } from './moments/WhisperLine.js';
+import { RoleSigil } from './actors/RoleSigil.js';
 import { FirstPerson } from './camera/FirstPerson.js';
 import { bearingTo } from './camera/fov.js';
 import { BANISHED_TILT, bearingFromEye, chairPose, dawnMaskSpot, setSpacing, tablePoint } from './layout.js';
@@ -108,6 +110,9 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
         <TableMask key={`fallen-${maskOf(f.seat)}`} seat={f.seat} mask={maskOf(f.seat)} role={f.role} viewer={view.you} at={restingSpot(f.seat)} scale={DAWN_MASK_SCALE} settled />
       ))}
       {view.recruit ? <Recruit key={`${view.recruit.from}-${view.recruit.to}`} from={view.recruit.from} to={view.recruit.to} mask={maskOf(view.recruit.from)} /> : null}
+      {view.figures.filter((f) => f.present && f.known).map((f) => <RoleSigil key={`role-${f.mask}`} seat={f.index} role={f.known!} />)}
+      {(view.whisperLines ?? []).map((w) => <WhisperLine key={`w-${w.from}-${w.to}`} from={w.from} to={w.to} />)}
+      <Speech text={view.thought?.text ?? null} speaker={view.thought?.speaker ?? null} thought />
       <Speech text={view.speech && view.speech.speaker !== view.you ? view.speech.text : null} speaker={view.speech?.speaker ?? null} />
       {view.you !== null ? (
   <FirstPerson toward={view.speaker !== null && view.speaker !== view.you ? bearingTo(view.speaker) : view.whisper && view.whisper.from !== view.you ? bearingTo(view.whisper.from) : view.dawn ? (bearingTo(view.dawn.victim) + bearingFromEye(restingSpot(view.dawn.victim))) / 2 : null} free={view.choosable.length > 0} focus={view.selected} overview={view.voting} />
@@ -116,7 +121,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
       )}
       {/* while a figure speaks, its own words are the caption */}
       <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
-      <Effects quality={q} still={reduced} words={!!view.speech && view.speech.speaker !== view.you} />
+      <Effects quality={q} still={reduced} words={(!!view.speech && view.speech.speaker !== view.you) || !!view.thought} />
     </ResourcesContext.Provider>
   );
 }

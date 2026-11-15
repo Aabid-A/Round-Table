@@ -15,13 +15,14 @@ const clamp = (n: number, lo: number, hi: number): number => (lo > hi ? (lo + hi
  * mask. If neither side has room (a narrow picture, the speaker filling it) they go above the mask. They never leave the picture or
  * sit under the buttons. `head` is the mask's middle, `headHalf` half its width, `box` the size of the words, all in device units.
  */
-export function speechPlacement(head: Ndc, headHalf: Ndc, box: Ndc): Ndc {
+export function speechPlacement(head: Ndc, headHalf: Ndc, box: Ndc, away = false): Ndc {
   const loX = -1 + EDGE + box.x / 2;
   const hiX = 1 - EDGE - box.x / 2;
   const loY = -1 + EDGE + box.y / 2;
   const hiY = 1 - TOP - box.y / 2;
   const fits = (x: number): boolean => x >= loX - 1e-9 && x <= hiX + 1e-9;
-  const toMiddle = head.x > 0 ? -1 : 1;
+  // Speech goes toward the middle of the picture; `away` (a private note beside the same mask) takes the other side first.
+  const toMiddle = (head.x > 0 ? -1 : 1) * (away ? -1 : 1);
   for (const side of [toMiddle, -toMiddle]) {
     const x = head.x + side * (headHalf.x + 0.02 + box.x / 2);
     if (fits(x)) return { x, y: clamp(head.y, loY, hiY) };
