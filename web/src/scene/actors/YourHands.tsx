@@ -9,12 +9,12 @@ import { TABLE_R, TABLE_Y } from '../models/dimensions.js';
 import { handGeometry } from '../models/hand.js';
 import { MASKS } from '../models/masks.js';
 import { PALETTE } from '../palette.js';
+import { HAND_SCALE, REST_POSE } from './handRest.js';
 
-/** A little over life size, so the fingers read at the bottom of a small screen. */
-const HAND = 1.65;
+const HAND = HAND_SCALE;
 const FORWARD = new THREE.Vector3(0, 0, 1);
 // In the space of your own seat: the table's edge at 0, +z across the table, +x to your left.
-const REST = { wrist: new THREE.Vector3(0.24, TABLE_Y + 0.036, 0.07), elbow: new THREE.Vector3(0.45, TABLE_Y - 0.04, -0.8), yaw: -0.6 };
+const REST = { wrist: new THREE.Vector3(0.24, TABLE_Y + REST_POSE.lift, 0.07), elbow: new THREE.Vector3(0.45, TABLE_Y - 0.04, -0.8), yaw: REST_POSE.yaw, pitch: REST_POSE.pitch };
 // Raised low and out to the side, so the pointing hand is seen from beside it and not end on.
 const RAISED = { wrist: new THREE.Vector3(0.34, TABLE_Y + 0.17, 0.3), elbow: new THREE.Vector3(0.5, TABLE_Y - 0.1, -0.75) };
 const ROLL = new THREE.Vector3(0, 0, 1);
@@ -57,7 +57,8 @@ function Arm({ side, pointAt, accent }: ArmProps) {
       tmp.aim.lerp(tmp.dir, approach(dt, 6, reduced)).normalize();
     }
     if (hand.current) {
-      tmp.rest.setFromEuler(tmp.e.set(0.07, REST.yaw * side + Math.sin(t * 0.21) * 0.03, 0, 'YXZ'));
+      // Tipped back so the arched fingers and the heel of the hand both rest on the wood, none of it sunk into the table.
+      tmp.rest.setFromEuler(tmp.e.set(REST.pitch, REST.yaw * side + Math.sin(t * 0.21) * 0.03, 0, 'YXZ'));
       tmp.raised.setFromUnitVectors(FORWARD, tmp.aim).multiply(tmp.roll.setFromAxisAngle(ROLL, -side * 0.7));
       hand.current.position.copy(tmp.wrist);
       hand.current.quaternion.slerpQuaternions(tmp.rest, tmp.raised, Math.min(1, up));
