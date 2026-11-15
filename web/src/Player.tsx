@@ -196,6 +196,10 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
             }
           />
           <div className="shell-controls">
+            <p className="shell-label">
+              {live ? '' : `seed ${log.seed} · `}
+              {log.cast.length} players
+            </p>
             {controls}
             {viewPicker}
           </div>

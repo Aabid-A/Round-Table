@@ -547,3 +547,14 @@ html.shell-on body {
   gap: 6px;
   justify-content: center;
 }
+
+/* While the shell is up, the page it sits in (a title bar, notes, buttons below) is gone, for the eye and for a screen reader. */
+html.shell-on #root > :not(.shell):not(:has(> .shell)),
+html.shell-on #root > :has(> .shell) > :not(.shell) {
+  display: none;
+}
+.shell-label {
+  margin: 0 0 4px;
+  color: var(--hud-dim);
+  font-size: 13px;
+}

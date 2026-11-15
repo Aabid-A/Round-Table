@@ -156,6 +156,7 @@ function GuessPlayer({ log, name, episode }: PlayerProps) {
         </h2>
         <Hud muted={sound.muted} onMute={sound.toggleMute} menu={<a className="hud-btn" href="./">Back to the title</a>} />
         <div className="shell-controls">
+          <p className="shell-label">Guess the traitor · {episode !== null ? `Episode ${episode}` : name}</p>
           {step.kind === 'pick' && setup ? <PickPanel key={step.round} setup={setup} locked={picks[step.round] ?? null} onLock={(names) => setPicks((p) => ({ ...p, [step.round]: names }))} /> : null}
           {playback}
         </div>
