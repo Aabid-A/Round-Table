@@ -15,7 +15,7 @@ const WIDE = 0.24;
 const NARROW = 0.64;
 /** The narrowest the words go, in pixels. */
 const MIN_PX = 290;
-/** A private note is written differently in kind: slanting, in a cold grey-blue, on the other side of the mask. */
+/** A private note is written differently in kind: slanting, in a cold grey-blue, beneath what was said. */
 const THOUGHT = { italic: true, colour: '#b8c4e6' };
 /** The most lines a private note takes in the room; the live region carries all of it. */
 const NOTE_LINES = 5;
@@ -107,5 +107,7 @@ export function Speech({ text, speaker, note = null }: { text: string | null; sp
 /** At most `n` lines, the last cut short with an ellipsis when more were left out. */
 function capLines(lines: string[], n: number): string[] {
   if (lines.length <= n) return lines;
-  return [...lines.slice(0, n - 1), `${lines[n - 1]!.replace(/\s*\S*$/, '')} …`];
+  const last = lines[n - 1]!;
+  // Drop the last word to make room for the ellipsis, unless it is the only word on the line.
+  return [...lines.slice(0, n - 1), `${last.includes(' ') ? last.replace(/\s*\S*$/, '') : last} …`];
 }

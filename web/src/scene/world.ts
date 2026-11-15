@@ -64,6 +64,8 @@ export interface WorldView {
   whisperLines?: { from: number; to: number }[];
   /** Players already out of the game, by seat: their masks lie on the table before their empty chairs, turned over when the role is known. */
   fallen?: { seat: number; role: Role | null }[];
+  /** Words for the prompt in the room, when they differ from `announce` (the all-seeing room draws notes and whispers in the room, so its caption leaves them out). */
+  caption?: string;
   /** Words for the HUD and the live region: what is happening and what the player may do. Only what this viewer may know. */
   announce: string;
 }

@@ -119,7 +119,7 @@ export function World({ view, quality, onHover, onPick }: { view: WorldView; qua
         <Director focus={view.shot?.focus ?? view.speaker ?? view.dawn?.victim ?? null} wide={view.shot?.wide ?? view.voting} cut={view.shot?.cut ?? false} />
       )}
       {/* while a figure speaks, its own words are the caption */}
-      <Caption text={view.speech ? null : view.announce} waiting={view.choosable.length > 0} />
+      <Caption text={view.speech ? null : (view.caption ?? view.announce)} waiting={view.choosable.length > 0} />
       <Effects quality={q} still={reduced} words={(!!view.speech && view.speech.speaker !== view.you) || !!view.thought} />
     </ResourcesContext.Provider>
   );

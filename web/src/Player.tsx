@@ -38,6 +38,12 @@ const announcement = (view: StepView): string =>
  * whispers; the all-seeing view adds the speaker's private notes and who whispered to whom, which the drawing shows as a
  * panel and a line a screen reader cannot see.
  */
+/** The moment alone, as the room's prompt says it: its title and what was said or done, without notes or whispers. */
+const momentWords = (view: SceneView): string => {
+  const { title, speaker, text } = view.moment;
+  return text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title;
+};
+
 const roomAnnouncement = (view: SceneView): string => {
   const { title, speaker, text, thought } = view.moment;
   const parts = [text ? `${title}. ${speaker ? `${speaker}: ` : ''}${text}` : title];
@@ -125,7 +131,9 @@ export function Player({ log, onReload, live = false, initial, room3d = false }:
   const scene = showRoom && step.kind !== 'result' ? (sv ?? tableSceneView(log, steps, index, view)) : null;
   const beat = useBeat(scene?.stage?.kind === 'banish' ? `${seat ?? ''}:${index}` : null, BANISH_BEATS.length, BANISH_BEAT_MS);
   const said = sv ? roomAnnouncement(sv) : announcement(view);
-  const world = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
+  const built = scene ? worldFromScene(scene, scene.stage?.kind === 'banish' ? banishWords(scene.stage.seat, beat, said) : said, beat) : null;
+  // In the all-seeing room the notes and whispers are drawn in the room; its prompt says only the moment (the live region keeps all).
+  const world = built && spectating && !(scene?.stage?.kind === 'banish') ? { ...built, caption: momentWords(sv!) } : built;
   const sitAt = (s: number): void => {
     const name = world?.figures.find((f) => f.index === s)?.name;
     if (name) sit(name);
