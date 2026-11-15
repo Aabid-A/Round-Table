@@ -9,8 +9,9 @@ const FAITHFUL = 5;
 const WHISPERED = 6;
 const TRAITOR = 1;
 
+// These tests cover the flat room (the CSS room), the 3D room's fallback; play-3d.e2e.ts covers the room.
 async function startSolo(page: Page, seed: number): Promise<void> {
-  await page.goto(`/?mode=play&seed=${seed}`);
+  await page.goto(`/?mode=play&seed=${seed}&fallback=1`);
   await page.getByLabel(/Your name at the table/).fill('Sam');
   await page.getByRole('button', { name: 'Take a seat' }).click();
   await expect(page.getByTestId('turn-form')).toBeVisible();

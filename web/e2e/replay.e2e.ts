@@ -3,8 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 const FIXTURE = 'tests/fixtures/sample-game.json';
 
+// These tests cover the flat replay table, which is the 3D room's fallback; replay-3d.e2e.ts covers the room.
 async function openFixture(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?fallback=1');
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
   await expect(page.getByTestId('section')).toContainText('Night');
 }
@@ -126,4 +127,15 @@ test('loads a log named in the address, and says when it is missing', async ({ p
   await expect(page.getByTestId('section')).toContainText('Night');
   await page.goto('/?log=missing-game');
   await expect(page.getByRole('alert')).toContainText('No log named "missing-game"');
+});
+
+test('the flat replay says a banishment in full at once, as its card does (the room’s beat-by-beat words are the room’s alone)', async ({ page }) => {
+  await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
+  await page.goto('/?log=sample&fallback=1');
+  await page.getByRole('slider', { name: 'Step' }).focus();
+  for (let i = 0; i < 36; i++) await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('section')).toContainText('Banishment');
+  await expect(page.getByTestId('card')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).toContainText('faithful');
+  await expect(page.getByTestId('announcement')).not.toContainText('chair is pushed back');
 });

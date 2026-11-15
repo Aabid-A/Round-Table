@@ -31,3 +31,33 @@ describe('quality levels', () => {
     expect(qualityFromSearch('')).toBeNull();
   });
 });
+
+describe('too slow for the room', () => {
+  it('is a median frame over 100 ms, so one slow frame does not decide', async () => {
+    const { tooSlow } = await import('../../web/src/scene/stage/quality.js');
+    expect(tooSlow([])).toBe(false);
+    expect(tooSlow([16, 16, 400, 16, 16])).toBe(false);
+    expect(tooSlow([120, 130, 90, 140, 150])).toBe(true);
+  });
+});
+
+describe('the WebGL check', () => {
+  it('asks the browser once per page and releases the context it opened', async () => {
+    let made = 0;
+    let released = 0;
+    const fake = { getExtension: () => ({ loseContext: () => void released++ }) };
+    const doc = { createElement: () => ({ getContext: () => (made++, fake) }) };
+    const g = globalThis as unknown as { document?: unknown };
+    const before = g.document;
+    g.document = doc;
+    try {
+      const { hasWebGl2 } = await import('../../web/src/scene/webgl.js');
+      expect(hasWebGl2()).toBe(true);
+      expect(hasWebGl2()).toBe(true);
+      expect(made).toBe(1);
+      expect(released).toBe(1);
+    } finally {
+      g.document = before;
+    }
+  });
+});
