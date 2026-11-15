@@ -294,6 +294,6 @@ test('the note card keeps a very long word and a very long note inside its box',
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
 });

@@ -17,9 +17,14 @@ import './scene/hud.css';
 import './slice/slice.css';
 import { SlicePage } from './slice/SlicePage.js';
 import { isSliceMode } from './slice/params.js';
+import { TitleScreen } from './shell/TitleScreen.js';
 
 const search = window.location.search;
-const page = isCardPage(search) ? (
+// No address at all is the front door; ?mode=replay is the replay's file picker that used to live there.
+const isFrontDoor = new URLSearchParams(search).toString() === '';
+const page = isFrontDoor ? (
+  <TitleScreen />
+) : isCardPage(search) ? (
   <CardPage />
 ) : isGuessMode(search) ? (
   <GuessPage />

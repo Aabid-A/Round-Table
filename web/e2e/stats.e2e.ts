@@ -73,6 +73,6 @@ test('is reachable by keyboard: the table region and the sort buttons take focus
 });
 
 test('the replay page still loads at the plain address', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
 });

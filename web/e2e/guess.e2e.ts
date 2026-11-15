@@ -245,6 +245,6 @@ test('an episode with no vote has nothing to guess and says so, with no 0/0', as
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
 });

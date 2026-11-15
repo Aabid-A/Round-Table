@@ -112,7 +112,7 @@ test('says what is wrong with the URL, an unknown turn and a missing log', async
 });
 
 test('the other pages still open at their own addresses', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await expect(page.getByRole('heading', { level: 1, name: 'Round Table replay' })).toBeVisible();
   await page.route('**/stats.json', (route) => route.fulfill({ status: 404, body: '' }));
   await page.goto('/?page=stats');

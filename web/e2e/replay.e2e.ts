@@ -100,7 +100,7 @@ test('a log that parses but cannot be drawn shows a message instead of a blank p
   // The murder event passes the shape check but has no proposals, so drawing it throws.
   const broken = JSON.parse(readFileSync(FIXTURE, 'utf8'));
   delete broken.events.find((e: { type: string }) => e.type === 'murder').proposals;
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await page.locator('input[type=file]').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(broken)) });
   // Every step is described up front, so the error shows as soon as the log is opened.
   await expect(page.getByRole('alert')).toContainText('This log could not be shown');
@@ -111,7 +111,7 @@ test('a log that parses but cannot be drawn shows a message instead of a blank p
 });
 
 test('rejects a log with another schemaVersion with a clear message', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=replay');
   await page.locator('input[type=file]').setInputFiles({
     name: 'old.json',
     mimeType: 'application/json',
