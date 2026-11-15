@@ -73,6 +73,7 @@ export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLe
         <Ghost ghost={ghost} phase={phase} />
       ) : (
         <LiveSeat
+          room3d
           turn={open && turn ? { id: turn.id, phase: turn.phase, options: turn.options, user: turn.user, timeoutMs: turn.timeoutMs } : null}
           publicPhase={turn ? publicPhase(turn.phase) : phase}
           onSubmit={(t, answer) => {
