@@ -3,11 +3,12 @@ import { useRef } from 'react';
 import * as THREE from 'three';
 import type { Role } from '../../../../src/types.js';
 import { banishedMaskSpot, figurePose } from '../layout.js';
+import { TABLE_MASK_SCALE } from '../models/dimensions.js';
 import { MaskMesh } from '../models/MaskMesh.js';
 import { approach, useReducedMotion } from '../motion.js';
 import { PALETTE } from '../palette.js';
 
-const SCALE = 0.2;
+const SCALE = TABLE_MASK_SCALE;
 /** How far the mask is tipped up from lying flat, toward the viewer, so it can be read from a seat. */
 const TILT = 0.62;
 

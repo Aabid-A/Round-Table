@@ -8,7 +8,10 @@ import { approach, useReducedMotion } from '../motion.js';
 import { wrapCaption } from './caption.js';
 import { speechPlacement } from './speech.js';
 
-/** How far in front of the eye the words hang: at the distance the depth of field is focused on, so they are sharp, and in front of everything else drawn. */
+/**
+ * How far in front of the eye the words hang: at the distance the depth of field is focused on. They are drawn last and write that
+ * depth, so the blur reads them there and leaves them sharp, whatever lies behind them.
+ */
 const AHEAD = 2.6;
 /** How wide the words are, as a part of the picture's width: a column beside the speaker on a wide screen, most of a phone's. */
 const WIDE = 0.24;
@@ -68,7 +71,7 @@ export function Speech({ text, speaker }: { text: string | null; speaker: number
     <mesh ref={mesh} renderOrder={10} visible={false}>
       <planeGeometry args={[1, 1]} />
       {/* lit letters, as the turn prompt: they give their own light, so they read by candle, by fire and at dawn */}
-      <meshStandardMaterial ref={material} color="#000" emissive="#fff" emissiveMap={drawn.texture} alphaMap={drawn.alpha} transparent opacity={0} depthTest={false} depthWrite={false} />
+      <meshStandardMaterial ref={material} color="#000" emissive="#fff" emissiveMap={drawn.texture} alphaMap={drawn.alpha} transparent opacity={0} depthTest={false} depthWrite fog={false} />
     </mesh>
   );
 }
