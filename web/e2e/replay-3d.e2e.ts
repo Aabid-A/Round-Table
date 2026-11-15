@@ -85,3 +85,16 @@ test('a banishment is staged beat by beat: the room shows seven, then the mask',
   await expect(page.getByTestId('world')).toHaveAttribute('data-figures', '6', { timeout: 15_000 });
   await expect(page.getByTestId('announcement')).toContainText('faithful', { timeout: 15_000 });
 });
+
+test('with reduced motion the replay shows its flat page, not the room: the table, and a seat’s CSS room', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.route('**/games/sample.json', (route) => route.fulfill({ path: FIXTURE }));
+  // No ?fallback=1 and no ?quality=: reduced motion alone must choose the flat page.
+  await page.goto('/?log=sample');
+  await expect(page.getByTestId('section')).toContainText('Night');
+  await expect(page.getByTestId('table')).toBeVisible();
+  await expect(page.getByTestId('world')).toHaveCount(0);
+  await page.getByLabel('View').selectOption('Aria');
+  await expect(page.getByTestId('room')).toBeVisible();
+  await expect(page.getByTestId('world')).toHaveCount(0);
+});

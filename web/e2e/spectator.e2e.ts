@@ -139,7 +139,7 @@ test('the status line in the all-seeing room reads out the notes and the whisper
   await expect(page.getByTestId('announcement')).toContainText(/Whisper from \w+ to \w+: .*WHISPER-/);
 });
 
-test('the plain public table is still the default, with no room', async ({ page }) => {
+test('the fallback public table has no room', async ({ page }) => {
   await open(page, '');
   await expect(page.getByTestId('table')).toBeVisible();
   await expect(page.getByTestId('room')).toHaveCount(0);
