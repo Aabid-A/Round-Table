@@ -22,6 +22,9 @@ import { liveView, newsHoldMs, ringOrder } from './liveView.js';
 /** How long each piece of news stays up in the room. */
 export const BEAT_MS = 2800;
 
+/** In a timed turn, how long the role reveal stays before the turn takes over. */
+export const REVEAL_TIMED_MS = 5000;
+
 /** The least time a faithful's night lasts on screen, even when the AIs answer at once, so the dark and the waking can be seen. */
 export const SLEEP_MS = 1600;
 
@@ -71,6 +74,7 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
   // Your role is told once, at the start, with your mask in your hands, and held until you take your seat.
   const [seated, setSeated] = useState(false);
   const [journal, setJournal] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [lastUser, setLastUser] = useState('');
   const sound = useRoomSound();
   const input = useInputKind();
@@ -145,6 +149,13 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
   const built = room3d && choice.room && shown ? worldFromScene(shown, shown.stage?.kind === 'banish' ? banishWords(shown.stage.seat, beat, said) : said, beat) : null;
   const world = built && revealing && k ? { ...built, reveal: { role: k.role, partners: k.role === 'traitor' ? k.fellowTraitors : [] }, choosable: [], caption: '' } : built;
   useJournalKey(() => inShell && setJournal((v) => !v));
+  // A timed turn (rooms) does not wait for the click: the reveal lets you on after a few seconds, so it never costs the turn.
+  const timed = turn !== null && turn.timeoutMs !== null;
+  useEffect(() => {
+    if (!revealing || !timed) return;
+    const t = setTimeout(() => setSeated(true), REVEAL_TIMED_MS);
+    return () => clearTimeout(t);
+  }, [revealing, timed]);
   const nameAt = (seat: number): string | null => world?.figures.find((f) => f.index === seat)?.name ?? null;
   // The keys choose among the seats the turn offers, and Enter confirms, as in the slice.
   useChooseKeys(world?.choosable ?? [], world?.selected ?? null, (seat) => setPicked(nameAt(seat)), () => submit.current?.());
@@ -176,15 +187,15 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
           <>
             <button type="button" className="shell-catch" aria-hidden="true" tabIndex={-1} onClick={() => (sound.start(), setSeated(true))} />
             <div className="shell-hold">
-              <p className="sr-only" role="status">
+              <p className="sr-only" id="role-told">
                 {k.role === 'traitor' ? `You are a traitor.${k.fellowTraitors.length ? ` Your partner: ${k.fellowTraitors.join(', ')}.` : ''}` : 'You are faithful.'}
               </p>
-              <button type="button" className="inputbar-send" onClick={() => (sound.start(), setSeated(true))} data-testid="take-seat" autoFocus>
+              <button type="button" className="inputbar-send" onClick={() => (sound.start(), setSeated(true))} data-testid="take-seat" aria-describedby="role-told" autoFocus>
                 Take your seat
               </button>
             </div>
           </>
-        ) : turn && spec ? (
+        ) : turn && spec && !formOpen ? (
           <InputBar
             spec={spec}
             picked={picked}
@@ -197,13 +208,12 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
             missing={form.missing}
             onSend={() => (sound.play('confirm'), submit.current?.())}
           />
-        ) : (
-          <div className="shell-status">{children}</div>
-        )}
+        ) : null}
+        {/* Notices (offline, a timed-out turn, an answer refused) and the clock in words: always shown, over the bar. */}
+        {!revealing && <div className={turn ? 'shell-status shell-notes' : 'shell-status'}>{children}</div>}
         {turn && (
-          <details className="shell-form" data-testid="shell-form">
+          <details className="shell-form" data-testid="shell-form" onToggle={(e) => setFormOpen(e.currentTarget.open)}>
             <summary>Answer with a form instead</summary>
-            {children}
             <HumanForm
               key={`form-${turn.id}`}
               request={{ system: '', user: turn.user, phase: turn.phase, player: k.name, options: turn.options }}

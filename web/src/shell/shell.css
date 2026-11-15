@@ -558,3 +558,22 @@ html.shell-on #root > :has(> .shell) > :not(.shell) {
   color: var(--hud-dim);
   font-size: 13px;
 }
+
+/* Notices and the clock in words during a turn: just above the input bar. */
+.shell-notes {
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--kb) + 120px);
+}
+.shell-notes:empty,
+.shell-status:empty {
+  display: none;
+}
+.shell-status .notice,
+.shell-status .clock {
+  margin: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+}
+.shell-form[open] {
+  z-index: 12;
+}

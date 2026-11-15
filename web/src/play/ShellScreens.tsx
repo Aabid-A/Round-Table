@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import type { GameLog } from '../../../src/engine/types.js';
-import { finalRoles } from '../replay/timeline.js';
+import { buildSteps, finalRoles, seatsAt } from '../replay/timeline.js';
 import { END_REASONS, WINNER } from '../result.js';
 import { useRoomSound, type RoomChoice } from '../scene/host.js';
 import { HallRoom } from '../shell/HallRoom.js';
@@ -105,10 +105,18 @@ export function ShellEnd({ choice, human, log, onAgain, onReplay, onDetails }: {
     const at = log.cast.findIndex((c) => c.name === human);
     return [...log.cast.slice(at), ...log.cast.slice(0, at)].map((c) => c.name);
   }, [log, human]);
-  const view = useMemo(
-    () => hallView({ you: 0, names: order, ending: order.map((name, seat) => ({ seat, role: roles[name] === 'traitor' ? 'traitor' : 'faithful' })) }),
-    [order, roles],
-  );
+  const view = useMemo(() => {
+    // Each player in the mask they wore all game (the mask follows the cast, as in the game's room), and the out of the game gone from their chairs.
+    const steps = buildSteps(log);
+    const status = new Map(seatsAt(log, steps, steps.length - 1).map((s) => [s.name, s.status]));
+    return hallView({
+      you: 0,
+      names: order,
+      masks: order.map((name) => log.cast.findIndex((c) => c.name === name)),
+      gone: order.map((name) => (status.get(name) ?? 'alive') !== 'alive'),
+      ending: order.map((name, seat) => ({ seat, role: roles[name] === 'traitor' ? 'traitor' : 'faithful' })),
+    });
+  }, [order, roles, log]);
   const r = log.result;
   const title = r.winner === null ? 'Game stopped' : WINNER[r.winner];
   const line = `${END_REASONS[r.reason] ?? r.reason} · ${r.rounds} round${r.rounds === 1 ? '' : 's'}`;

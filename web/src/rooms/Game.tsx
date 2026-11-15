@@ -93,6 +93,11 @@ export function Game({ me, phase, turn, timedOut, ghost, offline, onAnswer, onLe
               You are offline. Reconnecting…
             </p>
           )}
+          {timedOut && (
+            <p className="notice" role="status" data-testid="timed-out-in-room">
+              You ran out of time on your last turn, so a fallback move was made for you.
+            </p>
+          )}
           {open && turn ? (
             <>
               <Clock key={`clock-${turn.id}`} timeoutMs={turn.timeoutMs} afterText="If it runs out, a fallback move is made for you." />
