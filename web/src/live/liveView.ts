@@ -1,7 +1,7 @@
 import type { Phase, Role } from '../../../src/types.js';
 import type { PublicPhase } from '../../../src/publicPhase.js';
 import type { Knowledge } from '../perspective/knowledge.js';
-import type { SceneMoment, SceneSeat, SceneTimer, SceneView, SceneWhisper } from '../scene/view.js';
+import type { SceneMoment, SceneSeat, SceneStage, SceneTimer, SceneView, SceneWhisper } from '../scene/view.js';
 import { nightProposals, type LiveEvent } from './events.js';
 
 const PHASE_TITLE: Record<Phase, string> = {
@@ -75,6 +75,21 @@ function momentFor(s: LiveSnapshot): { moment: SceneMoment; whispers: SceneWhisp
 }
 
 /**
+ * The moment the room stages for a line of news this seat was told: dawn on the one murdered, the votes as tokens, a banishment with
+ * the mask turned over. A role is shown only where this seat's own prompt already holds it (who is out, and what they were).
+ */
+function stageOf(b: LiveEvent | null, out: Map<string, { role: Role | null }>): SceneStage | null {
+  if (!b) return null;
+  if (b.kind === 'breakfast' && b.victim !== null) return { kind: 'dawn', victim: b.victim, role: out.get(b.victim)?.role ?? null };
+  if (b.kind === 'votes') return { kind: 'votes', votes: b.votes };
+  if (b.kind === 'banished') {
+    const role = out.get(b.player)?.role;
+    return role ? { kind: 'banish', seat: b.player, role, votes: [] } : null;
+  }
+  return null;
+}
+
+/**
  * The room as the player in seat `me` sees it, from their own chair. Everything here comes from what this player was already
  * sent: their latest prompt (role, fellow traitors, who is out and what they were), the public phase, and their own open turn.
  * Nothing about another player's role, notes or whispers can be in it.
@@ -107,5 +122,6 @@ export function liveView(s: LiveSnapshot): SceneView {
     proposals: s.turn?.phase === 'night' && k?.role === 'traitor' ? nightProposals(s.turn.user) : [],
     timer: s.timer,
     picking: s.turn && nameOptions.length > 0 ? { options: nameOptions, picked: s.picked } : null,
+    stage: stageOf(s.beat, out),
   };
 }

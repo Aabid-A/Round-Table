@@ -62,6 +62,12 @@ export interface WorldView {
   thought?: { text: string; speaker: number } | null;
   /** Whispers drawn as lines between the seats. Only ever set for a spectator. */
   whisperLines?: { from: number; to: number }[];
+  /** The viewer's turn counting down, drawn on the table as a candle burning down (game-feel: time is shown in the room first). */
+  timer?: { leftMs: number; totalMs: number } | null;
+  /** The viewer sleeps through the night: the room goes dark. */
+  sleep?: boolean;
+  /** A traitor's night: the seats proposed so far, by seat, each with how many proposed it. Only ever set for a traitor's own view. */
+  proposals?: { seat: number; count: number }[];
   /** Players already out of the game, by seat: their masks lie on the table before their empty chairs, turned over when the role is known. */
   fallen?: { seat: number; role: Role | null }[];
   /** Words for the prompt in the room, when they differ from `announce` (the all-seeing room draws notes and whispers in the room, so its caption leaves them out). */

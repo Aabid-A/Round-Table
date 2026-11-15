@@ -2,6 +2,13 @@ import { SEATS } from './layout.js';
 import type { SceneView } from './view.js';
 import { CANDLES, type WorldBanish, type WorldView } from './world.js';
 
+/** How many times each name comes up. */
+function countBy(names: string[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const n of names) m.set(n, (m.get(n) ?? 0) + 1);
+  return m;
+}
+
 /** The beats of a staged banishment, one after another: the chair pushed back, the figure leaving, the mask turned over, quiet. */
 export const BANISH_BEATS: WorldBanish['stage'][] = ['pushback', 'leave', 'mask', 'done'];
 
@@ -37,7 +44,9 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
   const banishing = stage?.kind === 'banish' ? stage.seat : null;
   const speaking = scene.moment.kind === 'speech' ? seatOrNull(scene.moment.speaker) : null;
   const target = seatOrNull(scene.moment.target);
-  const whisper = stage?.kind === 'whisper' ? { from: seatOf(stage.from), to: seatOf(stage.to) } : null;
+  // A whisper reaching this seat: staged by the replay as a moment, by a live seat as the line of news it was told.
+  const toMe = scene.viewer !== null ? scene.whispers.find((w) => w.to === scene.viewer && castIndex.has(w.from)) : undefined;
+  const whisper = stage?.kind === 'whisper' ? { from: seatOf(stage.from), to: seatOf(stage.to) } : toMe ? { from: seatOf(toMe.from), to: 0 } : null;
   const figures = scene.seats.map((s, i) => ({
     index: seatOf(s.name),
     name: s.name,
@@ -67,7 +76,7 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     // Seen from no chair: a recruitment is held on the one being recruited; a whisper pulls back so both its ends are in the picture.
     ...(from === null ? { shot: { focus: stage?.kind === 'recruit' ? seatOf(stage.to) : seatOrNull(scene.camera.focus), wide: stage?.kind === 'recruit' ? false : scene.camera.wide || scene.whispers.length > 0, cut: scene.camera.cut } } : {}),
     // A recruitment is done in the dark: the candles are out for it.
-    mood: scene.night || stage?.kind === 'recruit' ? 'night' : dawn ? 'dawn' : 'day',
+    mood: scene.night || scene.sleep || stage?.kind === 'recruit' ? 'night' : dawn ? 'dawn' : 'day',
     candlesLit: scene.night || dawn || stage?.kind === 'recruit' ? 0 : CANDLES,
     speaker: speaking,
     // A whisper's words are said beside the one who leans in to say them, not written over the room.
@@ -83,9 +92,13 @@ export function worldFromScene(scene: SceneView, announce: string, beat = BANISH
     thought: scene.viewer === null && scene.moment.thought && scene.moment.speaker && castIndex.has(scene.moment.speaker) ? { text: scene.moment.thought, speaker: seatOf(scene.moment.speaker) } : null,
     whisperLines: scene.viewer !== null ? [] : scene.whispers.filter((w) => castIndex.has(w.from) && castIndex.has(w.to)).map((w) => ({ from: seatOf(w.from), to: seatOf(w.to) })),
     fallen: scene.seats.filter((s) => s.status !== 'alive' && !staged.has(s.name)).map((s) => ({ seat: seatOf(s.name), role: s.role })),
-    choosable: [],
+    // A live turn: the seats that may be chosen, and the one chosen so far. Choosing is done in the room.
+    choosable: (scene.picking?.options ?? []).filter((n) => castIndex.has(n)).map(seatOf),
     hovered: null,
-    selected: null,
+    selected: seatOrNull(scene.picking?.picked),
+    timer: scene.timer ?? null,
+    sleep: scene.sleep === true,
+    proposals: [...countBy((scene.proposals ?? []).map((p) => p.target).filter((n) => castIndex.has(n)))].map(([n, count]) => ({ seat: seatOf(n), count })),
     announce,
   };
 }

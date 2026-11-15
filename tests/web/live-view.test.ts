@@ -140,3 +140,33 @@ describe('liveView for a ghost watching a seat', () => {
     expect({ ...asleep, sleep: false }.sleep).toBe(false); // the ghost view turns it off
   });
 });
+
+describe('a live seat in the 3D room', () => {
+  it('never gives the room a spectator field, a role it does not hold, or night proposals unless a traitor (8 games, every turn of every seat)', async () => {
+    const { worldFromScene } = await import('../../web/src/scene/fromScene.js');
+    let checked = 0;
+    for (let seed = 1; seed <= 8; seed++) {
+      const log = await playMock(seed);
+      for (const c of log.cast) {
+        const order = orderFor(log, c.name);
+        for (const t of log.turns.filter((x) => x.player === c.name)) {
+          const view = liveView(snapshotAt(log, t, order));
+          const w = worldFromScene(view, '');
+          expect(w.you).toBe(0);
+          for (const f of w.figures) {
+            expect(f.known).toBeUndefined();
+            if (f.revealed !== null) expect(f.revealed).toBe(view.seats.find((s) => s.name === f.name)!.role);
+            if (f.present && f.index !== 0) expect(f.revealed).toBeNull();
+          }
+          expect(w.thought ?? null).toBeNull();
+          expect(w.whisperLines ?? []).toEqual([]);
+          if ((w.proposals ?? []).length > 0) expect(parsePrompt(t.attempts[0]!.prompt)!.role).toBe('traitor');
+          // Choosing in the room offers only the turn's own options.
+          for (const s of w.choosable) expect(view.picking!.options).toContain(w.figures.find((f) => f.index === s)!.name);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(200);
+  });
+});
