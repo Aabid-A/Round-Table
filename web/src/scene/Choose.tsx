@@ -33,7 +33,7 @@ export function useChooseKeys(choosable: number[], selected: number | null, onSe
     const onKey = (e: KeyboardEvent): void => {
       // Keys pressed in a control or anything else that takes the focus from the keyboard (a scrollable box of text) are left to it.
       const t = e.target as HTMLElement;
-      if (t.closest?.('input, button, summary, textarea, select, [contenteditable="true"], [tabindex]:not([tabindex="-1"])') && !t.closest?.('.world-room')) return;
+      if (t.closest?.('a[href], input, button, summary, textarea, select, [contenteditable="true"], [tabindex]:not([tabindex="-1"])') && !t.closest?.('.world-room')) return;
       const { choosable: c, selected: s, onSelect: pick, onConfirm: ok } = latest.current;
       const i = s === null ? -1 : c.indexOf(s);
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') pick(c[(i + 1) % c.length]!);

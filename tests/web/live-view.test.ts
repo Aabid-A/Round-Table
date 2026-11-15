@@ -206,3 +206,17 @@ describe('a live seat’s staged news', () => {
     expect(whispers).toBeGreaterThan(0);
   });
 });
+
+describe('how long a line of news stays up', () => {
+  it('holds a banishment in the 3D room until its mask has turned, and leaves everything else (and the flat room) as it was', async () => {
+    const { newsHoldMs } = await import('../../web/src/live/liveView.js');
+    const { BANISH_BEAT_MS, BANISH_BEATS, BANISH_MS } = await import('../../web/src/scene/fromScene.js');
+    const banished = { kind: 'banished' as const, player: 'Dax' };
+    expect(newsHoldMs(banished, true, 2800)).toBe(BANISH_MS);
+    expect(BANISH_MS).toBeGreaterThan(2 * BANISH_BEAT_MS); // the beat in which the mask turns over
+    expect(BANISH_BEATS[2]).toBe('mask');
+    expect(newsHoldMs(banished, false, 2800)).toBe(2800);
+    expect(newsHoldMs({ kind: 'breakfast', victim: 'Aria' }, true, 2800)).toBe(2800);
+    expect(newsHoldMs(undefined, true, 2800)).toBe(2800);
+  });
+});

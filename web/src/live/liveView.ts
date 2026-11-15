@@ -2,6 +2,7 @@ import type { Phase, Role } from '../../../src/types.js';
 import type { PublicPhase } from '../../../src/publicPhase.js';
 import type { Knowledge } from '../perspective/knowledge.js';
 import type { SceneMoment, SceneSeat, SceneStage, SceneTimer, SceneView, SceneWhisper } from '../scene/view.js';
+import { BANISH_MS } from '../scene/fromScene.js';
 import { nightProposals, type LiveEvent } from './events.js';
 
 const PHASE_TITLE: Record<Phase, string> = {
@@ -124,4 +125,9 @@ export function liveView(s: LiveSnapshot): SceneView {
     picking: s.turn && nameOptions.length > 0 ? { options: nameOptions, picked: s.picked } : null,
     stage: stageOf(s.beat, out),
   };
+}
+
+/** How long a line of news stays up: `beatMs` for most, and in the 3D room (`staged`) a banishment until its mask has been turned over. */
+export function newsHoldMs(beat: LiveEvent | undefined, staged: boolean, beatMs: number): number {
+  return staged && beat?.kind === 'banished' ? Math.max(beatMs, BANISH_MS) : beatMs;
 }

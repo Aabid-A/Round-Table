@@ -11,7 +11,7 @@ import { useBeat, useRoomChoice } from '../scene/host.js';
 import { momentWords } from '../replay/momentWords.js';
 import { LiveRoom } from './LiveRoom.js';
 import { newsToPlay, type LiveEvent } from './events.js';
-import { liveView, ringOrder } from './liveView.js';
+import { liveView, newsHoldMs, ringOrder } from './liveView.js';
 
 /** How long each piece of news stays up in the room. */
 export const BEAT_MS = 2800;
@@ -82,9 +82,11 @@ export function LiveSeat({ turn, publicPhase, onSubmit, children, room3d = false
   }, [turn?.id]);
   useEffect(() => {
     if (beatAt >= reel.length) return;
-    const t = setTimeout(() => setBeatAt((i) => i + 1), BEAT_MS);
+    // In the 3D room a banishment is staged beat by beat: its news stays up until the mask has been turned over.
+    const ms = newsHoldMs(reel[beatAt], room3d && choice.room, BEAT_MS);
+    const t = setTimeout(() => setBeatAt((i) => i + 1), ms);
     return () => clearTimeout(t);
-  }, [reel, beatAt]);
+  }, [reel, beatAt, room3d, choice.room]);
   useEffect(() => {
     if (!turn || turn.timeoutMs === null) return setLeft(null);
     const end = Date.now() + turn.timeoutMs;
